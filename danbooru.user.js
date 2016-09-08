@@ -412,6 +412,23 @@ $(function() {
     }
 
     /*
+     * Add 'comment #1234' permalink to comments on posts and in comment index.
+     */
+    if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
+        $('.comment').each((i, e) => {
+            const post_id    = $(e).data('post-id');
+            const comment_id = $(e).data('comment-id');
+
+            $(e).find('menu').prepend($(`
+                <li>
+                    <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
+                </li>
+                <li> | </li>
+            `));
+        });
+    }
+
+    /*
      * /forum_topics tweaks.
      */
 
