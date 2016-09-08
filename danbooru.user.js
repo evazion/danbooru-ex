@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      99
+// @version      129
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -251,6 +251,29 @@ $(function() {
         return old_update_data(data);
     };
 
+    const old_postmodemenu_change = Danbooru.PostModeMenu.change;
+    Danbooru.PostModeMenu.change = function () {
+        const mode = $("#mode-box select").val();
+
+        if (mode !== "view") {
+            /* Disable middle-click for tag scripts. */
+            $("article.post-preview a").off("click").click(function (e) {
+                console.log(e);
+                if (e.which == 1) {
+                    return Danbooru.PostModeMenu.click(e);
+                }
+            });
+
+            /* Enable selectable thumbnails. */
+            $("#page").selectable({
+                filter: "article.post-preview",
+                delay: 300
+            });
+        }
+
+        return old_postmodemenu_change();
+    };
+
     /*
      * Global tweaks.
      */
@@ -306,34 +329,22 @@ $(function() {
 
     // $("#search-box").remove();
 
-    Danbooru.PostModeMenu.initialize_selector();
-    Danbooru.PostModeMenu.initialize_preview_link();
-    Danbooru.PostModeMenu.initialize_edit_form();
-    Danbooru.PostModeMenu.initialize_tag_script_field();
-    Danbooru.PostModeMenu.initialize_shortcuts();
-    Danbooru.PostModeMenu.change();
-
-    $(document).bind('keydown', 'ctrl+a',  Danbooru.PostModeMenu.select_all);
-    $(document).bind('keydown', 'shift+a', Danbooru.PostModeMenu.apply_mode);
-
-
-
     /*
-     * /posts, /pools, /favorites, /post_versions index tweaks.
+     * Use the mode menu everywhere *but* on /posts/show (so as to not
+     * interfere with existing keyboard shortcuts on that page).
      */
+    if (! ($("#c-posts").length && $("#a-show").length)) {
+        Danbooru.PostModeMenu.initialize_selector();
+        Danbooru.PostModeMenu.initialize_preview_link();
+        Danbooru.PostModeMenu.initialize_edit_form();
+        Danbooru.PostModeMenu.initialize_tag_script_field();
+        Danbooru.PostModeMenu.initialize_shortcuts();
+        Danbooru.PostModeMenu.change();
 
-    if ($("#c-posts,#c-post-versions,#c-favorites,#c-pools").length && $("#a-index").length) {
-        // Disable middle-click for tag scripts.
-        $("article.post-preview a").off("click").click(function (e) {
-            if (e.which == 1) {
-                return Danbooru.PostModeMenu.click(e);
-            }
-        });
+        $('#sticky-header .mode-box button').click(Danbooru.PostModeMenu.apply_mode);
 
-        $("body").selectable({
-            filter: "article.post-preview",
-            delay: 300
-        });
+        $(document).bind('keydown', 'ctrl+a',  Danbooru.PostModeMenu.select_all);
+        $(document).bind('keydown', 'shift+a', Danbooru.PostModeMenu.apply_mode);
 
         const keys = {
             "v":     "view",
@@ -351,11 +362,30 @@ $(function() {
         };
 
         $.each(keys, function (key, mode) {
-            $(document).keydown(key, function () {
+            $(document).keydown(key, function (e) {
+                const prev_mode = $("#mode-box select").val();
                 $("#mode-box select").val(mode);
-                // include (learn more) link.
+
+                if (mode === "tag-script") {
+                    let $tag_script_field = $("#tag-script-field").first();
+                    console.log($tag_script_field);
+
+                    /* Focus and select all in tag script entry box. */
+                    if (prev_mode === "tag-script") {
+                        $tag_script_field.focus().selectRange(0, $tag_script_field.val().length);
+                        $tag_script_field.focus();
+                    }
+                    /*
+                    if ($tag_script_field.val().length) {
+                        $tag_script_field.val((i, v) => v.replace(/\s*$/, ' '));
+                    }
+                    */
+                }
+
                 Danbooru.notice(`Switched to ${mode} mode.`);
                 Danbooru.PostModeMenu.change();
+
+                e.preventDefault();
             });
         });
     }
