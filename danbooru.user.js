@@ -7,15 +7,13 @@
 // @author       evazion
 // @match        *://*.donmai.us/*
 // @grant        none
-// @updateURL    http://localhost:8000/danbooru.user.js
-// @downloadURL  http://localhost:8000/danbooru.user.js
+// @updateURL    https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
+// @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/16a3e63a7108dc7da34d7d52b4fccd9ada24308c/ui/selectable.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
 // ==/UserScript==
 
-// @updateURL    https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
-// @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
 // @require      https://raw.githubusercontent.com/imgix/drift/master/dist/Drift.js
 // @resource     css https://raw.githubusercontent.com/imgix/drift/master/dist/drift-basic.css
 
