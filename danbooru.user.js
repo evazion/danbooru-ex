@@ -33,7 +33,7 @@ $(function() {
                 display: flex;
                 width: 100%;
                 background: white;
-                z-index: 50;
+                z-index: 100;
             }
 
             #sticky-header h1 {
