@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      129
+// @version      130
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -550,7 +550,9 @@ $(function() {
             const last_page =
                 $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
 
-            last_page && Danbooru.Paginator.goto(last_page);
+            if (last_page) {
+                Danbooru.Paginator.goto(last_page);
+            }
 
             e.preventDefault();
         });
