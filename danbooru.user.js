@@ -441,19 +441,19 @@ $(function() {
     $('#tag-script-field').attr('type', 'text');
     $('input[type=text],textarea').keydown('esc', e => $(e.currentTarget).blur());
 
+    let scroll = (direction, duration, distance) => 
+        _.throttle(() => {
+            const top = $(window).scrollTop() + direction * $(window).height() * distance;
+            $('html, body').animate({scrollTop: top}, duration, "linear");
+        }, duration);
     /*
     Danbooru.Shortcuts.nav_scroll_down =
         () => Danbooru.scroll_to($(window).scrollTop() + $(window).height() * 0.15);
     Danbooru.Shortcuts.nav_scroll_up =
         () => Danbooru.scroll_to($(window).scrollTop() - $(window).height() * 0.15);
     */
-    let scroll = (direction, duration, distance) => 
-        _.throttle(() => {
-            console.log('scroll');
-            const top = $(window).scrollTop() + direction * $(window).height() * distance;
-            $('html, body').animate({scrollTop: top}, duration, "linear");
-        }, duration);
 
+    /* Enable smooth scrolling with W/D keys. */
     Danbooru.Shortcuts.nav_scroll_down = scroll(+1, 50, 0.06);
     Danbooru.Shortcuts.nav_scroll_up   = scroll(-1, 50, 0.06);
 
