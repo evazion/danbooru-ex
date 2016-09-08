@@ -14,6 +14,91 @@
 $(function() {
     'use strict';
 
+    const stylesheet = $(`
+        <style>
+            #sticky-header {
+                position: fixed;
+                display: flex;
+                width: 100%;
+                background: white;
+                z-index: 50;
+            }
+
+            #sticky-header h1 {
+                display: inline-block;
+                font-size: 2.5em;
+                margin: 0 30px;
+                //padding: 42px 0px 0px 0px;
+            }
+
+            #sticky-header #search-box {
+                display: inline-block;
+                margin: auto 30px;
+            }
+
+            #sticky-header #search-box #tags {
+                width: 640px;
+            }
+
+            #sticky-header #mode-box {
+                margin: auto 30px;
+            }
+
+            #sticky-header #mode-box form {
+                display: inline-block;
+            }
+
+            #sticky-header #mode-box form #tag-script-field {
+                margin-top: 0;
+            }
+
+
+            #notice {
+                top: 3.5em;
+            }
+
+            #top {
+                padding-top: 52px;
+            }
+
+            #top h1 {
+                display: none;
+            }
+
+
+
+            .ui-selected {
+                background: lightblue;
+            }
+
+            .ui-selectable {
+                -ms-touch-action: none;
+                touch-action: none;
+            }
+
+            .ui-selectable-helper{
+                position: absolute;
+                z-index: 100;
+                border: 1px dotted black;
+            }
+
+            /*
+            .user-member::before, .user-gold::before,
+            .user-platinum::before, .user-builder::before,
+            .user-janitor::before, .user-moderator::before,
+            .user-admin::before {
+                content: '@';
+                color: grey;
+            }
+            */
+
+            /*
+            .paginator {
+                clear: none !important;
+            }
+            */
+        </style>
+    `).appendTo("head");
     Danbooru.PostModeMenu.show_notice = function (i) {
         var current_script_id = Danbooru.Cookie.get("current_tag_script_id");
         var tag_script = Danbooru.Cookie.get("tag-script-" + current_script_id).trim();
