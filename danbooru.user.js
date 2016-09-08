@@ -1,15 +1,27 @@
 // ==UserScript==
-// @name         Danbooru Power Tools
-// @namespace    https://github.com/evazion/danbooru-power-tools
-// @version      20160902
+// @name         Danbooru EX
+// @namespace    https://github.com/evazion/danbooru-ex
+// @version      99
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
 // @match        *://*.donmai.us/*
 // @grant        none
+// @updateURL    http://localhost:8000/danbooru.user.js
+// @downloadURL  http://localhost:8000/danbooru.user.js
+// @require      https://raw.githubusercontent.com/jquery/jquery-ui/16a3e63a7108dc7da34d7d52b4fccd9ada24308c/ui/selectable.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
+// ==/UserScript==
+
+// @updateURL    https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
+// @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
 // @require      https://raw.githubusercontent.com/imgix/drift/master/dist/Drift.js
 // @resource     css https://raw.githubusercontent.com/imgix/drift/master/dist/drift-basic.css
-// ==/UserScript==
+
+/*
+ * What is a userscript? A miserable pile of hacks.
+ */
 
 $(function() {
     'use strict';
@@ -99,13 +111,131 @@ $(function() {
             */
         </style>
     `).appendTo("head");
+
+    /*
+     * Extensions to Danbooru's JS API.
+     */
+
+    /* Generate the post thumbnail HTML. */
+    Danbooru.Post.preview = function (post) {
+        let preview_class = "post-preview";
+
+        preview_class += post.is_pending           ? " post-status-pending"      : "";
+        preview_class += post.is_flagged           ? " post-status-flagged"      : "";
+        preview_class += post.is_deleted           ? " post-status-deleted"      : "";
+        preview_class += post.parent_id            ? " post-status-has-parent"   : "";
+        preview_class += post.has_visible_children ? " post-status-has-children" : "";
+
+        const data_attributes = `
+            data-id="${post.id}"
+            data-has-sound="${!!post.tag_string.match(/(video_with_sound|flash_with_sound)/)}"
+            data-tags="${_.escape(post.tag_string)}"
+            data-pools="${post.pool_string}"
+            data-uploader="${_.escape(post.uploader_name)}"
+            data-approver-id="${post.approver_id}"
+            data-rating="${post.rating}"
+            data-width="${post.image_width}"
+            data-height="${post.image_height}"
+            data-flags="${post.status_flags}"
+            data-parent-id="${post.parent_id}"
+            data-has-children="${post.has_children}"
+            data-score="${post.score}"
+            data-views="${post.view_count}"
+            data-fav-count="${post.fav_count}"
+            data-pixiv-id="${post.pixiv_id}"
+            data-md5="${post.md5}"
+            data-file-ext="${post.file_ext}"
+            data-file-url="${post.file_url}"
+            data-large-file-url="${post.large_file_url}"
+            data-preview-file-url="${post.preview_file_url}"
+        `;
+
+        const tag_params = "";
+
+        return `
+            <article itemscope itemtype="http://schema.org/ImageObject"
+                     id="post_${post.id}" class="${preview_class}" ${data_attributes}>
+                <a href="/posts/${post.id}${tag_params}">
+                    <img itemprop="thumbnailUrl"
+                         src="${post.preview_file_url}"
+                         alt="${_.escape(post.tag_string)}">
+                </a>
+            </article>
+        `;
+    };
+
+    /* Go to page N. */
+    Danbooru.Paginator.goto = function (n) {
+        if (location.search.match(/page=(\d+)/)) {
+            location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
+        } else {
+            location.search += `&page=${n}`;
+        }
+    };
+
+    /* Apply current mode to all selected posts. */
+    Danbooru.PostModeMenu.apply_mode = function (e) {
+        $(".ui-selected").each(function (i, e) {
+            var s = $("#mode-box select").val();
+            var post_id = $(e).data('id');
+
+            if (s === "add-fav") {
+                Danbooru.Favorite.create(post_id);
+            } else if (s === "remove-fav") {
+                Danbooru.Favorite.destroy(post_id);
+            } else if (s === "edit") {
+                Danbooru.PostModeMenu.open_edit(post_id);
+            } else if (s === 'vote-down') {
+                Danbooru.Post.vote("down", post_id);
+            } else if (s === 'vote-up') {
+                Danbooru.Post.vote("up", post_id);
+            } else if (s === 'rating-q') {
+                Danbooru.Post.update(post_id, {"post[rating]": "q"});
+            } else if (s === 'rating-s') {
+                Danbooru.Post.update(post_id, {"post[rating]": "s"});
+            } else if (s === 'rating-e') {
+                Danbooru.Post.update(post_id, {"post[rating]": "e"});
+            } else if (s === 'lock-rating') {
+                Danbooru.Post.update(post_id, {"post[is_rating_locked]": "1"});
+            } else if (s === 'lock-note') {
+                Danbooru.Post.update(post_id, {"post[is_note_locked]": "1"});
+            } else if (s === 'approve') {
+                Danbooru.Post.approve(post_id);
+            } else if (s === "tag-script") {
+                var current_script_id = Danbooru.Cookie.get("current_tag_script_id");
+                var tag_script = Danbooru.Cookie.get("tag-script-" + current_script_id);
+                Danbooru.TagScript.run(post_id, tag_script);
+            } else {
+                return;
+            }
+        });
+
+        e.preventDefault();
+    };
+
+    /* Toggle post selection between all or none. */
+    Danbooru.PostModeMenu.select_all = function (e) {
+        if ($('.ui-selected').length) {
+            $('.ui-selected').removeClass('ui-selected');
+        } else {
+            $('.post-preview').addClass('ui-selected');
+        }
+
+        e.preventDefault();
+    };
+
+    /*
+     * Monkey patches for Danbooru's JS API.
+     */
+
+    /* Display the new tag script in the popup notice when switching tag scripts. */
     Danbooru.PostModeMenu.show_notice = function (i) {
-        var current_script_id = Danbooru.Cookie.get("current_tag_script_id");
-        var tag_script = Danbooru.Cookie.get("tag-script-" + current_script_id).trim();
+        let current_script_id = Danbooru.Cookie.get("current_tag_script_id");
+        let tag_script = Danbooru.Cookie.get(`tag-script-${current_script_id}`).trim();
         if (tag_script) {
             Danbooru.notice(`Switched to tag script #${i}: <a href="/posts?tags=${encodeURIComponent(tag_script)}">${tag_script}</a>. To switch tag scripts, use the number keys.`);
         } else {
-            Danbooru.notice("Switched to tag script #" + i + ". To switch tag scripts, use the number keys.");
+            Danbooru.notice(`Switched to tag script #${i}. To switch tag scripts, use the number keys.`);
         }
     };
 
@@ -121,27 +251,103 @@ $(function() {
         return old_update_data(data);
     };
 
-    if ($("#c-posts,#c-favorites,#c-pools").length && $("#a-index").length) {
+    /*
+     * Global tweaks.
+     */
+
+    /*
+     * Use relative times everywhere.
+     */
+    const ABS_DATE = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/;
+    const abs_dates = $('time').filter((i, e) => $(e).text().match(ABS_DATE));
+
+    abs_dates.each((i, e) => {
+        const time_ago = moment($(e).attr('datetime')).fromNow();
+        $(e).text(time_ago);
+    });
+
+    /*
+     * Add sticky header.
+     */
+
+    var $sticky = $(`
+        <header id="sticky-header">
+            <h1><a href="/">Danbooru</a></h1>
+            <form id="search-box" action="/posts" accept-charset="UTF-8" method="get">
+                <input name="utf8" type="hidden" value="✓">
+                <input type="text" name="tags" id="tags" size="20" class="ui-autocomplete-input" autocomplete="off">
+                <input type="submit" value="Go">
+            </form>
+            <section id="mode-box">
+                <form action="/">
+                    <select name="mode">
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                        <option value="tag-script">Tag script</option>
+                        <option value="add-fav">Favorite</option>
+                        <option value="remove-fav">Unfavorite</option>
+                        <option value="rating-s">Rate safe</option>
+                        <option value="rating-q">Rate questionable</option>
+                        <option value="rating-e">Rate explicit</option>
+                        <option value="vote-up">Vote up</option>
+                        <option value="vote-down">Vote down</option>
+                        <option value="lock-rating">Lock rating</option>
+                        <option value="lock-note">Lock notes</option>
+                    </select>
+                </form>
+                <input id="tag-script-field" placeholder="Enter tag script" style="display: none; margin-top: 0.5em;">
+                <button type="button">Apply</button>
+            </section>
+        </header>
+    `);
+
+    $('#sticky-header .mode-box button').click(Danbooru.PostModeMenu.apply_mode);
+    $sticky.insertBefore("#top");
+
+    // $("#search-box").remove();
+
+    Danbooru.PostModeMenu.initialize_selector();
+    Danbooru.PostModeMenu.initialize_preview_link();
+    Danbooru.PostModeMenu.initialize_edit_form();
+    Danbooru.PostModeMenu.initialize_tag_script_field();
+    Danbooru.PostModeMenu.initialize_shortcuts();
+    Danbooru.PostModeMenu.change();
+
+    $(document).bind('keydown', 'ctrl+a',  Danbooru.PostModeMenu.select_all);
+    $(document).bind('keydown', 'shift+a', Danbooru.PostModeMenu.apply_mode);
+
+
+
+    /*
+     * /posts, /pools, /favorites, /post_versions index tweaks.
+     */
+
+    if ($("#c-posts,#c-post-versions,#c-favorites,#c-pools").length && $("#a-index").length) {
         // Disable middle-click for tag scripts.
-        $(".post-preview a").off("click").click(function (e) {
+        $("article.post-preview a").off("click").click(function (e) {
             if (e.which == 1) {
                 return Danbooru.PostModeMenu.click(e);
             }
         });
 
-        var keys = {
-            "v":       "view",
-            "t":       "tag-script",
-            "e":       "edit",
-            "f":       "add-fav",
-            "shift+f": "remove-fav",
+        $("body").selectable({
+            filter: "article.post-preview",
+            delay: 300
+        });
 
-            "shift+s": "rating-s",
-            "shift+q": "rating-q",
-            "shift+e": "rating-e",
+        const keys = {
+            "v":     "view",
+            "t":     "tag-script",
+            "e":     "edit",
+            "f":     "add-fav",
+            "alt+f": "remove-fav",
 
-            //"v":       "vote-up",
-            //"shift+v": "vote-down",
+            "alt+s": "rating-s",
+            "alt+q": "rating-q",
+            "alt+e": "rating-e",
+
+            "u":     "vote-up",
+            "alt+u": "vote-down",
         };
 
         $.each(keys, function (key, mode) {
@@ -154,36 +360,154 @@ $(function() {
         });
     }
 
-    if ($("#c-posts").length && $("#a-show").length) {
-        var post_id = Danbooru.meta("post-id");
+    /*
+     * /posts/show tweaks
+     */
 
-        var rate = function (post_id, rating) {
+    if ($("#c-posts").length && $("#a-show").length) {
+        let post_id = Danbooru.meta("post-id");
+
+        let rate = function (post_id, rating) {
             return function (e) {
                 Danbooru.Post.update(post_id, {"post[rating]": rating});
                 e.preventDefault();
             };
         };
 
-        $(document).keydown("ctrl+s", rate(post_id, 's'));
-        $(document).keydown("ctrl+q", rate(post_id, 'q'));
-        $(document).keydown("ctrl+e", rate(post_id, 'e'));
+        $(document).keydown("alt+s", rate(post_id, 's'));
+        $(document).keydown("alt+q", rate(post_id, 'q'));
+        $(document).keydown("alt+e", rate(post_id, 'e'));
 
-        $(document).keydown("x", Danbooru.Post.vote.bind(undefined, 'down', post_id));
-        $(document).keydown("c", Danbooru.Post.vote.bind(undefined, 'up',   post_id));
+        $(document).keydown("u",     e => Danbooru.Post.vote('up',   post_id));
+        $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
     }
+
+    /*
+     * /post_versions tweaks.
+     */
+
+    /* Show thumbnails in post changes listing. */
+    if ($("#c-post-versions").length && $("#a-index").length) {
+        let $post_column = $('tr td:nth-child(1)');
+        let post_ids = $.map($post_column, e => $(e).text().match(/(\d+).\d+/)[1] );
+
+        let post_data = [];
+        let requests = _.chunk(post_ids, 100).map(function (ids) {
+            let search = 'id:' + ids.join(',');
+
+            console.log(`/posts.json?tags=${search}`);
+            return $.get(`/posts.json?tags=${search}`).then(data => {
+                data.forEach((post, i) => post_data[post.id] = post);
+            });
+        });
+
+        console.log('requests', requests);
+        Promise.all(requests).then(_ => {
+            console.log('post_data', post_data);
+            $post_column.each((i, e) => {
+                let post_id = $(e).text().match(/(\d+).\d+/)[1];
+                $(e).html(Danbooru.Post.preview(post_data[post_id]));
+            });
+        });
+    }
+
+    /*
+     * /forum_topics tweaks.
+     */
 
     if ($("#c-forum-topics").length && $("#a-show").length) {
         /* On forum posts, change "Permalink" to "Forum #1234" and place to the left of "Quote". */
         $(".forum-post menu").each(function (i, e) {
-            var forum_id  = $(e).find("li:nth-child(1)");
-            var quote     = $(e).find("li:nth-child(2)");
-            var permalink = $(e).find("li:last-child");
+            let $forum_id  = $(e).find("li:nth-child(1)");
+            let $quote     = $(e).find("li:nth-child(2)");
+            let $permalink = $(e).find("li:last-child");
 
-            permalink.find("a").text(`Forum #${forum_id.text().match(/\d+/)}`);
-            forum_id.remove();
+            $permalink.insertBefore($quote);
+            $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
+            $permalink.after($("<li>").text("|"));
 
-            permalink.insertBefore(quote);
-            $("<li>").text("|").insertAfter(permalink);
+            $forum_id.remove();
+        });
+    }
+
+    /*
+     * Global keybindings.
+     */
+
+    /* Escape: Close notice popups. */
+    $(document).keydown('esc', e => $('#close-notice-link').click());
+
+    /* Escape: Unfocus text entry field. */
+    $('#tag-script-field').attr('type', 'text');
+    $('input[type=text],textarea').keydown('esc', e => $(e.currentTarget).blur());
+
+    /*
+    Danbooru.Shortcuts.nav_scroll_down =
+        () => Danbooru.scroll_to($(window).scrollTop() + $(window).height() * 0.15);
+    Danbooru.Shortcuts.nav_scroll_up =
+        () => Danbooru.scroll_to($(window).scrollTop() - $(window).height() * 0.15);
+    */
+    let scroll = (direction, duration, distance) => 
+        _.throttle(() => {
+            console.log('scroll');
+            const top = $(window).scrollTop() + direction * $(window).height() * distance;
+            $('html, body').animate({scrollTop: top}, duration, "linear");
+        }, duration);
+
+    Danbooru.Shortcuts.nav_scroll_down = scroll(+1, 50, 0.06);
+    Danbooru.Shortcuts.nav_scroll_up   = scroll(-1, 50, 0.06);
+
+    /* Q: Focus search box. */
+    /* XXX: Doesn't override site keybinding. */
+    /*
+    $(document).keydown("keydown", "q", e => {
+        let $input = $("#tags, #search_name, #search_name_matches, #query").first();
+        console.log($input);
+
+        // Add a space to end if box is non-empty and doesn't already have trailing space.
+        $input.val().length && $input.val((i, v) => v.replace(/\s*$/, ' '));
+        $input.first().trigger("focus").selectEnd();
+
+        e.preventDefault();
+    });
+    */
+
+    /* Shift+Q: Focus and select all in search box. */
+    $(document).keydown('shift+q', e => {
+        let $input = $("#tags, #search_name, #search_name_matches, #query").first();
+
+        // Add a space to end if  box is non-empty and doesn't already have trailing space.
+        $input.val().length && $input.val((i, v) => v.replace(/\s*$/, ' '));
+        $input.focus().selectRange(0, $input.val().length);
+
+        e.preventDefault();
+    });
+
+    /*
+     * Global paginator tweaks.
+     */
+
+    if ($(".paginator").length) {
+        // Add paginator above results.
+        // $('.paginator').clone().insertBefore('#post-sections');
+
+        /* Shift+1..9: Jump to page N. */
+        [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(n =>
+            $(document).keydown(`shift+${n}`, e => {
+                Danbooru.Paginator.goto(n);
+                e.preventDefault();
+            })
+        );
+
+        /* Shift+0: Switch to last page if there is one. */
+        $(document).keydown(`shift+0`, e => {
+            // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
+            const last_page =
+                $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
+
+            last_page && Danbooru.Paginator.goto(last_page);
+
+            e.preventDefault();
         });
     }
 });
