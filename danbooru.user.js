@@ -66,7 +66,7 @@ $(function() {
 
 
             #notice {
-                top: 3.5em;
+                top: 4.5em !important;
             }
 
             #top {
