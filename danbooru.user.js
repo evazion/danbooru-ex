@@ -299,10 +299,10 @@ $(function() {
                 <button type="button">Apply</button>
             </section>
         </header>
-    `);
+    `).insertBefore("#top");
 
-    $('#sticky-header .mode-box button').click(Danbooru.PostModeMenu.apply_mode);
-    $sticky.insertBefore("#top");
+    // Initalize sticky header search box.
+    $("#sticky-header #tags").val($("#sidebar #tags").val());
 
     // $("#search-box").remove();
 
