@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      130
+// @version      167
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -77,6 +77,21 @@ $(function() {
 
 
 
+            #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3, 
+            #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
+                //display: flex;
+                //align-items: center;
+                padding-top: 52px;
+                margin-top: -52px;
+            }
+
+            #wiki-page-body a.ui-icon.collapsible-header {
+                display: inline-block;
+                margin-left: -8px;
+            }
+
+
+
             .ui-selected {
                 background: lightblue;
             }
@@ -86,7 +101,7 @@ $(function() {
                 touch-action: none;
             }
 
-            .ui-selectable-helper{
+            .ui-selectable-helper {
                 position: absolute;
                 z-index: 100;
                 border: 1px dotted black;
@@ -113,6 +128,27 @@ $(function() {
     /*
      * Extensions to Danbooru's JS API.
      */
+
+    Danbooru.Dtext.create_expandable = function (name, content) {
+        const $expandable = $(`
+            <div class="expandable">
+                <div class="expandable-header">
+                    <span>${_.escape(name)}</span>
+                    <input type="button" value="Show" class="expandable-button">
+                </div>
+                <div class="expandable-content" style="display: none">
+                    ${content}
+                </div>
+            </div>
+        `);
+
+        $expandable.find('.expandable-button').click(e => {
+            $(e.target).closest('.expandable').find('.expandable-content').fadeToggle('fast');
+            $(e.target).val((_, val) => val === 'Show' ? 'Hide' : 'Show');
+        });
+
+        return $expandable;
+    };
 
     /* Generate the post thumbnail HTML. */
     Danbooru.Post.preview = function (post) {
@@ -248,6 +284,14 @@ $(function() {
         $("#post-information > ul > li:nth-child(6)").text(`Rating: ${rating}`);
         return old_update_data(data);
     };
+
+    /* Disable middle-click for on clicking related tag. */
+    const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
+    Danbooru.RelatedTag.toggle_tag = function (e) {
+        if (e.which === 1) {
+            return old_toggle_tag(e);
+        }
+    }
 
     const old_postmodemenu_change = Danbooru.PostModeMenu.change;
     Danbooru.PostModeMenu.change = function () {
@@ -447,11 +491,11 @@ $(function() {
             const post_id    = $(e).data('post-id');
             const comment_id = $(e).data('comment-id');
 
-            $(e).find('menu').prepend($(`
+            $(e).find('menu').append($(`
+                <li> | </li>
                 <li>
                     <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
                 </li>
-                <li> | </li>
             `));
         });
     }
@@ -461,18 +505,70 @@ $(function() {
      */
 
     if ($("#c-forum-topics").length && $("#a-show").length) {
-        /* On forum posts, change "Permalink" to "Forum #1234" and place to the left of "Quote". */
+        /* On forum posts, change "Permalink" to "Forum #1234". */
         $(".forum-post menu").each(function (i, e) {
             let $forum_id  = $(e).find("li:nth-child(1)");
             let $quote     = $(e).find("li:nth-child(2)");
             let $permalink = $(e).find("li:last-child");
 
-            $permalink.insertBefore($quote);
             $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
-            $permalink.after($("<li>").text("|"));
+            $permalink.before($("<li>").text("|"));
 
             $forum_id.remove();
         });
+    }
+
+    /*
+     * /wiki_pages tweaks.
+     */
+
+    if ($("#c-wiki-pages").length) {
+        const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+
+        console.log($headings);
+        if ($headings.length >= 3) {
+            /* Add collapse/expand button to headings. */
+            $headings.prepend(
+                $('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>')
+            ).click(e => {
+                const $button = $(e.target);
+
+                $button.toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+                $button.parent('h1').nextUntil('h1').slideToggle();
+                $button.parent('h2').nextUntil('h1, h2').slideToggle();
+                $button.parent('h3').nextUntil('h1, h2, h3').slideToggle();
+                $button.parent('h4').nextUntil('h1, h2, h3, h4').slideToggle();
+                $button.parent('h5').nextUntil('h1, h2, h3, h4, h5').slideToggle();
+                $button.parent('h6').nextUntil('h1, h2, h3, h4, h5, h6').slideToggle();
+            });
+
+            /* Add Table of Contents expandable and link entries to headings. */
+            const $toc = Danbooru.Dtext.create_expandable('Table of Contents', '<ul></ul>').prependTo('#wiki-page-body');
+            console.log($toc);
+
+            var $ul;
+            let $menu = $toc.find('ul');
+            let level = $headings.length > 0 ? parseInt($headings.first().get(0).tagName[1]) : undefined;
+
+            $headings.each((i, e) => {
+                const header = $(e).text();
+                const anchor = 'dtext-' + header.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/, '');
+
+                const next_level = parseInt(e.tagName[1]);
+                if (next_level > level) {
+                    $ul = $('<ul></ul>');
+                    $menu.append($ul);
+                    $menu = $ul;
+                } else if (next_level < level) {
+                    $menu = $menu.parent();
+                }
+
+                $(e).attr('id', anchor);
+                $menu.append($(`<li><a href="#${anchor}">${header}</a></li>`));
+
+                level = next_level;
+            });
+        }
     }
 
     /*
