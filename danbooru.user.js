@@ -483,11 +483,11 @@ $(function() {
             const post_id    = $(e).data('post-id');
             const comment_id = $(e).data('comment-id');
 
-            $(e).find('menu').prepend($(`
+            $(e).find('menu').append($(`
+                <li> | </li>
                 <li>
                     <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
                 </li>
-                <li> | </li>
             `));
         });
     }
@@ -497,15 +497,14 @@ $(function() {
      */
 
     if ($("#c-forum-topics").length && $("#a-show").length) {
-        /* On forum posts, change "Permalink" to "Forum #1234" and place to the left of "Quote". */
+        /* On forum posts, change "Permalink" to "Forum #1234". */
         $(".forum-post menu").each(function (i, e) {
             let $forum_id  = $(e).find("li:nth-child(1)");
             let $quote     = $(e).find("li:nth-child(2)");
             let $permalink = $(e).find("li:last-child");
 
-            $permalink.insertBefore($quote);
             $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
-            $permalink.after($("<li>").text("|"));
+            $permalink.before($("<li>").text("|"));
 
             $forum_id.remove();
         });
