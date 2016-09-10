@@ -285,6 +285,14 @@ $(function() {
         return old_update_data(data);
     };
 
+    /* Disable middle-click for on clicking related tag. */
+    const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
+    Danbooru.RelatedTag.toggle_tag = function (e) {
+        if (e.which === 1) {
+            return old_toggle_tag(e);
+        }
+    }
+
     const old_postmodemenu_change = Danbooru.PostModeMenu.change;
     Danbooru.PostModeMenu.change = function () {
         const mode = $("#mode-box select").val();
