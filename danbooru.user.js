@@ -101,7 +101,7 @@ $(function() {
                 touch-action: none;
             }
 
-            .ui-selectable-helper{
+            .ui-selectable-helper {
                 position: absolute;
                 z-index: 100;
                 border: 1px dotted black;
