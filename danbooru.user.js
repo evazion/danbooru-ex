@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      167
+// @version      193
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -9,7 +9,8 @@
 // @grant        none
 // @updateURL    https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
-// @require      https://raw.githubusercontent.com/jquery/jquery-ui/16a3e63a7108dc7da34d7d52b4fccd9ada24308c/ui/selectable.js
+// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
+// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
 // ==/UserScript==
@@ -105,6 +106,19 @@ $(function() {
                 position: absolute;
                 z-index: 100;
                 border: 1px dotted black;
+            }
+
+            .ui-tooltip {
+                padding:   8px;
+                position:  absolute;
+                z-index:   9999;
+                max-width: 300px;
+                -webkit-box-shadow: 0 0 5px #aaa;
+                box-shadow: 0 0 5px #aaa;
+            }
+
+            body .ui-tooltip {
+                border-width: 2px;
             }
 
             /*
@@ -329,6 +343,27 @@ $(function() {
     abs_dates.each((i, e) => {
         const time_ago = moment($(e).attr('datetime')).fromNow();
         $(e).text(time_ago);
+    });
+
+    /*
+     * Show thumbnails on hovering over post #1234 links.
+     */
+
+    /* Mark 'post #1234' links. */
+    $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text())).addClass('dtext-post');
+
+    /* Enable tooltips for post #1234 links. Fetch thumbnail URL on tooltip open. */
+    $(document).tooltip({
+        items: '.dtext-post',
+        // content: '<img src="http://danbooru.donmai.us/data/d68a1f25d17ca14afc14ef2335b61d2a.gif"></img>',
+        content: ' ',
+        open: (e, ui) => {
+            const id = $(e.toElement).attr('href').match(/\/posts\/(\d+)/)[1];
+
+            $.get(`/posts/${id}.json`).then(post => {
+                $(ui.tooltip).html(`<img src=${post.preview_file_url}></img>`);
+            });
+        }
     });
 
     /*
