@@ -77,6 +77,21 @@ $(function() {
 
 
 
+            #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3, 
+            #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
+                //display: flex;
+                //align-items: center;
+                padding-top: 52px;
+                margin-top: -52px;
+            }
+
+            #wiki-page-body a.ui-icon.collapsible-header {
+                display: inline-block;
+                margin-left: -8px;
+            }
+
+
+
             .ui-selected {
                 background: lightblue;
             }
@@ -113,6 +128,27 @@ $(function() {
     /*
      * Extensions to Danbooru's JS API.
      */
+
+    Danbooru.Dtext.create_expandable = function (name, content) {
+        const $expandable = $(`
+            <div class="expandable">
+                <div class="expandable-header">
+                    <span>${_.escape(name)}</span>
+                    <input type="button" value="Show" class="expandable-button">
+                </div>
+                <div class="expandable-content" style="display: none">
+                    ${content}
+                </div>
+            </div>
+        `);
+
+        $expandable.find('.expandable-button').click(e => {
+            $(e.target).closest('.expandable').find('.expandable-content').fadeToggle('fast');
+            $(e.target).val((_, val) => val === 'Show' ? 'Hide' : 'Show');
+        });
+
+        return $expandable;
+    };
 
     /* Generate the post thumbnail HTML. */
     Danbooru.Post.preview = function (post) {
@@ -473,6 +509,59 @@ $(function() {
 
             $forum_id.remove();
         });
+    }
+
+    /*
+     * /wiki_pages tweaks.
+     */
+
+    if ($("#c-wiki-pages").length) {
+        const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+
+        console.log($headings);
+        if ($headings.length >= 3) {
+            /* Add collapse/expand button to headings. */
+            $headings.prepend(
+                $('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>')
+            ).click(e => {
+                const $button = $(e.target);
+
+                $button.toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+                $button.parent('h1').nextUntil('h1').slideToggle();
+                $button.parent('h2').nextUntil('h1, h2').slideToggle();
+                $button.parent('h3').nextUntil('h1, h2, h3').slideToggle();
+                $button.parent('h4').nextUntil('h1, h2, h3, h4').slideToggle();
+                $button.parent('h5').nextUntil('h1, h2, h3, h4, h5').slideToggle();
+                $button.parent('h6').nextUntil('h1, h2, h3, h4, h5, h6').slideToggle();
+            });
+
+            /* Add Table of Contents expandable and link entries to headings. */
+            const $toc = Danbooru.Dtext.create_expandable('Table of Contents', '<ul></ul>').prependTo('#wiki-page-body');
+            console.log($toc);
+
+            var $ul;
+            let $menu = $toc.find('ul');
+            let level = $headings.length > 0 ? parseInt($headings.first().get(0).tagName[1]) : undefined;
+
+            $headings.each((i, e) => {
+                const header = $(e).text();
+                const anchor = 'dtext-' + header.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/, '');
+
+                const next_level = parseInt(e.tagName[1]);
+                if (next_level > level) {
+                    $ul = $('<ul></ul>');
+                    $menu.append($ul);
+                    $menu = $ul;
+                } else if (next_level < level) {
+                    $menu = $menu.parent();
+                }
+
+                $(e).attr('id', anchor);
+                $menu.append($(`<li><a href="#${anchor}">${header}</a></li>`));
+
+                level = next_level;
+            });
+        }
     }
 
     /*
