@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      201
+// @version      203
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -563,11 +563,15 @@ $(function() {
 
     if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
         $('.comment').each((i, e) => {
-            const post_id    = $(e).data('post-id');
+            const $menu = $(e).find('menu');
+            const post_id = $(e).data('post-id');
             const comment_id = $(e).data('comment-id');
 
-            $(e).find('menu').append($(`
-                <li> | </li>
+            if ($menu.children().length > 0) {
+                $menu.append($('<li> | </li>'));
+            }
+
+            $menu.append($(`
                 <li>
                     <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
                 </li>
