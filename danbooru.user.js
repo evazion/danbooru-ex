@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      193
+// @version      201
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -15,11 +15,35 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
 // ==/UserScript==
 
+// @updateURL    http://127.0.0.1:8000/danbooru.user.js
+// @downloadURL  http://127.0.0.1:8000/danbooru.user.js
+// @updateURL    https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
+// @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/danbooru.user.js
+
 // @require      https://raw.githubusercontent.com/imgix/drift/master/dist/Drift.js
 // @resource     css https://raw.githubusercontent.com/imgix/drift/master/dist/drift-basic.css
 
 /*
  * What is a userscript? A miserable pile of hacks.
+ */
+
+/*
+ * Known issues:
+ * - Colorized tags in spoiler tags aren't styled right.
+ * - The flicker as things are added to the page is annoying, especially for
+ *   the search bar.
+ * - Links to nonexistent tags don't get colorized or get tooltips. This
+ *   includes empty aliased tags.
+ * - Tags on posts and comments don't get tooltips.
+ * - Tags in DText previews aren't colorized and don't get tooltips.
+ * - Autocomplete in the search bar doesn't work.
+ * - The header collapse buttons in the wiki might be annoying.
+ * - Collapsing a higher level heading uncollapses lower level headings if
+ *   they're already collapsed.
+ * - This code sucks.
+ * -- ES6 constructs may not be compatible with all browsers?
+ * -- Should probably be broken up into multiple files.
+ * -- The CSS styles should be external.
  */
 
 $(function() {
@@ -164,7 +188,7 @@ $(function() {
         return $expandable;
     };
 
-    /* Generate the post thumbnail HTML. */
+    // Generate the post thumbnail HTML.
     Danbooru.Post.preview = function (post) {
         let preview_class = "post-preview";
 
@@ -212,7 +236,7 @@ $(function() {
         `;
     };
 
-    /* Go to page N. */
+    // Go to page N.
     Danbooru.Paginator.goto = function (n) {
         if (location.search.match(/page=(\d+)/)) {
             location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
@@ -221,7 +245,7 @@ $(function() {
         }
     };
 
-    /* Apply current mode to all selected posts. */
+    // Apply current mode to all selected posts.
     Danbooru.PostModeMenu.apply_mode = function (e) {
         $(".ui-selected").each(function (i, e) {
             var s = $("#mode-box select").val();
@@ -261,7 +285,7 @@ $(function() {
         e.preventDefault();
     };
 
-    /* Toggle post selection between all or none. */
+    // Toggle post selection between all or none.
     Danbooru.PostModeMenu.select_all = function (e) {
         if ($('.ui-selected').length) {
             $('.ui-selected').removeClass('ui-selected');
@@ -276,7 +300,7 @@ $(function() {
      * Monkey patches for Danbooru's JS API.
      */
 
-    /* Display the new tag script in the popup notice when switching tag scripts. */
+    // Display the new tag script in the popup notice when switching tag scripts.
     Danbooru.PostModeMenu.show_notice = function (i) {
         let current_script_id = Danbooru.Cookie.get("current_tag_script_id");
         let tag_script = Danbooru.Cookie.get(`tag-script-${current_script_id}`).trim();
@@ -287,7 +311,7 @@ $(function() {
         }
     };
 
-    /* Update Rating in sidebar when it changes. */
+    // Update Rating in sidebar when it changes.
     var old_update_data = Danbooru.Post.update_data;
     Danbooru.Post.update_data = function(data) {
         var rating = data.rating === 's' ? "Safe"
@@ -299,28 +323,28 @@ $(function() {
         return old_update_data(data);
     };
 
-    /* Disable middle-click for on clicking related tag. */
+    // Prevent middle-click from adding tag when clicking on related tags (open
+    // a new tab instead).
     const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
     Danbooru.RelatedTag.toggle_tag = function (e) {
         if (e.which === 1) {
             return old_toggle_tag(e);
         }
-    }
+    };
 
     const old_postmodemenu_change = Danbooru.PostModeMenu.change;
     Danbooru.PostModeMenu.change = function () {
         const mode = $("#mode-box select").val();
 
         if (mode !== "view") {
-            /* Disable middle-click for tag scripts. */
+            // Disable middle-click for tag scripts.
             $("article.post-preview a").off("click").click(function (e) {
-                console.log(e);
                 if (e.which == 1) {
                     return Danbooru.PostModeMenu.click(e);
                 }
             });
 
-            /* Enable selectable thumbnails. */
+            // Enable selectable thumbnails.
             $("#page").selectable({
                 filter: "article.post-preview",
                 delay: 300
@@ -332,11 +356,24 @@ $(function() {
 
     /*
      * Global tweaks.
+     * - Use relative times everywhere.
+     * - Show thumbnails when hovering over post #1234 links.
+     * - Add search bar to site header.
+     * - Add mode menu to site header.
+     * - Add mode menu hotkeys:
+     * -- V: Switch to view mode (the default).
+     * -- T: Switch to tag script mode.
+     * -- E: Switch to edit mode.
+     * -- U: Switch to vote up mode.
+     * -- Alt+U: Switch to vote down mode.
+     * -- F: Switch to add favorite mode.
+     * -- Alt+F: Switch to remove favorite mode.
+     * -- Alt+S: Switch to rate safe mode.
+     * -- Alt+Q: Switch to rate questionable mode.
+     * -- Alt+E: Switch to rate explicit mode.
      */
 
-    /*
-     * Use relative times everywhere.
-     */
+    // Use relative times everywhere.
     const ABS_DATE = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/;
     const abs_dates = $('time').filter((i, e) => $(e).text().match(ABS_DATE));
 
@@ -349,10 +386,12 @@ $(function() {
      * Show thumbnails on hovering over post #1234 links.
      */
 
-    /* Mark 'post #1234' links. */
-    $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text())).addClass('dtext-post');
+    // Add a class to 'post #1234' links so $(document).tooltip() can find them.
+    $('a[href^="/posts/"]')
+        .filter((i, e) => /post #\d+/.test($(e).text()))
+        .addClass('dtext-post');
 
-    /* Enable tooltips for post #1234 links. Fetch thumbnail URL on tooltip open. */
+    // Enable tooltips for post #1234 links. Fetch thumbnail URL on tooltip open.
     $(document).tooltip({
         items: '.dtext-post',
         // content: '<img src="http://danbooru.donmai.us/data/d68a1f25d17ca14afc14ef2335b61d2a.gif"></img>',
@@ -404,8 +443,6 @@ $(function() {
     // Initalize sticky header search box.
     $("#sticky-header #tags").val($("#sidebar #tags").val());
 
-    // $("#search-box").remove();
-
     /*
      * Use the mode menu everywhere *but* on /posts/show (so as to not
      * interfere with existing keyboard shortcuts on that page).
@@ -445,7 +482,6 @@ $(function() {
 
                 if (mode === "tag-script") {
                     let $tag_script_field = $("#tag-script-field").first();
-                    console.log($tag_script_field);
 
                     /* Focus and select all in tag script entry box. */
                     if (prev_mode === "tag-script") {
@@ -468,7 +504,11 @@ $(function() {
     }
 
     /*
-     * /posts/show tweaks
+     * /posts/1234:
+     * - Alt+S: Rate Safe.
+     * - Alt+Q: Rate Questionable.
+     * - Alt+E: Rate Explicit.
+     * - U / Alt+U: Vote up / vote down.
      */
 
     if ($("#c-posts").length && $("#a-show").length) {
@@ -490,7 +530,8 @@ $(function() {
     }
 
     /*
-     * /post_versions tweaks.
+     * /post_versions:
+     * - Show thumbnails instead of post IDs.
      */
 
     /* Show thumbnails in post changes listing. */
@@ -502,15 +543,12 @@ $(function() {
         let requests = _.chunk(post_ids, 100).map(function (ids) {
             let search = 'id:' + ids.join(',');
 
-            console.log(`/posts.json?tags=${search}`);
             return $.get(`/posts.json?tags=${search}`).then(data => {
                 data.forEach((post, i) => post_data[post.id] = post);
             });
         });
 
-        console.log('requests', requests);
         Promise.all(requests).then(_ => {
-            console.log('post_data', post_data);
             $post_column.each((i, e) => {
                 let post_id = $(e).text().match(/(\d+).\d+/)[1];
                 $(e).html(Danbooru.Post.preview(post_data[post_id]));
@@ -519,8 +557,10 @@ $(function() {
     }
 
     /*
-     * Add 'comment #1234' permalink to comments on posts and in comment index.
+     * Comments:
+     * - Add 'comment #1234' permalink.
      */
+
     if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
         $('.comment').each((i, e) => {
             const post_id    = $(e).data('post-id');
@@ -536,7 +576,8 @@ $(function() {
     }
 
     /*
-     * /forum_topics tweaks.
+     * /forum_topics:
+     * - Change 'Permalink' to 'Forum #1234'.
      */
 
     if ($("#c-forum-topics").length && $("#a-show").length) {
@@ -554,20 +595,22 @@ $(function() {
     }
 
     /*
-     * /wiki_pages tweaks.
+     * /wiki_pages:
+     * - Make headings collapsible.
+     * - Add a table of contents to long wiki pages.
      */
 
     if ($("#c-wiki-pages").length) {
         const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
 
-        console.log($headings);
         if ($headings.length >= 3) {
-            /* Add collapse/expand button to headings. */
+            // Add collapse/expand button to headings.
             $headings.prepend(
                 $('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>')
             ).click(e => {
                 const $button = $(e.target);
 
+                // Collapse everything up to the next heading at the same level.
                 $button.toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
                 $button.parent('h1').nextUntil('h1').slideToggle();
                 $button.parent('h2').nextUntil('h1, h2').slideToggle();
@@ -577,29 +620,40 @@ $(function() {
                 $button.parent('h6').nextUntil('h1, h2, h3, h4, h5, h6').slideToggle();
             });
 
-            /* Add Table of Contents expandable and link entries to headings. */
+            // Add Table of Contents expandable.
             const $toc = Danbooru.Dtext.create_expandable('Table of Contents', '<ul></ul>').prependTo('#wiki-page-body');
-            console.log($toc);
 
-            var $ul;
+            /* 
+             * Build ToC. Create a nested heirarchy matching the hierarchy of
+             * headings on the page; an h5 following an h4 opens a new submenu,
+             * another h4 closes the submenu. Likewise for h5, h6, etc.
+             */
+
+            let $submenu = null;
             let $menu = $toc.find('ul');
-            let level = $headings.length > 0 ? parseInt($headings.first().get(0).tagName[1]) : undefined;
+            let level = $headings.length > 0
+                      ? parseInt($headings.first().get(0).tagName[1])
+                      : undefined;
 
             $headings.each((i, e) => {
                 const header = $(e).text();
-                const anchor = 'dtext-' + header.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/, '');
+                const anchor = 'dtext-' + header.toLowerCase()
+                                                .replace(/[^a-z]+/g, '-')
+                                                .replace(/^-|-$/, '');
 
                 const next_level = parseInt(e.tagName[1]);
                 if (next_level > level) {
-                    $ul = $('<ul></ul>');
-                    $menu.append($ul);
-                    $menu = $ul;
+                    $submenu = $('<ul></ul>');
+                    $menu.append($submenu);
+                    $menu = $submenu;
                 } else if (next_level < level) {
                     $menu = $menu.parent();
                 }
 
                 $(e).attr('id', anchor);
-                $menu.append($(`<li><a href="#${anchor}">${header}</a></li>`));
+                $menu.append($(
+                    `<li><a href="#${anchor}">${header}</a></li>`
+                ));
 
                 level = next_level;
             });
@@ -608,12 +662,16 @@ $(function() {
 
     /*
      * Global keybindings.
+     * - Escape: Close notice popups.
+     * - W: Smooth scroll up.
+     * - S: Smooth scroll down.
+     * - Shift+Q: Focus top search bar.
      */
 
-    /* Escape: Close notice popups. */
+    // Escape: Close notice popups.
     $(document).keydown('esc', e => $('#close-notice-link').click());
 
-    /* Escape: Unfocus text entry field. */
+    // Escape: Unfocus text entry field.
     $('#tag-script-field').attr('type', 'text');
     $('input[type=text],textarea').keydown('esc', e => $(e.currentTarget).blur());
 
@@ -629,7 +687,7 @@ $(function() {
         () => Danbooru.scroll_to($(window).scrollTop() - $(window).height() * 0.15);
     */
 
-    /* Enable smooth scrolling with W/D keys. */
+    // Enable smooth scrolling with W/S keys.
     Danbooru.Shortcuts.nav_scroll_down = scroll(+1, 50, 0.06);
     Danbooru.Shortcuts.nav_scroll_up   = scroll(-1, 50, 0.06);
 
@@ -648,7 +706,7 @@ $(function() {
     });
     */
 
-    /* Shift+Q: Focus and select all in search box. */
+    // Shift+Q: Focus and select all in search box.
     $(document).keydown('shift+q', e => {
         let $input = $("#tags, #search_name, #search_name_matches, #query").first();
 
@@ -661,6 +719,8 @@ $(function() {
 
     /*
      * Global paginator tweaks.
+     * - Shift+1..9: Jump to page N.
+     * - Shift+0: Jump to last page.
      */
 
     if ($(".paginator").length) {
@@ -675,7 +735,7 @@ $(function() {
             })
         );
 
-        /* Shift+0: Switch to last page if there is one. */
+        // Shift+0: Switch to last page if there is one.
         $(document).keydown(`shift+0`, e => {
             // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
             const last_page =
