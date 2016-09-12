@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      203
+// @version      204
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -617,14 +617,15 @@ $(function() {
             ).click(e => {
                 const $button = $(e.target);
 
-                // Collapse everything up to the next heading at the same level.
+                // Collapse everything up to the next heading at the same
+                // level, or up to the alias/implication list at the bottom of the page.
                 $button.toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
-                $button.parent('h1').nextUntil('h1').slideToggle();
-                $button.parent('h2').nextUntil('h1, h2').slideToggle();
-                $button.parent('h3').nextUntil('h1, h2, h3').slideToggle();
-                $button.parent('h4').nextUntil('h1, h2, h3, h4').slideToggle();
-                $button.parent('h5').nextUntil('h1, h2, h3, h4, h5').slideToggle();
-                $button.parent('h6').nextUntil('h1, h2, h3, h4, h5, h6').slideToggle();
+                $button.parent('h1').nextUntil('p.hint, h1').slideToggle();
+                $button.parent('h2').nextUntil('p.hint, h1, h2').slideToggle();
+                $button.parent('h3').nextUntil('p.hint, h1, h2, h3').slideToggle();
+                $button.parent('h4').nextUntil('p.hint, h1, h2, h3, h4').slideToggle();
+                $button.parent('h5').nextUntil('p.hint, h1, h2, h3, h4, h5').slideToggle();
+                $button.parent('h6').nextUntil('p.hint, h1, h2, h3, h4, h5, h6').slideToggle();
             });
 
             // Add Table of Contents expandable.
