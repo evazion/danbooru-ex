@@ -592,9 +592,12 @@ $(function() {
             let $permalink = $(e).find("li:last-child");
 
             $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
-            $permalink.before($("<li>").text("|"));
-
             $forum_id.remove();
+
+            // Add separator only if there's something to separate.
+            if ($(e).children().length > 1) {
+                $permalink.before($("<li>").text("|"));
+            }
         });
     }
 
