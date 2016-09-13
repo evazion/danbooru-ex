@@ -363,7 +363,7 @@ $(function() {
                     const tag_title =
                         `${TAG_CATEGORIES[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
-                    $(`a[href^="/wiki_pages/show_or_new?title=${tag_name}"]`)
+                    $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`)
                         .addClass(`tag-type-${tag.category}`)
                         .attr('title', tag_title);
                 });
