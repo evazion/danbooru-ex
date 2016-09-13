@@ -345,7 +345,7 @@ $(function() {
         tag_batches.forEach(tag_batch => {
             const tag_query = encodeURIComponent(tag_batch.join(','));
 
-            $.getJSON(`/tags.json?search[name]=${tag_query}&limit=1000`).then(tags => {
+            $.getJSON(`/tags.json?search[hide_empty]=no&search[name]=${tag_query}&limit=1000`).then(tags => {
                 _.each(tags, tag => {
                     // Encode some extra things manually because Danbooru
                     // encodes these things in URLs but encodeURIComponent doesn't.
