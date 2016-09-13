@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      204
+// @version      257
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -297,6 +297,71 @@ $(function() {
     };
 
     /*
+     * Color code tags linking to wiki pages. Also add a tooltip showing the
+     * tag creation date and post count.
+     */
+    Danbooru.WikiPage.initialize_wiki_links = function () {
+        const $wiki_links = $(`a[href^="/wiki_pages/show_or_new?title="]`);
+
+        const tag_names = $wiki_links.map((i, e) =>
+            decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1])
+        ).toArray();
+
+        // Collect tags in batches, with each batch having a max count of 1000
+        // tags or a max combined size of 6500 bytes for all tags. This is
+        // necessary because these are the API limits for the /tags.json call.
+        //
+        // FIXME: Technically, tag.length counts UTF-16 codepoints here when we
+        // should be counting bytes.
+        //
+        // Ref: http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
+        const [tag_batches,,] = tag_names.reduce(
+            ([tags, tag_size, tag_count], tag) => {
+                tag_size += tag.length;
+                tag_count++;
+
+                if (tag_count > 1000 || tag_size > 6500) {
+                    tags.unshift([tag]);
+                    tag_count = 0;
+                    tag_size = 0
+                } else {
+                    tags[0].push(tag);
+                }
+
+                return [tags, tag_size, tag_count];
+            },
+            [ [[]], 0, 0 ] /* tags = [[]], tag_size = 0, tag_count = 0 */
+        );
+
+        // Fetch tag data for each batch of tags, then categorize them and add tooltips.
+        tag_batches.forEach(tag_batch => {
+            const tag_query = encodeURIComponent(tag_batch.join(','));
+
+            $.getJSON(`/tags.json?search[name]=${tag_query}&limit=1000`).then(tags => {
+                _.each(tags, tag => {
+                    // Encode "'", "(", and ")" manually because Danbooru encodes
+                    // these things in URLs but encodeURIComponent doesn't.
+                    const tag_name =
+                        encodeURIComponent(tag.name)
+                        .replace(/'/g,  '%27')
+                        .replace(/\(/g, '%28')
+                        .replace(/\)/g, '%29');
+
+                    const tag_created_at =
+                        moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
+
+                    const tag_title =
+                        `tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+
+                    $(`a[href^="/wiki_pages/show_or_new?title=${tag_name}"]`)
+                        .addClass(`tag-type-${tag.category}`)
+                        .attr('title', tag_title);
+                });
+            });
+        });
+    };
+
+    /*
      * Monkey patches for Danbooru's JS API.
      */
 
@@ -358,6 +423,7 @@ $(function() {
      * Global tweaks.
      * - Use relative times everywhere.
      * - Show thumbnails when hovering over post #1234 links.
+     * - Color code tags everywhere.
      * - Add search bar to site header.
      * - Add mode menu to site header.
      * - Add mode menu hotkeys:
@@ -404,6 +470,12 @@ $(function() {
             });
         }
     });
+
+    /*
+     * Color code all tags linking to the wiki.
+     */
+
+    Danbooru.WikiPage.initialize_wiki_links();
 
     /*
      * Add sticky header.
