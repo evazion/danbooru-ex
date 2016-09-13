@@ -347,13 +347,15 @@ $(function() {
 
             $.getJSON(`/tags.json?search[name]=${tag_query}&limit=1000`).then(tags => {
                 _.each(tags, tag => {
-                    // Encode "'", "(", and ")" manually because Danbooru encodes
-                    // these things in URLs but encodeURIComponent doesn't.
+                    // Encode some extra things manually because Danbooru
+                    // encodes these things in URLs but encodeURIComponent doesn't.
                     const tag_name =
                         encodeURIComponent(tag.name)
+                        .replace(/!/g,  '%21')
                         .replace(/'/g,  '%27')
                         .replace(/\(/g, '%28')
-                        .replace(/\)/g, '%29');
+                        .replace(/\)/g, '%29')
+                        .replace(/~/g,  '%7E');
 
                     const tag_created_at =
                         moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
