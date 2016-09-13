@@ -363,7 +363,7 @@ $(function() {
      * - Add mode menu hotkeys:
      * -- V: Switch to view mode (the default).
      * -- T: Switch to tag script mode.
-     * -- E: Switch to edit mode.
+     * -- Shift+E: Switch to edit mode.
      * -- U: Switch to vote up mode.
      * -- Alt+U: Switch to vote down mode.
      * -- F: Switch to add favorite mode.
@@ -463,9 +463,9 @@ $(function() {
         const keys = {
             "v":     "view",
             "t":     "tag-script",
-            "e":     "edit",
             "f":     "add-fav",
             "alt+f": "remove-fav",
+            "shift+e": "edit",
 
             "alt+s": "rating-s",
             "alt+q": "rating-q",
