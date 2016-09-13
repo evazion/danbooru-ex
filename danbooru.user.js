@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      265
+// @version      274
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -60,7 +60,19 @@ $(function() {
     const stylesheet = $(`
         <style>
             /* Ensure colorized tags are still hidden. */
-            .spoiler a {
+            .spoiler:hover a.tag-type-1 {
+                color: #A00;
+            }
+
+            .spoiler:hover a.tag-type-3 {
+                color: #A0A;
+            }
+
+            .spoiler:hover a.tag-type-4 {
+                color: #0A0;
+            }
+
+            .spoiler:not(:hover) a {
                 color: black !important;
             }
 
