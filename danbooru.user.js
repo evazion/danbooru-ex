@@ -81,6 +81,7 @@ $(function() {
                 width: 100%;
                 background: white;
                 z-index: 100;
+                border-bottom: 1px solid #EEE;
             }
 
             #sticky-header h1 {
