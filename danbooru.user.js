@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      294
+// @version      296
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -29,7 +29,6 @@
 
 /*
  * Known issues:
- * - Colorized tags in spoiler tags aren't styled right.
  * - The flicker as things are added to the page is annoying, especially for
  *   the search bar.
  * - Links to nonexistent tags don't get colorized or get tooltips. This
@@ -388,9 +387,40 @@ $(function() {
         });
     };
 
+    // Add comment #1234 links to all comments in $parent.
+    Danbooru.Comment.initialize_metadata = function ($parent) {
+        $parent = $parent || $(document);
+
+        $parent.find('.comment').each((i, e) => {
+            const $menu = $(e).find('menu');
+            const post_id = $(e).data('post-id');
+            const comment_id = $(e).data('comment-id');
+
+            if ($menu.children().length > 0) {
+                $menu.append($('<li> | </li>'));
+            }
+
+            $menu.append($(`
+                <li>
+                    <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
+                </li>
+            `));
+        });
+    };
+
     /*
      * Monkey patches for Danbooru's JS API.
      */
+
+    // HACK: "Show all comments" replaces the comment list's HTML then
+    // initializes all the reply/edit/vote links. We hook into that
+    // initialization here so we can add in our own metadata at the same time.
+    Danbooru.Comment.initialize_vote_links = function ($parent) {
+        $parent = $parent || $(document);
+        $parent.find(".unvote-comment-link").hide();
+
+        Danbooru.Comment.initialize_metadata($parent);
+    }
 
     // Display the new tag script in the popup notice when switching tag scripts.
     Danbooru.PostModeMenu.show_notice = function (i) {
@@ -662,21 +692,7 @@ $(function() {
      */
 
     if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
-        $('.comment').each((i, e) => {
-            const $menu = $(e).find('menu');
-            const post_id = $(e).data('post-id');
-            const comment_id = $(e).data('comment-id');
-
-            if ($menu.children().length > 0) {
-                $menu.append($('<li> | </li>'));
-            }
-
-            $menu.append($(`
-                <li>
-                    <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
-                </li>
-            `));
-        });
+        Danbooru.Comment.initialize_metadata();
     }
 
     /*
