@@ -126,7 +126,7 @@ $(function() {
 
 
 
-            #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3, 
+            #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
             #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
                 //display: flex;
                 //align-items: center;
@@ -347,7 +347,7 @@ $(function() {
                 if (tag_count > 1000 || tag_size > 6500) {
                     tags.unshift([tag]);
                     tag_count = 0;
-                    tag_size = 0
+                    tag_size = 0;
                 } else {
                     tags[0].push(tag);
                 }
@@ -451,7 +451,7 @@ $(function() {
         $parent.find(".unvote-comment-link").hide();
 
         Danbooru.Comment.initialize_metadata($parent);
-    }
+    };
 
     // Display the new tag script in the popup notice when switching tag scripts.
     Danbooru.PostModeMenu.show_notice = function (i) {
@@ -493,7 +493,7 @@ $(function() {
             // Only apply tag script on left click, not middle click and not
             // ctrl+left click.
             $("article.post-preview a").off("click").click(function (e) {
-                if (e.which == 1 && e.ctrlKey == false) {
+                if (e.which == 1 && e.ctrlKey === false) {
                     return Danbooru.PostModeMenu.click(e);
                 }
             });
