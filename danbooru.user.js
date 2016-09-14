@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      313
+// @version      318
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -725,6 +725,27 @@ $(function() {
 
     if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
         Danbooru.Comment.initialize_metadata();
+    }
+
+    /* 
+     * /comments:
+     * - Sort tags by type, and put artist tags first.
+     */
+    if ($("#c-comments").length && $("#a-index").length) {
+        $(".comments-for-post").each((i, comment) => {
+            const $tags =
+                $(comment)
+                .find(".category-0, .category-1, .category-3, .category-4")
+                .detach();
+
+            // Sort tags by category, but put general tags (category 0) at the end.
+            const $sorted = _.sortBy($tags, t =>
+                $(t).attr('class').replace(/category-0/, 'category-5')
+            );
+
+            $(comment).find('.list-of-tags').append($sorted);
+        });
+
     }
 
     /*
