@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      292
+// @version      294
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -429,9 +429,10 @@ $(function() {
         const mode = $("#mode-box select").val();
 
         if (mode !== "view") {
-            // Disable middle-click for tag scripts.
+            // Only apply tag script on left click, not middle click and not
+            // ctrl+left click.
             $("article.post-preview a").off("click").click(function (e) {
-                if (e.which == 1) {
+                if (e.which == 1 && e.ctrlKey == false) {
                     return Danbooru.PostModeMenu.click(e);
                 }
             });
