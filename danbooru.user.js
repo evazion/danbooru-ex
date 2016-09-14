@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      274
+// @version      292
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -698,6 +698,32 @@ $(function() {
                 $permalink.before($("<li>").text("|"));
             }
         });
+    }
+
+    /*
+     * /pools/1234 & /artists/1234
+     * - Add hotkey:
+     * -- E: edit pool.
+     */
+
+    function open_edit_page (controller) {
+        // FIXME: Get the ID from the 'Show' link. This is brittle.
+        const $show_link =
+            $('#nav > menu:nth-child(2) a')
+            .filter((i, e) => $(e).text().match(/^Show$/));
+
+        const id =
+            $show_link.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
+
+        window.location.href = `/${controller}/${id}/edit`;
+    }
+
+    if ($("#c-pools").length && $("#a-show").length) {
+        $(document).keydown("e", e => open_edit_page('pools'));
+    }
+
+    if ($("#c-artists").length && $("#a-show").length) {
+        $(document).keydown("e", e => open_edit_page('artists'));
     }
 
     /*
