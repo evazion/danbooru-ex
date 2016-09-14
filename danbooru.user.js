@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      296
+// @version      313
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -387,23 +387,54 @@ $(function() {
         });
     };
 
-    // Add comment #1234 links to all comments in $parent.
+    // Add scores and comment #1234 links to all comments in $parent.
     Danbooru.Comment.initialize_metadata = function ($parent) {
         $parent = $parent || $(document);
 
         $parent.find('.comment').each((i, e) => {
             const $menu = $(e).find('menu');
+
             const post_id = $(e).data('post-id');
             const comment_id = $(e).data('comment-id');
+            const comment_score = $(e).data('score');
+
+            const $upvote_link = $menu.find(`#comment-vote-up-link-for-${comment_id}`);
+            const $downvote_link = $menu.find(`#comment-vote-down-link-for-${comment_id}`);
 
             if ($menu.children().length > 0) {
                 $menu.append($('<li> | </li>'));
             }
 
+            /*
+            const $score_container = $('<li></li>');
+
+            $score_container.append($(`
+                <span class="info">
+                    <strong>Score</strong>
+                    <span>${comment_score}</span>
+                </span>
+            `));
+
+            $score_container.append(document.createTextNode('(vote '));
+            $upvote_link.find('a').appendTo($score_container).text('up');
+            $score_container.append(document.createTextNode('/'));
+            $downvote_link.find('a').appendTo($score_container).text('down');
+            $score_container.append(document.createTextNode(')'));
+
+            $menu.append($score_container);
+            */
+
             $menu.append($(`
                 <li>
                     <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
                 </li>
+            `));
+
+            $menu.append($(`
+                <span class="info">
+                    <strong>Score</strong>
+                    <span>${comment_score}</span>
+                </span>
             `));
         });
     };
@@ -689,6 +720,7 @@ $(function() {
     /*
      * Comments:
      * - Add 'comment #1234' permalink.
+     * - Add comment scores.
      */
 
     if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
