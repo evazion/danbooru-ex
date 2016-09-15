@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      318
+// @version      332
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -187,6 +187,28 @@ $(function() {
             */
         </style>
     `).appendTo("head");
+
+    /*
+     * DanbooruEX functions.
+     */
+
+    let DanbooruEX = {};
+
+    DanbooruEX.toHumanSize = function (bytes) {
+        const units = ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+
+        if (Math.abs(bytes) < 1024) {
+            return bytes + ' B';
+        }
+
+        let u = -1;
+        do {
+            bytes /= 1024;
+            ++u;
+        } while (Math.abs(bytes) >= 1024 && u < units.length - 1);
+
+        return bytes.toFixed(1) + ' ' + units[u];
+    };
 
     /*
      * Extensions to Danbooru's JS API.
@@ -555,7 +577,7 @@ $(function() {
         open: (e, ui) => {
             const id = $(e.toElement).attr('href').match(/\/posts\/(\d+)/)[1];
 
-            $.get(`/posts/${id}.json`).then(post => {
+            $.getJSON(`/posts/${id}.json`).then(post => {
                 $(ui.tooltip).html(`<img src=${post.preview_file_url}></img>`);
             });
         }
@@ -732,21 +754,62 @@ $(function() {
      * /comments:
      * - Sort tags by type, and put artist tags first.
      */
+
     if ($("#c-comments").length && $("#a-index").length) {
-        $(".comments-for-post").each((i, comment) => {
-            const $tags =
-                $(comment)
-                .find(".category-0, .category-1, .category-3, .category-4")
-                .detach();
+        const post_ids =
+            $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
-            // Sort tags by category, but put general tags (category 0) at the end.
-            const $sorted = _.sortBy($tags, t =>
-                $(t).attr('class').replace(/category-0/, 'category-5')
-            );
+        $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {
+            $(".comments-for-post").each((i, comment) => {
+                const post_id = $(comment).parent().data('id');
+                const post = _.find(posts, { id: post_id });
 
-            $(comment).find('.list-of-tags').append($sorted);
+                const $row = $(`<div class="row"></div>`);
+                $row.append($(`
+                    <span class="info">
+                        <strong>Post</strong>
+                        <a href="/posts/${post.id}">#${post.id}</a>
+                    </span>
+                `));
+                $row.append($(`
+                    <span class="info">
+                        <strong>Size</strong>
+                        <a href="${post.large_file_url}">${DanbooruEX.toHumanSize(post.file_size)}</a>
+                        (${post.image_width}x${post.image_height})
+                    </span>
+                `));
+
+                $row.append($(`
+                    <span class="info">
+                        <strong>Favorites</strong>
+                        ${post.fav_count} (<a href="">Fav</a>)
+                    </span>
+                `));
+
+                /*
+                $row.append($(`
+                    <span class="info">
+                        <strong>Source</strong>
+                        <a href="${_.escape(post.source)}">${_.escape(post.source)}</a>
+                    </span>
+                `));
+                */
+
+                $(comment).find('.header').prepend($row);
+
+                const $tags =
+                    $(comment)
+                    .find(".category-0, .category-1, .category-3, .category-4")
+                    .detach();
+
+                // Sort tags by category, but put general tags (category 0) at the end.
+                const $sorted = _.sortBy($tags, t =>
+                    $(t).attr('class').replace(/category-0/, 'category-5')
+                );
+
+                $(comment).find('.list-of-tags').append($sorted);
+            });
         });
-
     }
 
     /*
