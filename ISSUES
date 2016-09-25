@@ -26,6 +26,7 @@
 * /post_versions shouldn't display thumbnails when viewing the history of a single post.
 
 * @mentions and user #1234 links aren't colorized or given data attributes.
+* Colorizing user links can't handle more than 1000 usernames being on one page.
 
 * This code is shit and needs to be rewritten.
 ** Break it up into classes in multiple files.

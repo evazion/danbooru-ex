@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      352
+// @version      353
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -560,7 +560,7 @@ $(function() {
         .sortedUniq()
         .join(',');
 
-    $.getJSON(`/users.json?search[id]=${user_ids}`).then(users => {
+    $.getJSON(`/users.json?limit=1000&search[id]=${user_ids}`).then(users => {
         for (const user of users) {
             let $user = $(`a.with-style[href^="/users/${user.id}"]`);
 
