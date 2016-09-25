@@ -58,6 +58,14 @@ $(function() {
 
     const stylesheet = $(`
         <style>
+            a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
+                text-decoration: underline;
+            }
+
+            a.with-style[data-is-banned="true"] {
+                color: black;
+                text-decoration: underline;
+            }
             /* Ensure colorized tags are still hidden. */
             .spoiler:hover a.tag-type-1 {
                 color: #A00;
@@ -533,6 +541,7 @@ $(function() {
 
     /*
      * Global tweaks.
+     * - Style banned users and approvers.
      * - Use relative times everywhere.
      * - Show thumbnails when hovering over post #1234 links.
      * - Color code tags everywhere.
@@ -550,6 +559,27 @@ $(function() {
      * -- Alt+Q: Switch to rate questionable mode.
      * -- Alt+E: Switch to rate explicit mode.
      */
+
+    // Add data attributes to usernames so that banned users and approvers can be styled.
+    const user_ids =
+        _($('a.with-style[href^="/users"]'))
+        .map(e => $(e).attr('href').replace("/users/", ""))
+        .map(Number)
+        .sortBy()
+        .sortedUniq()
+        .join(',');
+
+    $.getJSON(`/users.json?search[id]=${user_ids}`).then(users => {
+        for (const user of users) {
+            let $user = $(`a.with-style[href^="/users/${user.id}"]`);
+
+            // $user.addClass(`user-${user.level_string.toLowerCase()}`);
+
+            _(user).forOwn((value, key) =>
+                $user.attr(`data-${_(key).kebabCase()}`, value)
+            );
+        }
+    });
 
     // Use relative times everywhere.
     const ABS_DATE = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/;
