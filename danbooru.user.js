@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      353
+// @version      354
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -808,7 +808,7 @@ $(function() {
                 $row.append($(`
                     <span class="info">
                         <strong>Size</strong>
-                        <a href="${post.large_file_url}">${DanbooruEX.toHumanSize(post.file_size)}</a>
+                        <a href="${post.file_url}">${DanbooruEX.toHumanSize(post.file_size)}</a>
                         (${post.image_width}x${post.image_height})
                     </span>
                 `));
