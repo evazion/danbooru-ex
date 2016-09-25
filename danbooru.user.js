@@ -27,24 +27,6 @@
  * What is a userscript? A miserable pile of hacks.
  */
 
-/*
- * Known issues:
- * - The flicker as things are added to the page is annoying, especially for
- *   the search bar.
- * - Links to nonexistent tags don't get colorized or get tooltips. This
- *   includes empty aliased tags.
- * - Tags on posts and comments don't get tooltips.
- * - Tags in DText previews aren't colorized and don't get tooltips.
- * - Autocomplete in the search bar doesn't work.
- * - The header collapse buttons in the wiki might be annoying.
- * - Collapsing a higher level heading uncollapses lower level headings if
- *   they're already collapsed.
- * - This code sucks.
- * -- ES6 constructs may not be compatible with all browsers?
- * -- Should probably be broken up into multiple files.
- * -- The CSS styles should be external.
- */
-
 $(function() {
     'use strict';
 
