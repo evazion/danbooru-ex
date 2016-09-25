@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      332
+// @version      334
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -696,6 +696,11 @@ $(function() {
      */
 
     if ($("#c-posts").length && $("#a-show").length) {
+        let $artist_h2 = $('#tag-list h2').filter((i, e) => $(e).text().match(/Artist/));
+        let $artist_tags = $artist_h2.next('ul');
+
+        $("#tag-list").prepend($artist_tags).prepend($artist_h2);
+
         let post_id = Danbooru.meta("post-id");
 
         let rate = function (post_id, rating) {
