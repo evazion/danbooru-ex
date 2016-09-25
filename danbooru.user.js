@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      334
+// @version      351
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -66,6 +66,15 @@ $(function() {
                 color: black;
                 text-decoration: underline;
             }
+
+            .tag-list-header h1, .tag-list-header h2 {
+                display: inline-block;
+            }
+
+            .tag-list-header .post-count {
+                margin-left: 0.5em;
+            }
+            
             /* Ensure colorized tags are still hidden. */
             .spoiler:hover a.tag-type-1 {
                 color: #A00;
@@ -726,10 +735,18 @@ $(function() {
      */
 
     if ($("#c-posts").length && $("#a-show").length) {
+        // Move artist tags to the top of the tag list.
         let $artist_h2 = $('#tag-list h2').filter((i, e) => $(e).text().match(/Artist/));
         let $artist_tags = $artist_h2.next('ul');
 
         $("#tag-list").prepend($artist_tags).prepend($artist_h2);
+
+        // Add tag counts to the artist/copyright/characters headers.
+        $("#tag-list h1, #tag-list h2").wrap('<span class="tag-list-header">');
+        $('#tag-list .tag-list-header').each((i, e) => {
+            const tag_count = $(e).next('ul').children().size();
+            $(e).append(`<span class="post-count">${tag_count}</span>`);
+        });
 
         let post_id = Danbooru.meta("post-id");
 
