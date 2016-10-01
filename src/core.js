@@ -2,14 +2,8 @@ jQuery(function() {
     'use strict';
 
     require('./danbooru-ex.css');
-
-    const TAG_CATEGORIES = [
-        "General",    // 0
-        "Artist",     // 1
-        undefined,    // 2 (unused)
-        "Copyright",  // 3
-        "Character"   // 4
-    ];
+    const EX = require("./ex.js");
+    window.EX = EX;
 
     /*
      * DanbooruEX functions.
@@ -223,7 +217,7 @@ jQuery(function() {
                         moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
                     const tag_title =
-                        `${TAG_CATEGORIES[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+                        `${EX.Tag.categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
                     $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`)
                         .addClass(`tag-type-${tag.category}`)
