@@ -2,30 +2,9 @@ jQuery(function() {
     'use strict';
 
     require('./danbooru-ex.css');
+    const filesize = require("filesize");
     const EX = require("./ex.js");
     window.EX = EX;
-
-    /*
-     * DanbooruEX functions.
-     */
-
-    let DanbooruEX = {};
-
-    DanbooruEX.toHumanSize = function (bytes) {
-        const units = ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
-
-        if (Math.abs(bytes) < 1024) {
-            return bytes + ' B';
-        }
-
-        let u = -1;
-        do {
-            bytes /= 1024;
-            ++u;
-        } while (Math.abs(bytes) >= 1024 && u < units.length - 1);
-
-        return bytes.toFixed(1) + ' ' + units[u];
-    };
 
     /*
      * Extensions to Danbooru's JS API.
@@ -626,7 +605,7 @@ jQuery(function() {
                 $row.append($(`
                     <span class="info">
                         <strong>Size</strong>
-                        <a href="${post.file_url}">${DanbooruEX.toHumanSize(post.file_size)}</a>
+                        <a href="${post.file_url}">${filesize(post.file_size, { round: 0 })}</a>
                         (${post.image_width}x${post.image_height})
                     </span>
                 `));
