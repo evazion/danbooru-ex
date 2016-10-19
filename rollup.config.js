@@ -11,9 +11,15 @@ export default {
     dest: 'dist/danbooru-ex.user.js',
     format: 'iife',
     globals: {
-        jquery: 'jQuery'
+        lodash: '_',
+        jquery: 'jQuery',
+        moment: 'moment',
     },
-    external: [ 'jquery' ],
+    external: [
+        'jquery',
+        'lodash',
+        'moment',
+    ],
     plugins: [
         postcss({
             extensions: [ '.css' ],
