@@ -1,10 +1,14 @@
 .ONESHELL:
-.PHONY: all serve watch clean
+.PHONY: all bump serve watch clean
 
 all: dist/danbooru-ex.user.js
-dist/danbooru-ex.user.js: $(shell find src)
+dist/danbooru-ex.user.js: $(shell find src) | bump
 	mkdir -p dist
 	rollup -c
+
+bump:
+	V=$$(awk '/\/\/ @version      [[:digit:]]+/ { print $$3 + 1 }' src/header.js)
+	sed -i -r -e "s!(// @version      )[[:digit:]]+!\\1$$V!g" src/header.js
 
 serve:
 	cd dist
