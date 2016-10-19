@@ -1,5 +1,5 @@
-class EX {}
+import Tag from "./ex/tag.js";
 
-EX.Tag = require("./ex/tag.js");
+export default class EX {}
 
-module.exports = EX;
+EX.Tag = Tag;

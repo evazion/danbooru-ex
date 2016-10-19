@@ -1,10 +1,10 @@
+import filesize from "filesize";
+
+import "./danbooru-ex.css";
+import EX from "./ex.js";
+
 jQuery(function() {
     'use strict';
-
-    require('./danbooru-ex.css');
-    const filesize = require("filesize");
-    const EX = require("./ex.js");
-    window.EX = EX;
 
     /*
      * Extensions to Danbooru's JS API.

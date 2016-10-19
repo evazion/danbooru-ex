@@ -1,4 +1,4 @@
-class Tag {}
+export default class Tag {}
 
 Tag.categories = [
     "General",    // 0
@@ -7,5 +7,3 @@ Tag.categories = [
     "Copyright",  // 3
     "Character"   // 4
 ];
-
-module.exports = Tag;
