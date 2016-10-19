@@ -1,7 +1,7 @@
 .ONESHELL:
 .PHONY: all bump serve watch clean
 
-all: dist/danbooru-ex.user.js
+all: dist/danbooru-ex.user.js rollup.config.js
 dist/danbooru-ex.user.js: $(shell find src) | bump
 	mkdir -p dist
 	rollup -c
