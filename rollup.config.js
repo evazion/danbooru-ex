@@ -7,7 +7,7 @@ import postcss from 'rollup-plugin-postcss';
 export default {
     moduleName: 'danbooruEX',
     banner: fs.readFileSync("src/header.js"),
-    entry: 'src/core.js',
+    entry: 'src/ex.js',
     dest: 'dist/danbooru-ex.user.js',
     format: 'iife',
     globals: {
