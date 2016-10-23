@@ -8,6 +8,8 @@ export default class ModeMenu {
       return;
     }
 
+    ModeMenu.initialize_patches();
+
     Danbooru.PostModeMenu.initialize_selector();
     Danbooru.PostModeMenu.initialize_preview_link();
     Danbooru.PostModeMenu.initialize_edit_form();
@@ -62,6 +64,42 @@ export default class ModeMenu {
         Danbooru.PostModeMenu.change();
       });
     });
+  }
+
+  static initialize_patches() {
+    // Display the new tag script in the popup notice when switching tag scripts.
+    Danbooru.PostModeMenu.show_notice = function (i) {
+      let current_script_id = Danbooru.Cookie.get("current_tag_script_id");
+      let tag_script = Danbooru.Cookie.get(`tag-script-${current_script_id}`).trim();
+      if (tag_script) {
+        Danbooru.notice(`Switched to tag script #${i}: <a href="/posts?tags=${encodeURIComponent(tag_script)}">${tag_script}</a>. To switch tag scripts, use the number keys.`);
+      } else {
+        Danbooru.notice(`Switched to tag script #${i}. To switch tag scripts, use the number keys.`);
+      }
+    };
+
+    const old_postmodemenu_change = Danbooru.PostModeMenu.change;
+    Danbooru.PostModeMenu.change = function () {
+      const mode = $("#mode-box select").val();
+
+      if (mode !== "view") {
+        // Only apply tag script on left click, not middle click and not
+        // ctrl+left click.
+        $("article.post-preview a").off("click").click(function (e) {
+          if (e.which == 1 && e.ctrlKey === false) {
+            return Danbooru.PostModeMenu.click(e);
+          }
+        });
+
+        // Enable selectable thumbnails.
+        $("#page").selectable({
+          filter: "article.post-preview",
+          delay: 300
+        });
+      }
+
+      return old_postmodemenu_change();
+    };
   }
 
   // Apply current mode to all selected posts.

@@ -1,6 +1,20 @@
 import filesize from "filesize";
 
-export default class Comment {
+export default class Comments {
+  static initialize() {
+    // HACK: "Show all comments" replaces the comment list's HTML then
+    // initializes all the reply/edit/vote links. We hook into that
+    // initialization here so we can add in our own metadata at the same time.
+    Danbooru.Comment.initialize_vote_links = function ($parent) {
+        $parent = $parent || $(document);
+        $parent.find(".unvote-comment-link").hide();
+
+        Comments.initialize_metadata($parent);
+    };
+
+    Comments.initialize_metadata();
+  }
+
   /*
    * Add 'comment #1234' permalink.
    * Add comment scores.

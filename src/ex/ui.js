@@ -9,6 +9,27 @@ import WikiPages    from "./ui/wiki_pages.js";
 import Tag from "./tag.js";
 
 export default class UI {
+  static initialize() {
+    UI.initialize_patches();
+    UI.initialize_post_thumbnails();
+    UI.initialize_user_links();
+    UI.initialize_wiki_links();
+
+    UI.initialize_header();
+    UI.initialize_relative_times();
+    UI.initialize_hotkeys();
+  }
+
+  // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
+  static initialize_patches() {
+    const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
+    Danbooru.RelatedTag.toggle_tag = function (e) {
+      if (e.which === 1) {
+        return old_toggle_tag(e);
+      }
+    };
+  }
+
   /*
    * Add sticky header.
    */

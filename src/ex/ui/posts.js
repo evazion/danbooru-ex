@@ -1,4 +1,28 @@
+import _ from "lodash";
+
 export default class Posts {
+  static initialize() {
+    Posts.initialize_patches();
+    Posts.initialize_artist_tags();
+    Posts.initialize_tag_type_counts();
+    Posts.initialize_hotkeys();
+  }
+
+  // Update Rating in sidebar when it changes.
+  static initialize_patches() {
+    function patched_update_data(update_data, data) {
+      const rating = data.rating === 's' ? "Safe"
+                    : data.rating === 'q' ? "Questionable"
+                    : data.rating === 'e' ? "Explicit"
+                    : "Unknown";
+
+      $("#post-information > ul > li:nth-child(6)").text(`Rating: ${rating}`);
+      return update_data(data);
+    }
+
+    Danbooru.Post.update_data = _.wrap(Danbooru.Post.update_data, patched_update_data);
+  }
+
   // Move artist tags to the top of the tag list.
   static initialize_artist_tags() {
     let $artist_h2 = $('#tag-list h2').filter((i, e) => $(e).text().match(/Artist/));

@@ -13,71 +13,6 @@ jQuery(function() {
      * Monkey patches for Danbooru's JS API.
      */
 
-    // HACK: "Show all comments" replaces the comment list's HTML then
-    // initializes all the reply/edit/vote links. We hook into that
-    // initialization here so we can add in our own metadata at the same time.
-    Danbooru.Comment.initialize_vote_links = function ($parent) {
-        $parent = $parent || $(document);
-        $parent.find(".unvote-comment-link").hide();
-
-        Danbooru.Comment.initialize_metadata($parent);
-    };
-
-    // Display the new tag script in the popup notice when switching tag scripts.
-    Danbooru.PostModeMenu.show_notice = function (i) {
-        let current_script_id = Danbooru.Cookie.get("current_tag_script_id");
-        let tag_script = Danbooru.Cookie.get(`tag-script-${current_script_id}`).trim();
-        if (tag_script) {
-            Danbooru.notice(`Switched to tag script #${i}: <a href="/posts?tags=${encodeURIComponent(tag_script)}">${tag_script}</a>. To switch tag scripts, use the number keys.`);
-        } else {
-            Danbooru.notice(`Switched to tag script #${i}. To switch tag scripts, use the number keys.`);
-        }
-    };
-
-    // Update Rating in sidebar when it changes.
-    var old_update_data = Danbooru.Post.update_data;
-    Danbooru.Post.update_data = function(data) {
-        var rating = data.rating === 's' ? "Safe"
-                   : data.rating === 'q' ? "Questionable"
-                   : data.rating === 'e' ? "Explicit"
-                   : "Unknown";
-
-        $("#post-information > ul > li:nth-child(6)").text(`Rating: ${rating}`);
-        return old_update_data(data);
-    };
-
-    // Prevent middle-click from adding tag when clicking on related tags (open
-    // a new tab instead).
-    const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
-    Danbooru.RelatedTag.toggle_tag = function (e) {
-        if (e.which === 1) {
-            return old_toggle_tag(e);
-        }
-    };
-
-    const old_postmodemenu_change = Danbooru.PostModeMenu.change;
-    Danbooru.PostModeMenu.change = function () {
-        const mode = $("#mode-box select").val();
-
-        if (mode !== "view") {
-            // Only apply tag script on left click, not middle click and not
-            // ctrl+left click.
-            $("article.post-preview a").off("click").click(function (e) {
-                if (e.which == 1 && e.ctrlKey === false) {
-                    return Danbooru.PostModeMenu.click(e);
-                }
-            });
-
-            // Enable selectable thumbnails.
-            $("#page").selectable({
-                filter: "article.post-preview",
-                delay: 300
-            });
-        }
-
-        return old_postmodemenu_change();
-    };
-
     /*
      * Global tweaks.
      * - Style banned users and approvers.
@@ -99,19 +34,11 @@ jQuery(function() {
      * -- Alt+E: Switch to rate explicit mode.
      */
 
-    EX.UI.initialize_post_thumbnails();
-    EX.UI.initialize_user_links();
-    EX.UI.initialize_wiki_links();
-
-    EX.UI.initialize_header();
-    EX.UI.initialize_relative_times();
-
+    EX.UI.initialize();
     EX.UI.ModeMenu.initialize();
 
-    if ($("#c-posts").length && $("#a-show").length) {
-      EX.UI.Posts.initialize_artist_tags();
-      EX.UI.Posts.initialize_tag_type_count();
-      EX.UI.Posts.initialize_hotkeys();
+    if ($("#c-posts #a-show").length) {
+      EX.UI.Posts.initialize();
     }
 
     // Show thumbnails in post changes listing.
@@ -119,11 +46,11 @@ jQuery(function() {
       EX.UI.PostVersions.initialize_thumbnails();
     }
 
-    if ($("#c-comments").length || ($("#c-posts").length && $("#a-show").length)) {
-      EX.UI.Comments.initialize_metadata();
+    if ($("#c-comments").length || ($("#c-posts #a-show").length)) {
+      EX.UI.Comments.initialize();
     }
 
-    if ($("#c-comments").length && $("#a-index").length) {
+    if ($("#c-comments #a-index").length) {
       EX.UI.Comments.initialize_tag_list();
     }
 
@@ -159,6 +86,4 @@ jQuery(function() {
       EX.UI.WikiPages.initialize_collapsible_headings();
       EX.UI.WikiPages.initialize_table_of_contents();
     }
-
-    EX.UI.initialize_hotkeys();
 });
