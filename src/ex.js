@@ -2,9 +2,9 @@ import _ from "lodash";
 import jQuery from "jquery";
 import moment from "moment";
 
-import DText from "./ex/dtext.js";
-import Tag   from "./ex/tag.js";
-import UI    from "./ex/ui.js";
+import DText from "./dtext.js";
+import Tag   from "./tag.js";
+import UI    from "./ui.js";
 import "./danbooru-ex.css";
 
 export default class EX {}
