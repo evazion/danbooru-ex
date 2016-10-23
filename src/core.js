@@ -57,27 +57,9 @@ jQuery(function() {
     EX.UI.ForumPosts.initialize_permalinks();
 
     // /pools/1234 & /artists/1234
-    // - Add hotkey:
-    // -- E: edit pool.
-    function open_edit_page (controller) {
-        // FIXME: Get the ID from the 'Show' link. This is brittle.
-        const $show_link =
-            $('#nav > menu:nth-child(2) a')
-            .filter((i, e) => $(e).text().match(/^Show$/));
-
-        const id =
-            $show_link.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
-
-        window.location.href = `/${controller}/${id}/edit`;
-    }
-
-    if ($("#c-pools").length && $("#a-show").length) {
-        $(document).keydown("e", e => open_edit_page('pools'));
-    }
-
-    if ($("#c-artists").length && $("#a-show").length) {
-        $(document).keydown("e", e => open_edit_page('artists'));
-    }
+    // - E: edit pool.
+    EX.UI.Pools.initialize();
+    EX.UI.Artists.initialize();
 
     // /wiki_pages:
     // - Make headings collapsible.

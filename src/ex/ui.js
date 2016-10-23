@@ -1,6 +1,8 @@
+import Artists      from "./ui/artists.js";
 import Comments     from "./ui/comments.js";
 import ForumPosts   from "./ui/forum_posts.js";;
 import ModeMenu     from "./ui/mode_menu.js";
+import Pools        from "./ui/pools.js";
 import Posts        from "./ui/posts.js";
 import PostVersions from "./ui/post_versions.js";
 import Users        from "./ui/users.js";
@@ -290,6 +292,17 @@ export default class UI {
     });
   }
 
+  static openEditPage(controller) {
+    // FIXME: Get the ID from the 'Show' link. This is brittle.
+    const $show_link =
+      $('#nav > menu:nth-child(2) a')
+      .filter((i, e) => $(e).text().match(/^Show$/));
+
+    const id = $show_link.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
+
+    window.location.href = `/${controller}/${id}/edit`;
+  }
+
   // Go to page N.
   static gotoPage(n) {
     if (location.search.match(/page=(\d+)/)) {
@@ -300,9 +313,11 @@ export default class UI {
   }
 }
 
+UI.Artists = Artists;
 UI.Comments = Comments;
 UI.ForumPosts = ForumPosts;
 UI.ModeMenu = ModeMenu;
+UI.Pools = Pools;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;
 UI.Users = Users;
