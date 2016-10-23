@@ -1,11 +1,15 @@
 export default class ForumPosts {
-  // On forum posts, change "Permalink" to "Forum #1234". */
-  static initialize_permalinks() {
+  static initialize() {
     if ($("#c-forum-topics #a-show").length === 0) {
       return false;
     }
 
-    $(".forum-post menu").each(function (i, e) {
+    ForumPosts.initialize_permalinks();
+  }
+
+  // On forum posts, change "Permalink" to "Forum #1234". */
+  static initialize_permalinks() {
+    $(".forum-post menu").each((i, e) => {
       let $forum_id  = $(e).find("li:nth-child(1)");
       let $quote     = $(e).find("li:nth-child(2)");
       let $permalink = $(e).find("li:last-child");

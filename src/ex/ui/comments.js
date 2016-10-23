@@ -2,17 +2,25 @@ import filesize from "filesize";
 
 export default class Comments {
   static initialize() {
+    if ($("#c-comments").length === 0 && $("#c-posts #a-show").length === 0) {
+      return;
+    }
+
+    Comments.initialize_patches();
+    Comments.initialize_metadata();
+    Comments.initialize_tag_list();
+  }
+
+  static initialize_patches() {
     // HACK: "Show all comments" replaces the comment list's HTML then
     // initializes all the reply/edit/vote links. We hook into that
     // initialization here so we can add in our own metadata at the same time.
     Danbooru.Comment.initialize_vote_links = function ($parent) {
-        $parent = $parent || $(document);
-        $parent.find(".unvote-comment-link").hide();
+      $parent = $parent || $(document);
+      $parent.find(".unvote-comment-link").hide();
 
-        Comments.initialize_metadata($parent);
+      Comments.initialize_metadata($parent);
     };
-
-    Comments.initialize_metadata();
   }
 
   /*
@@ -72,6 +80,10 @@ export default class Comments {
 
   // Sort tags by type, and put artist tags first.
   static initialize_tag_list() {
+    if ($("#c-comments #a-index").length === 0) {
+      return;
+    }
+
     const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
     $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {

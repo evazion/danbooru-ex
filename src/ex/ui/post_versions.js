@@ -1,6 +1,14 @@
 import Posts from "./posts.js";
 
 export default class PostVersions {
+  static initialize() {
+    if ($("#c-post-versions #a-index").length === 0) {
+      return;
+    }
+
+    PostVersions.initialize_thumbnails();
+  }
+
   // Show thumbnails instead of post IDs.
   static initialize_thumbnails() {
     let $post_column = $('tr td:nth-child(1)');

@@ -1,6 +1,15 @@
 import DText from "../dtext.js";
 
 export default class WikiPages {
+  static initialize() {
+    if ($("#c-wiki-pages").length === 0) {
+      return
+    }
+
+    WikiPages.initialize_collapsible_headings();
+    WikiPages.initialize_table_of_contents();
+  }
+  
   // Add collapse/expand button to headings.
   static initialize_collapsible_headings() {
     const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');

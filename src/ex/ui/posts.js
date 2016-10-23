@@ -2,6 +2,10 @@ import _ from "lodash";
 
 export default class Posts {
   static initialize() {
+    if ($("#c-posts #a-show").length === 0) {
+      return;
+    }
+
     Posts.initialize_patches();
     Posts.initialize_artist_tags();
     Posts.initialize_tag_type_counts();
