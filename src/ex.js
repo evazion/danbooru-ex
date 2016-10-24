@@ -9,7 +9,7 @@ import "./danbooru-ex.css";
 
 export default class EX {
   static search(url, data, success) {
-    return $.getJSON(url, { search: data }, success);
+    return $.getJSON(url, { search: data, limit: 1000 }, success);
   }
 }
 
