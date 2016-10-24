@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      608
+// @version      609
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -1281,7 +1281,7 @@ __$styleInject(".artist-table {\n  white-space: nowrap;\n}\n\n.artist-table .art
 
 class EX$1 {
   static search(url, data, success) {
-    return $.getJSON(url, { search: data }, success);
+    return $.getJSON(url, { search: data, limit: 1000 }, success);
   }
 }
 
