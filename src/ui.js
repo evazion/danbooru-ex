@@ -292,6 +292,19 @@ export default class UI {
     });
   }
 
+  static linkTo(name, path = "/", params = {}, ...classes) {
+    const query = $.param(params);
+    const href = (query === "")
+               ? path
+               : path + "?" + query;
+
+    return `<a class="${_.escape(classes.join(" "))}" href="${href}">${_.escape(name)}</a>`;
+  }
+
+  static query(param) {
+    return new URL(window.location).searchParams.get(param);
+  }
+
   static openEditPage(controller) {
     // FIXME: Get the ID from the 'Show' link. This is brittle.
     const $show_link =
