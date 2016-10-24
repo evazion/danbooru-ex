@@ -140,7 +140,7 @@ export default class ModeMenu {
         return;
       }
     });
-  };
+  }
 
   // Toggle post selection between all or none.
   static select_all(e) {
@@ -151,5 +151,5 @@ export default class ModeMenu {
     } else {
       $('.post-preview').addClass('ui-selected');
     }
-  };
+  }
 }
