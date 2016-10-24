@@ -1,12 +1,11 @@
 import Posts from "./posts.js";
+import UI from "../ui.js";
 
 export default class PostVersions {
   static initialize() {
-    if ($("#c-post-versions #a-index").length === 0) {
-      return;
+    if ($("#c-post-versions #a-index").length && !UI.query("search[post_id]")) {
+      PostVersions.initialize_thumbnails();
     }
-
-    PostVersions.initialize_thumbnails();
   }
 
   // Show thumbnails instead of post IDs.
