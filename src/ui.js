@@ -13,7 +13,8 @@ import Tag from "./tag.js";
 export default class UI {
   static initialize() {
     UI.initialize_patches();
-    UI.initialize_post_thumbnails();
+    UI.initialize_post_thumbnail_tooltips();
+    UI.initialize_post_link_tooltips();
     UI.initialize_user_links();
     UI.initialize_wiki_links();
 
@@ -108,26 +109,58 @@ export default class UI {
     });
   }
 
-  /*
-   * Show thumbnails on hovering over post #1234 links.
-   */
-  static initialize_post_thumbnails() {
-    // Add a class to 'post #1234' links so $(document).tooltip() can find them.
+  // Show post previews when hovering over post #1234 links.
+  static initialize_post_link_tooltips() {
     $('a[href^="/posts/"]')
       .filter((i, e) => /post #\d+/.test($(e).text()))
-      .addClass('dtext-post');
+      .addClass('ex-thumbnail-tooltip-link');
 
-    // Enable tooltips for post #1234 links. Fetch thumbnail URL on tooltip open.
-    $(document).tooltip({
-      items: '.dtext-post',
-      // content: '<img src="http://danbooru.donmai.us/data/d68a1f25d17ca14afc14ef2335b61d2a.gif"></img>',
-      content: ' ',
+    UI.install_tooltips();
+  }
+
+  // Show post previews when hovering over thumbnails.
+  static initialize_post_thumbnail_tooltips() {
+    // The thumbnail container is .post-preview on every page but comments and
+    // the mod queue. Handle those specially.
+    if ($("#c-comments").length) {
+      $("#c-comments .post-preview .preview img").addClass('ex-thumbnail-tooltip-link');
+    } else if ($("#c-post-moderator-queues").length) {
+      $("#c-post-moderator-queues .mod-queue-preview aside img").addClass('ex-thumbnail-tooltip-link');
+    } else {
+      $(".post-preview img").addClass('ex-thumbnail-tooltip-link');
+    }
+
+    UI.install_tooltips();
+  }
+
+  static install_tooltips(items) {
+    const max_size = 450;
+
+    $(".ex-thumbnail-tooltip-link").tooltip({
+      items: "*",
+      content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
+      show: { delay: 350 },
+      position: {
+        my: "left+10 top",
+        at: "right top",
+      },
       open: (e, ui) => {
-        const id = $(e.toElement).attr('href').match(/\/posts\/(\d+)/)[1];
+        try {
+          let $e = $(e.toElement);
+          let $link = $e;
 
-        $.getJSON(`/posts/${id}.json`).then(post => {
-          $(ui.tooltip).html(`<img src=${post.preview_file_url}></img>`);
-        });
+          if ($e.prop("nodeName") === "IMG") {
+            $link = $e.closest("a");
+          }
+
+          const id = $link.attr('href').match(/\/posts\/(\d+)/)[1];
+
+          $.getJSON(`/posts/${id}.json`).then(post =>
+            $(ui.tooltip).html(Posts.preview(post, post.large_file_url, "ex-thumbnail-tooltip"))
+          );
+        } catch (e) {
+          console.log(e);
+        }
       }
     });
   }

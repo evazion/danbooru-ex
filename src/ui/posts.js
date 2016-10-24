@@ -68,9 +68,12 @@ export default class Posts {
   }
 
   // Generate the post thumbnail HTML.
-  static preview(post) {
+  static preview(post, src, klass = "") {
     let preview_class = "post-preview";
 
+    src = src || post.preview_file_url;
+
+    preview_class += " " + klass;
     preview_class += post.is_pending           ? " post-status-pending"      : "";
     preview_class += post.is_flagged           ? " post-status-flagged"      : "";
     preview_class += post.is_deleted           ? " post-status-deleted"      : "";
@@ -109,7 +112,7 @@ export default class Posts {
                id="post_${post.id}" class="${preview_class}" ${data_attributes}>
         <a href="/posts/${post.id}${tag_params}">
           <img itemprop="thumbnailUrl"
-               src="${post.preview_file_url}"
+               src="${src}"
                alt="${_.escape(post.tag_string)}">
         </a>
       </article>

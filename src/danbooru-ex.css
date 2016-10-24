@@ -11,6 +11,17 @@
   white-space: normal;
 }
 
+.ui-tooltip,
+.ui-tooltip .ex-thumbnail-tooltip img {
+  max-width:  450px !important;
+  max-height: 450px !important;
+}
+
+.ui-tooltip .post-preview {
+  width: auto;
+  height: auto;
+}
+
 a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
     text-decoration: underline;
 }
