@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      609
+// @version      610
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -99,7 +99,7 @@ class Artists {
   static replace_index() {
     let $table = $("#c-artists #a-index > table:nth-child(2)");
 
-    let artists = _($table.find("> tbody > tr")).map(e => new Object({
+    let artists = _($table.find("> tbody > tr")).map(e => ({
       id:   $(e).attr("id").match(/artist-(\d+)/)[1],
       name: $(e).find("> td:nth-child(1) > a:nth-child(1)").text()
     }));
@@ -107,37 +107,134 @@ class Artists {
     let requests = [
       EX$1.search("/artists.json", { id: artists.map("id").join(","), order: UI.query("search[order]") }),
       EX$1.search("/tags.json",    { name: artists.map("name").join(","), hide_empty: "no" }),
+      EX$1.search("/artists.json", { order: "created_at" }, { limit:  8 }),
+      EX$1.search("/artists.json", { is_active: true, order: "updated_at" }, { limit: 8 }),
+      EX$1.search("/artists.json", { is_active: false, order: "updated_at" }, { limit: 8 }),
     ];
 
-    Promise.all(requests).then(([artists, tags]) => {
+    Promise.all(requests).then(([artists, tags, created, updated, deleted]) => {
       artists = artists.map(artist =>
         _.merge(artist, {
           tag: _(tags).find(["name", artist.name])
         })
       );
 
-      const html = Artists.render_artist_table(artists);
-      $table.addClass("artist-table").html(html).show();
+      let $paginator = $(".paginator");
+
+      const index = Artists.render_index(artists, created, updated, deleted);
+      $("#c-artists #a-index").addClass("ex-index").html(index);
+
+      $paginator.appendTo("#content");
     });
   }
 
-  static render_artist_table(artists) {
+  static render_index(artists, created, updated, deleted) {
     return `
+    <aside id="sidebar">
+      ${Artists.render_sidebar(created, updated, deleted)}
+    </aside>
+
+    <section id="content">
+      ${Artists.render_table(artists)}
+    </section>
+    `;
+  }
+
+  static render_sidebar(created, updated, deleted) {
+    return `
+    <section class="ex-artists-search">
+      ${Artists.render_search_form()}
+    </section>
+
+    <section class="ex-artists-recent-changes">
+      ${Artists.render_recent_changes(created, updated, deleted)}
+    </section>
+    `;
+  }
+
+  static render_search_form() {
+    return `
+    <h1>Search</h1>
+
+    <form class="simple_form" action="/artists" accept-charset="UTF-8" method="get">
+      <input name="utf8" type="hidden" value="✓">
+
+      <label for="search_name">Name</label>
+      <input type="text" name="search[name]"
+            id="search_name" class="ui-autocomplete-input" autocomplete="off"
+            placeholder="Search artist name or URL">
+
+      <label for="search_order">Order</label>
+      <select name="search[order]" id="search_order">
+        <option value="created_at">Recently created</option>
+        <option value="updated_at">Last updated</option>
+        <option value="name">Name</option>
+      </select>
+
+      <input type="submit" name="commit" value="Search">
+    </form>
+    `;
+  }
+
+  static render_recent_changes(created, updated, deleted) {
+    function render_artists_list(artists, heading, params) {
+      return `
+      <section class="ex-artists-list">
+        <div class="ex-artists-list-heading">
+          <h2>${heading}</h2>
+          <span>
+            (${UI.linkTo("more", "/artists", { search: params })})
+          </span>
+        </div>
+        <ul>
+          ${render_ul(artists)}
+        </ul>
+      </section>
+      `;
+    }
+
+    function render_ul(artists) {
+      return _(artists).map(artist => `
+        <li class="category-1">
+          ${UI.linkTo(artist.name, `/artists/${artist.id}`)}
+
+	  <time class="ex-short-relative-time"
+                datetime="${artist.updated_at}"
+                title="${moment$1(artist.updated_at).format()}">
+            ${moment$1(artist.updated_at).locale("en-short").fromNow()}
+          </time>
+        </li>
+      `).join("");
+    }
+
+    return `
+    <h1>Recent Changes</h1>
+
+    ${render_artists_list(created, "New Artists",     { is_active: true,  order: "created_at" })}
+    ${render_artists_list(updated, "Updated Artists", { is_active: true,  order: "updated_at" })}
+    ${render_artists_list(deleted, "Deleted Artists", { is_active: false, order: "updated_at" })}
+    `;
+  }
+
+  static render_table(artists) {
+    return `
+    <table class="ex-artists striped" width="100%">
       <thead>
         <tr>
-          <th class="artist-id">ID</th>
-          <th class="artist-name">Name</th>
-          <th class="artist-post-count">Posts</th>
-          <th class="artist-other-names">Other Names</th>
-          <th class="artist-group-name">Group</th>
-          <th class="artist-status">Status</th>
-          <th class="artist-created">Created</th>
-          <th class="artist-updated">Updated</th>
+          <th class="ex-artist-id">ID</th>
+          <th class="ex-artist-name">Name</th>
+          <th class="ex-artist-post-count">Posts</th>
+          <th class="ex-artist-other-names">Other Names</th>
+          <th class="ex-artist-group-name">Group</th>
+          <th class="ex-artist-status">Status</th>
+          <th class="ex-artist-created">Created</th>
+          <th class="ex-artist-updated">Updated</th>
         </tr>
       </thead>
       <tbody>
         ${artists.map(Artists.render_row).join("")}
-      </tbody
+      </tbody>
+    </table>
     `;
   }
 
@@ -147,43 +244,43 @@ class Artists {
       .split(/\s+/)
       .sort()
       .map(name =>
-        UI.linkTo(name, "/artists", { search: { name: name }}, "artist-other-name")
+        UI.linkTo(name, "/artists", { search: { name: name }}, "ex-artist-other-name")
       )
       .join(", ");
 
     const group_link = UI.linkTo(
-      artist.group_name, "/artists", { search: { name: `group:${artist.group_name}` }}, "artist-group-name"
+      artist.group_name, "/artists", { search: { name: `group:${artist.group_name}` }}, "ex-artist-group-name"
     );
 
     return `
-      <tr>
-        <td class="artist-id">
-          ${UI.linkTo(`artist #${artist.id}`, `/artists/${artist.id}`)}
-        </td>
-        <td class="artist-name category-${artist.tag.category}">
-          ${UI.linkTo("?", "/wiki_pages", { title: artist.name }, "wiki-link")}
-          ${UI.linkTo(artist.name, `/artists/${artist.id}`, {}, "artist-link")}
-        </td>
-        <td class="artist-post-count">
-          ${UI.linkTo(artist.tag.post_count, "/posts", { tags: artist.name }, "search-tag")}
-        </td>
-        <td class="artist-other-names">
-          ${other_names}
-        </td>
-        <td class="artist-group-name">
-          ${artist.group_name ? group_link : ""}
-        </td>
-        <td class="artist-status">
-          ${artist.is_banned ? "Banned" : ""}
-          ${artist.is_active ? ""       : "Deleted"}
-        </td>
-        <td class="artist-created">
-          ${moment$1(artist.created_at).fromNow()}
-        </td>
-        <td class="artist-updated">
-          ${moment$1(artist.updated_at).fromNow()}
-        </td>
-      </tr>
+    <tr class="ex-artist">
+      <td class="ex-artist-id">
+	${UI.linkTo(`artist #${artist.id}`, `/artists/${artist.id}`)}
+      </td>
+      <td class="ex-artist-name category-${artist.tag.category}">
+	${UI.linkTo("?", "/wiki_pages", { title: artist.name }, "wiki-link")}
+	${UI.linkTo(artist.name, `/artists/${artist.id}`, {}, "artist-link")}
+      </td>
+      <td class="ex-artist-post-count">
+	${UI.linkTo(artist.tag.post_count, "/posts", { tags: artist.name }, "search-tag")}
+      </td>
+      <td class="ex-artist-other-names">
+	${other_names}
+      </td>
+      <td class="ex-artist-group-name">
+	${artist.group_name ? group_link : ""}
+      </td>
+      <td class="ex-artist-status">
+	${artist.is_banned ? "Banned" : ""}
+	${artist.is_active ? ""       : "Deleted"}
+      </td>
+      <td class="ex-artist-created">
+	${moment$1(artist.created_at).fromNow()}
+      </td>
+      <td class="ex-artist-updated">
+	${moment$1(artist.updated_at).fromNow()}
+      </td>
+    </tr>
     `;
   }
 }
@@ -920,6 +1017,8 @@ class WikiPages {
 
 class UI {
   static initialize() {
+    UI.initialize_moment();
+
     UI.initialize_patches();
     UI.initialize_post_thumbnail_tooltips();
     UI.initialize_post_link_tooltips();
@@ -968,6 +1067,7 @@ class UI {
               <option value="vote-down">Vote down</option>
               <option value="lock-rating">Lock rating</option>
               <option value="lock-note">Lock notes</option>
+              <option value="approve">Approve</option>
             </select>
           </form>
           <input id="tag-script-field" placeholder="Enter tag script" style="display: none; margin-top: 0.5em;">
@@ -1015,6 +1115,29 @@ class UI {
       const time_ago = moment($(e).attr('datetime')).fromNow();
       $(e).text(time_ago);
     });
+  }
+
+  static initialize_moment() {
+    moment.locale("en-short", {
+      relativeTime : {
+          future: "in %s",
+          past:   "%s",
+          s:  "s",
+          m:  "1m",
+          mm: "%dm",
+          h:  "1h",
+          hh: "%dh",
+          d:  "1d",
+          dd: "%dd",
+          M:  "1m",
+          MM: "%dm",
+          y:  "1y",
+          yy: "%dy"
+      }
+    });
+
+    moment.locale("en");
+    moment.defaultFormat = "MMMM Do YYYY, h:mm a";
   }
 
   // Show post previews when hovering over post #1234 links.
@@ -1277,11 +1400,11 @@ UI.PostVersions = PostVersions;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-__$styleInject(".artist-table {\n  white-space: nowrap;\n}\n\n.artist-table .artist-id {\n  width: 10%;\n}\n\n.artist-table .artist-other-names {\n  width: 100%;\n  white-space: normal;\n}\n\n.ui-tooltip,\n.ui-tooltip .ex-thumbnail-tooltip img {\n  max-width:  450px !important;\n  max-height: 450px !important;\n}\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n}\n\na.with-style[data-can-upload-free=\"false\"][data-can-approve-posts=\"true\"] {\n    text-decoration: underline;\n}\n\na.with-style[data-is-banned=\"true\"] {\n    color: black;\n    text-decoration: underline;\n}\n\n.tag-list-header h1, .tag-list-header h2 {\n    display: inline-block;\n}\n\n.tag-list-header .post-count {\n    margin-left: 0.5em;\n}\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n    color: #A00;\n}\n\n.spoiler:hover a.tag-type-3 {\n    color: #A0A;\n}\n\n.spoiler:hover a.tag-type-4 {\n    color: #0A0;\n}\n\n.spoiler:not(:hover) a {\n    color: black !important;\n}\n\n#sticky-header {\n    position: fixed;\n    display: flex;\n    width: 100%;\n    background: white;\n    z-index: 100;\n    border-bottom: 1px solid #EEE;\n}\n\n#sticky-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px;\n    //padding: 42px 0px 0px 0px;\n}\n\n#sticky-header #search-box {\n    display: inline-block;\n    margin: auto 30px;\n}\n\n#sticky-header #search-box #tags {\n    width: 640px;\n}\n\n#sticky-header #mode-box {\n    margin: auto 30px;\n}\n\n#sticky-header #mode-box form {\n    display: inline-block;\n}\n\n#sticky-header #mode-box form #tag-script-field {\n    margin-top: 0;\n}\n\n\n#notice {\n    top: 4.5em !important;\n}\n\n#top {\n    padding-top: 52px;\n}\n\n#top h1 {\n    display: none;\n}\n\n\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n    //display: flex;\n    //align-items: center;\n    padding-top: 52px;\n    margin-top: -52px;\n}\n\n#wiki-page-body a.ui-icon.collapsible-header {\n    display: inline-block;\n    margin-left: -8px;\n}\n\n\n\n.ui-selected {\n    background: lightblue;\n}\n\n.ui-selectable {\n    -ms-touch-action: none;\n    touch-action: none;\n}\n\n.ui-selectable-helper {\n    position: absolute;\n    z-index: 100;\n    border: 1px dotted black;\n}\n\n.ui-tooltip {\n    padding:   8px;\n    position:  absolute;\n    z-index:   9999;\n    max-width: 300px;\n    -webkit-box-shadow: 0 0 5px #aaa;\n    box-shadow: 0 0 5px #aaa;\n}\n\nbody .ui-tooltip {\n    border-width: 2px;\n}\n\n/*\n.user-member::before, .user-gold::before,\n.user-platinum::before, .user-builder::before,\n.user-janitor::before, .user-moderator::before,\n.user-admin::before {\n    content: '@';\n    color: grey;\n}\n*/\n\n/*\n.paginator {\n    clear: none !important;\n}\n*/\n",undefined);
+__$styleInject(".artist-table {\n  white-space: nowrap;\n}\n\n.artist-table .artist-id {\n  width: 10%;\n}\n\n.artist-table .artist-other-names {\n  width: 100%;\n  white-space: normal;\n}\n\n.ui-tooltip,\n.ui-tooltip .ex-thumbnail-tooltip img {\n  max-width:  450px !important;\n  max-height: 450px !important;\n}\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n}\n\n#c-artists #sidebar label {\n  pointer: auto;\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto;\n}\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important;\n}\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0;\n}\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0;\n}\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em;\n}\n\na.with-style[data-can-upload-free=\"false\"][data-can-approve-posts=\"true\"] {\n    text-decoration: underline;\n}\n\na.with-style[data-is-banned=\"true\"] {\n    color: black;\n    text-decoration: underline;\n}\n\n.tag-list-header h1, .tag-list-header h2 {\n    display: inline-block;\n}\n\n.tag-list-header .post-count {\n    margin-left: 0.5em;\n}\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n    color: #A00;\n}\n\n.spoiler:hover a.tag-type-3 {\n    color: #A0A;\n}\n\n.spoiler:hover a.tag-type-4 {\n    color: #0A0;\n}\n\n.spoiler:not(:hover) a {\n    color: black !important;\n}\n\n#sticky-header {\n    position: fixed;\n    display: flex;\n    width: 100%;\n    background: white;\n    z-index: 100;\n    border-bottom: 1px solid #EEE;\n}\n\n#sticky-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px;\n    //padding: 42px 0px 0px 0px;\n}\n\n#sticky-header #search-box {\n    display: inline-block;\n    margin: auto 30px;\n}\n\n#sticky-header #search-box #tags {\n    width: 640px;\n}\n\n#sticky-header #mode-box {\n    margin: auto 30px;\n}\n\n#sticky-header #mode-box form {\n    display: inline-block;\n}\n\n#sticky-header #mode-box form #tag-script-field {\n    margin-top: 0;\n}\n\n\n#notice {\n    top: 4.5em !important;\n}\n\n#top {\n    padding-top: 52px;\n}\n\n#top h1 {\n    display: none;\n}\n\n\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n    //display: flex;\n    //align-items: center;\n    padding-top: 52px;\n    margin-top: -52px;\n}\n\n#wiki-page-body a.ui-icon.collapsible-header {\n    display: inline-block;\n    margin-left: -8px;\n}\n\n\n\n.ui-selected {\n    background: lightblue;\n}\n\n.ui-selectable {\n    -ms-touch-action: none;\n    touch-action: none;\n}\n\n.ui-selectable-helper {\n    position: absolute;\n    z-index: 100;\n    border: 1px dotted black;\n}\n\n.ui-tooltip {\n    padding:   8px;\n    position:  absolute;\n    z-index:   9999;\n    max-width: 300px;\n    -webkit-box-shadow: 0 0 5px #aaa;\n    box-shadow: 0 0 5px #aaa;\n}\n\nbody .ui-tooltip {\n    border-width: 2px;\n}\n\n/*\n.user-member::before, .user-gold::before,\n.user-platinum::before, .user-builder::before,\n.user-janitor::before, .user-moderator::before,\n.user-admin::before {\n    content: '@';\n    color: grey;\n}\n*/\n\n/*\n.paginator {\n    clear: none !important;\n}\n*/\n",undefined);
 
 class EX$1 {
-  static search(url, data, success) {
-    return $.getJSON(url, { search: data, limit: 1000 }, success);
+  static search(url, search, { limit, page } = {}) {
+    return $.getJSON(url, { search, limit: limit || 1000, page: page || 1 });
   }
 }
 
