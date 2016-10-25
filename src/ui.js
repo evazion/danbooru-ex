@@ -60,6 +60,7 @@ export default class UI {
               <option value="vote-down">Vote down</option>
               <option value="lock-rating">Lock rating</option>
               <option value="lock-note">Lock notes</option>
+              <option value="approve">Approve</option>
             </select>
           </form>
           <input id="tag-script-field" placeholder="Enter tag script" style="display: none; margin-top: 0.5em;">
