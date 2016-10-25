@@ -8,8 +8,8 @@ import UI    from "./ui.js";
 import "./danbooru-ex.css";
 
 export default class EX {
-  static search(url, data, success) {
-    return $.getJSON(url, { search: data, limit: 1000 }, success);
+  static search(url, search, { limit, page } = {}) {
+    return $.getJSON(url, { search, limit: limit || 1000, page: page || 1 });
   }
 }
 

@@ -22,6 +22,30 @@
   height: auto;
 }
 
+#c-artists #sidebar label {
+  pointer: auto;
+  display: block;
+  font-weight: bold;
+  padding: 4px 0 4px 0;
+  width: auto;
+  cursor: auto;
+}
+
+#c-artists #sidebar input[type="text"] {
+  width: 100% !important;
+}
+
+#c-artists #sidebar button[type="submit"] {
+  display: block;
+  margin: 4px 0 4px 0;
+}
+
+#c-artists #sidebar h2 {
+  font-size: 1em;
+  display: inline-block;
+  margin: 0.75em 0 0.25em 0;
+}
+
 a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
     text-decoration: underline;
 }
