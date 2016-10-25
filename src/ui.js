@@ -12,6 +12,8 @@ import Tag from "./tag.js";
 
 export default class UI {
   static initialize() {
+    UI.initialize_moment();
+
     UI.initialize_patches();
     UI.initialize_post_thumbnail_tooltips();
     UI.initialize_post_link_tooltips();
@@ -108,6 +110,29 @@ export default class UI {
       const time_ago = moment($(e).attr('datetime')).fromNow();
       $(e).text(time_ago);
     });
+  }
+
+  static initialize_moment() {
+    moment.locale("en-short", {
+      relativeTime : {
+          future: "in %s",
+          past:   "%s",
+          s:  "s",
+          m:  "1m",
+          mm: "%dm",
+          h:  "1h",
+          hh: "%dh",
+          d:  "1d",
+          dd: "%dd",
+          M:  "1m",
+          MM: "%dm",
+          y:  "1y",
+          yy: "%dy"
+      }
+    });
+
+    moment.locale("en");
+    moment.defaultFormat = "MMMM Do YYYY, h:mm a";
   }
 
   // Show post previews when hovering over post #1234 links.

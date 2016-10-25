@@ -119,6 +119,12 @@ export default class Artists {
       return _(artists).map(artist => `
         <li class="category-1">
           ${UI.linkTo(artist.name, `/artists/${artist.id}`)}
+
+	  <time class="ex-short-relative-time"
+                datetime="${artist.updated_at}"
+                title="${moment(artist.updated_at).format()}">
+            ${moment(artist.updated_at).locale("en-short").fromNow()}
+          </time>
         </li>
       `).join("");
     }

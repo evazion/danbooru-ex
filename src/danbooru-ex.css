@@ -46,6 +46,11 @@
   margin: 0.75em 0 0.25em 0;
 }
 
+.ex-short-relative-time {
+  color: #CCC;
+  margin-left: 0.2em;
+}
+
 a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
     text-decoration: underline;
 }
