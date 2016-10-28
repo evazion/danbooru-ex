@@ -11,11 +11,15 @@ export default {
     dest: 'dist/danbooru-ex.user.js',
     format: 'iife',
     globals: {
+        dexie: 'Dexie',
+        filesize: 'filesize',
         lodash: '_',
         jquery: 'jQuery',
         moment: 'moment',
     },
     external: [
+        'dexie',
+        'filesize',
         'jquery',
         'lodash',
         'moment',

@@ -12,8 +12,10 @@
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/dexie/1.5.0/dexie.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
+// @require      https://unpkg.com/filesize@3.3.0
 // ==/UserScript==
 
 // @updateURL    http://127.0.0.1:8000/danbooru-ex.user.js

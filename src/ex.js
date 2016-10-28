@@ -1,6 +1,7 @@
 import _ from "lodash";
 import jQuery from "jquery";
 import moment from "moment";
+import Dexie from "dexie";
 
 import DText from "./dtext.js";
 import Tag   from "./tag.js";
