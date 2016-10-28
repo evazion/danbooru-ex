@@ -2,13 +2,16 @@ import filesize from "filesize";
 
 export default class Comments {
   static initialize() {
-    if ($("#c-comments").length === 0 && $("#c-posts #a-show").length === 0) {
-      return;
+    if ($("#c-comments").length || $("#c-posts #a-show").length) {
+      $(function () {
+        Comments.initialize_patches();
+        Comments.initialize_metadata();
+      });
     }
 
-    Comments.initialize_patches();
-    Comments.initialize_metadata();
-    Comments.initialize_tag_list();
+    if ($("#c-comments #a-index").length) {
+      Comments.initialize_tag_list();
+    }
   }
 
   static initialize_patches() {
@@ -44,25 +47,6 @@ export default class Comments {
         $menu.append($('<li> | </li>'));
       }
 
-      /*
-      const $score_container = $('<li></li>');
-
-      $score_container.append($(`
-          <span class="info">
-              <strong>Score</strong>
-              <span>${comment_score}</span>
-          </span>
-      `));
-
-      $score_container.append(document.createTextNode('(vote '));
-      $upvote_link.find('a').appendTo($score_container).text('up');
-      $score_container.append(document.createTextNode('/'));
-      $downvote_link.find('a').appendTo($score_container).text('down');
-      $score_container.append(document.createTextNode(')'));
-
-      $menu.append($score_container);
-      */
-
       $menu.append($(`
         <li>
           <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
@@ -80,10 +64,6 @@ export default class Comments {
 
   // Sort tags by type, and put artist tags first.
   static initialize_tag_list() {
-    if ($("#c-comments #a-index").length === 0) {
-      return;
-    }
-
     const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
     $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {
@@ -111,7 +91,7 @@ export default class Comments {
         $row.append($(`
           <span class="info">
             <strong>Favorites</strong>
-            ${post.fav_count} (<a href="">Fav</a>)
+            ${post.fav_count}
           </span>
         `));
 
