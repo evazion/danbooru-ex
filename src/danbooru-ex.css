@@ -1,12 +1,12 @@
-.artist-table {
+.ex-artists {
   white-space: nowrap;
 }
 
-.artist-table .artist-id {
+.ex-artist .ex-artist-id {
   width: 10%;
 }
 
-.artist-table .artist-other-names {
+.ex-artist .ex-artist-other-names {
   width: 100%;
   white-space: normal;
 }
