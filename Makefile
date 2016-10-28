@@ -1,14 +1,16 @@
 .ONESHELL:
 .PHONY: all bump serve watch clean
 
+HEADER := src/header-dev.js
+
 all: dist/danbooru-ex.user.js rollup.config.js
 dist/danbooru-ex.user.js: $(shell find src) | bump
 	mkdir -p dist
-	rollup -c
+	rollup --environment HEADER:$(HEADER) -c
 
 bump:
-	V=$$(awk '/\/\/ @version      [[:digit:]]+/ { print $$3 + 1 }' src/header.js)
-	sed -i -r -e "s!(// @version      )[[:digit:]]+!\\1$$V!g" src/header.js
+	V=$$(awk '/\/\/ @version      [[:digit:]]+/ { print $$3 + 1 }' $(HEADER))
+	sed -i -r -e "s!(// @version      )[[:digit:]]+!\\1$$V!g" $(HEADER)
 
 serve:
 	cd dist

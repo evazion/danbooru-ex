@@ -4,9 +4,11 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 
+const header = process.env.HEADER;
+
 export default {
     moduleName: 'danbooruEX',
-    banner: fs.readFileSync("src/header.js"),
+    banner: fs.readFileSync(header),
     entry: 'src/ex.js',
     dest: 'dist/danbooru-ex.user.js',
     format: 'iife',
