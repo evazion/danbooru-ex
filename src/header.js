@@ -8,6 +8,7 @@
 // @match        *://*.donmai.us/*
 // @match        *://localhost/*
 // @grant        none
+// @run-at       document-body
 // @updateURL    https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
