@@ -34,6 +34,5 @@ export default class EX {
 
 window.EX = EX;
 jQuery(function () {
-  "use strict";
   EX.initialize();
 });

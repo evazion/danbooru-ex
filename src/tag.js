@@ -41,7 +41,7 @@ export default class Tag {
       return $.getJSON(`/tags.json?limit=1000&search[hide_empty]=no&search[name]=${query}`);
     })
 
-    return Promise.all(requests).then(tags => 
+    return Promise.all(requests).then(tags =>
       _(tags).flatten().groupBy("name").mapValues(_.first).value()
     );
   }

@@ -10,7 +10,7 @@ export default class Config {
       styleUsernames: true,
       styleWikiLinks: true,
       useRelativeTimestamps: true,
-    }
+    };
   }
 
   constructor() {

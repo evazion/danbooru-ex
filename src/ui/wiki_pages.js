@@ -46,11 +46,9 @@ export default class WikiPages {
     const $toc =
       DText.create_expandable('Table of Contents', '<ul></ul>').prependTo('#wiki-page-body');
 
-    /* 
-     * Build ToC. Create a nested heirarchy matching the hierarchy of
-     * headings on the page; an h5 following an h4 opens a new submenu,
-     * another h4 closes the submenu. Likewise for h5, h6, etc.
-     */
+    // Build ToC. Create a nested heirarchy matching the hierarchy of
+    // headings on the page; an h5 following an h4 opens a new submenu,
+    // another h4 closes the submenu. Likewise for h5, h6, etc.
     let $submenu = null;
     let $menu = $toc.find('ul');
     let level = $headings.length > 0
