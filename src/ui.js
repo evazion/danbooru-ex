@@ -219,30 +219,26 @@ export default class UI {
   static initialize_wiki_links() {
     const $wiki_links = $(`a[href^="/wiki_pages/show_or_new?title="]`);
 
-    const tag_names = $wiki_links.map((i, e) =>
-      decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1])
-    ).toArray();
+    const tag_names =
+      $wiki_links
+      .toArray()
+      .map(e =>
+        $(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]
+      )
+      .map(decodeURIComponent);
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
     Tag.search(tag_names).then(tags => {
-      _.each(tags, tag => {
-        // Encode some extra things manually because Danbooru
-        // encodes these things in URLs but encodeURIComponent doesn't.
-        const tag_name =
-          encodeURIComponent(tag.name)
-          .replace(/!/g,  '%21')
-          .replace(/'/g,  '%27')
-          .replace(/\(/g, '%28')
-          .replace(/\)/g, '%29')
-          .replace(/~/g,  '%7E');
+      $wiki_links.each((i, e) => {
+        const $wiki_link = $(e);
+        const name = decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
+        const tag = tags[name];
 
         const tag_created_at =
           moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
         const tag_title =
           `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
-
-        const $wiki_link = $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`);
 
         _(tag).forOwn((value, key) =>
           $wiki_link.attr(`data-tag-${_(key).kebabCase()}`, value)
