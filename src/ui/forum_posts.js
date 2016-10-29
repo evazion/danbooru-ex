@@ -1,10 +1,8 @@
 export default class ForumPosts {
   static initialize() {
-    if ($("#c-forum-topics #a-show").length === 0) {
-      return false;
+    if ($("#c-forum-topics #a-show").length) {
+        ForumPosts.initialize_permalinks();
     }
-
-    ForumPosts.initialize_permalinks();
   }
 
   // On forum posts, change "Permalink" to "Forum #1234". */
