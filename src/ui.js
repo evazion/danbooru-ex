@@ -217,6 +217,10 @@ export default class UI {
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
   // creation date and post count.
   static initialize_wiki_links() {
+    function parse_tag_name(wiki_link) {
+      return decodeURIComponent($(wiki_link).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
+    }
+
     const meta_wikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
 
     const $wiki_links =
@@ -225,10 +229,7 @@ export default class UI {
 
     const tag_names =
       _($wiki_links.toArray())
-      .map(e =>
-        $(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]
-      )
-      .map(decodeURIComponent)
+      .map(parse_tag_name)
       .reject(tag => tag.match(meta_wikis))
       .value();
 
@@ -236,10 +237,10 @@ export default class UI {
     Tag.search(tag_names).then(tags => {
       $wiki_links.each((i, e) => {
         const $wiki_link = $(e);
-        const name = decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
+        const name = parse_tag_name($wiki_link);
         const tag = tags[name];
 
-        if (tag.match(meta_wikis)) {
+        if (name.match(meta_wikis)) {
           return;
         } else if (tag === undefined) {
           $wiki_link.addClass('tag-dne');
