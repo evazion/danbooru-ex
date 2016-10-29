@@ -34,5 +34,10 @@ export default class EX {
 
 window.EX = EX;
 jQuery(function () {
-  EX.initialize();
+  try {
+    EX.initialize();
+  } catch(e) {
+    $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
+    throw e;
+  }
 });
