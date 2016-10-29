@@ -1,19 +1,22 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      610
+// @version      796
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
 // @match        *://*.donmai.us/*
 // @match        *://localhost/*
 // @grant        none
+// @run-at       document-body
 // @updateURL    https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/dexie/1.5.0/dexie.min.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
+// @require      https://unpkg.com/filesize@3.3.0
 // ==/UserScript==
 
 // @updateURL    http://127.0.0.1:8000/danbooru-ex.user.js
@@ -25,7 +28,7 @@
  * What is a userscript? A miserable pile of hacks.
  */
 
-var danbooruEX = (function (_$1,jQuery,moment$1) {
+var danbooruEX = (function (_$1,jQuery,moment$1,filesize) {
 'use strict';
 
 function __$styleInject(css, returnValue) {
@@ -47,6 +50,75 @@ function __$styleInject(css, returnValue) {
 _$1 = 'default' in _$1 ? _$1['default'] : _$1;
 jQuery = 'default' in jQuery ? jQuery['default'] : jQuery;
 moment$1 = 'default' in moment$1 ? moment$1['default'] : moment$1;
+filesize = 'default' in filesize ? filesize['default'] : filesize;
+
+class Config {
+  static get Defaults() {
+    return {
+      schemaVersion: 1,
+      showHeaderBar: true,
+      showThumbnailPreviews: true,
+      showPostLinkPreviews: true,
+      styleUsernames: true,
+      styleWikiLinks: true,
+      useRelativeTimestamps: true,
+    };
+  }
+
+  constructor() {
+    this.storage = window.localStorage;
+  }
+
+  get(key) {
+    const value = this.storage["EX.config." + key];
+
+    return (value === undefined) ? Config.Defaults[key] : JSON.parse(value);
+  }
+
+  set(key, value) {
+    this.storage["EX.config." + key] = value;
+    return this;
+  }
+
+  get all() {
+    return _$1.mapValues(Config.Defaults, (v, k) => this.get(k));
+  }
+
+  reset() {
+    _$1(Config.Defaults).keys().each(key => {
+      delete this.storage["EX.config." + key];
+    });
+
+    return this;
+  }
+
+  get schemaVersion() { return this.get("schemaVersion"); }
+  get showHeaderBar() { return this.get("showHeaderBar"); }
+  get showThumbnailPreviews() { return this.get("showThumbnailPreviews"); }
+  get showPostLinkPreviews() { return this.get("showPostLinkPreviews"); }
+  get styleUsernames() { return this.get("styleUsernames"); }
+  get styleWikiLinks() { return this.get("styleWikiLinks"); }
+  get useRelativeTimestamps() { return this.get("useRelativeTimestamps"); }
+
+  set schemaVersion(v) { return this.set("schemaVersion", v); }
+  set showHeaderBar(v) { return this.set("showHeaderBar", v); }
+  set showThumbnailPreviews(v) { return this.set("showThumbnailPreviews", v); }
+  set showPostLinkPreviews(v) { return this.set("showPostLinkPreviews", v); }
+  set styleUsernames(v) { return this.set("styleUsernames", v); }
+  set useRelativeTimestamps(v) { return this.set("useRelativeTimestamps", v); }
+
+  // Define getters/setters for `Config.showHeaderBar` et al.
+  /*
+  for (const key of _.keys(Config.Defaults)) {
+    Object.defineProperty(Config.prototype, key, {
+      get: ()  => function ()  { return this.get(key) },
+      set: (v) => function (v) { return this.set(key, v) },
+      enumerable: true,
+      configurable: true,
+    });
+  }
+  */
+}
 
 class DText {
   static create_expandable(name, content) {
@@ -71,15 +143,52 @@ class DText {
   }
 }
 
-class Tag {}
+class Tag {
+  static get Categories() {
+    return [
+      "General",    // 0
+      "Artist",     // 1
+      undefined,    // 2 (unused)
+      "Copyright",  // 3
+      "Character"   // 4
+    ];
+  }
 
-Tag.categories = [
-    "General",    // 0
-    "Artist",     // 1
-    undefined,    // 2 (unused)
-    "Copyright",  // 3
-    "Character"   // 4
-];
+  // Collect tags in batches, with each batch having a max count of 1000
+  // tags or a max combined size of 6500 bytes for all tags. This is
+  // necessary because these are the API limits for the /tags.json call.
+  static batch(tags) {
+    let tag_batches = [[]];
+    tags = _$1(tags).sortBy().sortedUniq().value();
+
+    for (const tag of tags) {
+      const current_batch = tag_batches[0];
+      const next_batch = current_batch.concat([tag]);
+
+      const batch_length = next_batch.map(encodeURIComponent).join(",").length;
+      const batch_count = next_batch.length;
+
+      if (batch_count > 1000 || batch_length > 6500) {
+        tag_batches.unshift([tag]);
+      } else {
+        current_batch.push(tag);
+      }
+    }
+
+    return _$1.reverse(tag_batches);
+  }
+
+  static search(tags) {
+    const requests = Tag.batch(tags).map(batch => {
+      const query = batch.map(encodeURIComponent).join(",");
+      return $.getJSON(`/tags.json?limit=1000&search[hide_empty]=no&search[name]=${query}`);
+    });
+
+    return Promise.all(requests).then(tags =>
+      _$1(tags).flatten().groupBy("name").mapValues(_$1.first).value()
+    );
+  }
+}
 
 class Artists {
   static initialize() {
@@ -285,176 +394,18 @@ class Artists {
   }
 }
 
-var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-
-
-
-
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var filesize = createCommonjsModule(function (module, exports) {
-"use strict";
-
-/**
- * filesize
- *
- * @copyright 2016 Jason Mulligan <jason.mulligan@avoidwork.com>
- * @license BSD-3-Clause
- * @version 3.3.0
- */
-(function (global) {
-	var b = /^(b|B)$/;
-	var symbol = {
-		iec: {
-			bits: ["b", "Kib", "Mib", "Gib", "Tib", "Pib", "Eib", "Zib", "Yib"],
-			bytes: ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
-		},
-		jedec: {
-			bits: ["b", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb"],
-			bytes: ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-		}
-	};
-
-	/**
-  * filesize
-  *
-  * @method filesize
-  * @param  {Mixed}   arg        String, Int or Float to transform
-  * @param  {Object}  descriptor [Optional] Flags
-  * @return {String}             Readable file size String
-  */
-	function filesize(arg) {
-		var descriptor = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-		var result = [],
-		    val = 0,
-		    e = void 0,
-		    base = void 0,
-		    bits = void 0,
-		    ceil = void 0,
-		    neg = void 0,
-		    num = void 0,
-		    output = void 0,
-		    round = void 0,
-		    unix = void 0,
-		    spacer = void 0,
-		    standard = void 0,
-		    symbols = void 0;
-
-		if (isNaN(arg)) {
-			throw new Error("Invalid arguments");
-		}
-
-		bits = descriptor.bits === true;
-		unix = descriptor.unix === true;
-		base = descriptor.base || 2;
-		round = descriptor.round !== undefined ? descriptor.round : unix ? 1 : 2;
-		spacer = descriptor.spacer !== undefined ? descriptor.spacer : unix ? "" : " ";
-		symbols = descriptor.symbols || descriptor.suffixes || {};
-		standard = base === 2 ? descriptor.standard || "jedec" : "jedec";
-		output = descriptor.output || "string";
-		e = descriptor.exponent !== undefined ? descriptor.exponent : -1;
-		num = Number(arg);
-		neg = num < 0;
-		ceil = base > 2 ? 1000 : 1024;
-
-		// Flipping a negative number to determine the size
-		if (neg) {
-			num = -num;
-		}
-
-		// Zero is now a special case because bytes divide by 1
-		if (num === 0) {
-			result[0] = 0;
-			result[1] = unix ? "" : !bits ? "B" : "b";
-		} else {
-			// Determining the exponent
-			if (e === -1 || isNaN(e)) {
-				e = Math.floor(Math.log(num) / Math.log(ceil));
-
-				if (e < 0) {
-					e = 0;
-				}
-			}
-
-			// Exceeding supported length, time to reduce & multiply
-			if (e > 8) {
-				e = 8;
-			}
-
-			val = base === 2 ? num / Math.pow(2, e * 10) : num / Math.pow(1000, e);
-
-			if (bits) {
-				val = val * 8;
-
-				if (val > ceil && e < 8) {
-					val = val / ceil;
-					e++;
-				}
-			}
-
-			result[0] = Number(val.toFixed(e > 0 ? round : 0));
-			result[1] = base === 10 && e === 1 ? bits ? "kb" : "kB" : symbol[standard][bits ? "bits" : "bytes"][e];
-
-			if (unix) {
-				result[1] = standard === "jedec" ? result[1].charAt(0) : e > 0 ? result[1].replace(/B$/, "") : result[1];
-
-				if (b.test(result[1])) {
-					result[0] = Math.floor(result[0]);
-					result[1] = "";
-				}
-			}
-		}
-
-		// Decorating a 'diff'
-		if (neg) {
-			result[0] = -result[0];
-		}
-
-		// Applying custom symbol
-		result[1] = symbols[result[1]] || result[1];
-
-		// Returning Array, Object, or String (default)
-		if (output === "array") {
-			return result;
-		}
-
-		if (output === "exponent") {
-			return e;
-		}
-
-		if (output === "object") {
-			return { value: result[0], suffix: result[1], symbol: result[1] };
-		}
-
-		return result.join(spacer);
-	}
-
-	// CommonJS, AMD, script tag
-	if (typeof exports !== "undefined") {
-		module.exports = filesize;
-	} else if (typeof define === "function" && define.amd) {
-		define(function () {
-			return filesize;
-		});
-	} else {
-		global.filesize = filesize;
-	}
-})(typeof window !== "undefined" ? window : commonjsGlobal);
-});
-
 class Comments {
   static initialize() {
-    if ($("#c-comments").length === 0 && $("#c-posts #a-show").length === 0) {
-      return;
+    if ($("#c-comments").length || $("#c-posts #a-show").length) {
+      $(function () {
+        Comments.initialize_patches();
+        Comments.initialize_metadata();
+      });
     }
 
-    Comments.initialize_patches();
-    Comments.initialize_metadata();
-    Comments.initialize_tag_list();
+    if ($("#c-comments #a-index").length) {
+      Comments.initialize_tag_list();
+    }
   }
 
   static initialize_patches() {
@@ -490,25 +441,6 @@ class Comments {
         $menu.append($('<li> | </li>'));
       }
 
-      /*
-      const $score_container = $('<li></li>');
-
-      $score_container.append($(`
-          <span class="info">
-              <strong>Score</strong>
-              <span>${comment_score}</span>
-          </span>
-      `));
-
-      $score_container.append(document.createTextNode('(vote '));
-      $upvote_link.find('a').appendTo($score_container).text('up');
-      $score_container.append(document.createTextNode('/'));
-      $downvote_link.find('a').appendTo($score_container).text('down');
-      $score_container.append(document.createTextNode(')'));
-
-      $menu.append($score_container);
-      */
-
       $menu.append($(`
         <li>
           <a href="/posts/${post_id}#comment-${comment_id}">Comment #${comment_id}</a>
@@ -526,10 +458,6 @@ class Comments {
 
   // Sort tags by type, and put artist tags first.
   static initialize_tag_list() {
-    if ($("#c-comments #a-index").length === 0) {
-      return;
-    }
-
     const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
     $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {
@@ -557,7 +485,7 @@ class Comments {
         $row.append($(`
           <span class="info">
             <strong>Favorites</strong>
-            ${post.fav_count} (<a href="">Fav</a>)
+            ${post.fav_count}
           </span>
         `));
 
@@ -590,11 +518,9 @@ class Comments {
 
 class ForumPosts {
   static initialize() {
-    if ($("#c-forum-topics #a-show").length === 0) {
-      return false;
+    if ($("#c-forum-topics #a-show").length) {
+        ForumPosts.initialize_permalinks();
     }
-
-    ForumPosts.initialize_permalinks();
   }
 
   // On forum posts, change "Permalink" to "Forum #1234". */
@@ -978,11 +904,9 @@ class WikiPages {
     const $toc =
       DText.create_expandable('Table of Contents', '<ul></ul>').prependTo('#wiki-page-body');
 
-    /* 
-     * Build ToC. Create a nested heirarchy matching the hierarchy of
-     * headings on the page; an h5 following an h4 opens a new submenu,
-     * another h4 closes the submenu. Likewise for h5, h6, etc.
-     */
+    // Build ToC. Create a nested heirarchy matching the hierarchy of
+    // headings on the page; an h5 following an h4 opens a new submenu,
+    // another h4 closes the submenu. Likewise for h5, h6, etc.
     let $submenu = null;
     let $menu = $toc.find('ul');
     let level = $headings.length > 0
@@ -1018,15 +942,14 @@ class WikiPages {
 class UI {
   static initialize() {
     UI.initialize_moment();
-
     UI.initialize_patches();
-    UI.initialize_post_thumbnail_tooltips();
-    UI.initialize_post_link_tooltips();
-    UI.initialize_user_links();
-    UI.initialize_wiki_links();
 
-    UI.initialize_header();
-    UI.initialize_relative_times();
+    EX.config.showHeaderBar && UI.initialize_header();
+    EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
+    EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
+    EX.config.styleUsernames && UI.initialize_user_links();
+    EX.config.styleWikiLinks && UI.initialize_wiki_links();
+    EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     UI.initialize_hotkeys();
   }
 
@@ -1141,7 +1064,7 @@ class UI {
   }
 
   // Show post previews when hovering over post #1234 links.
-  static initialize_post_link_tooltips() {
+  static initialize_post_link_previews() {
     $('a[href^="/posts/"]')
       .filter((i, e) => /post #\d+/.test($(e).text()))
       .addClass('ex-thumbnail-tooltip-link');
@@ -1150,7 +1073,7 @@ class UI {
   }
 
   // Show post previews when hovering over thumbnails.
-  static initialize_post_thumbnail_tooltips() {
+  static initialize_post_thumbnail_previews() {
     // The thumbnail container is .post-preview on every page but comments and
     // the mod queue. Handle those specially.
     if ($("#c-comments").length) {
@@ -1220,69 +1143,63 @@ class UI {
     });
   }
 
-  /*
-    * Color code tags linking to wiki pages. Also add a tooltip showing the
-    * tag creation date and post count.
-    */
+  // Color code tags linking to wiki pages. Also add a tooltip showing the tag
+  // creation date and post count.
   static initialize_wiki_links() {
-    const $wiki_links = $(`a[href^="/wiki_pages/show_or_new?title="]`);
+    function parse_tag_name(wiki_link) {
+      return decodeURIComponent($(wiki_link).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
+    }
 
-    const tag_names = $wiki_links.map((i, e) =>
-      decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1])
-    ).toArray();
+    const meta_wikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
 
-    // Collect tags in batches, with each batch having a max count of 1000
-    // tags or a max combined size of 6500 bytes for all tags. This is
-    // necessary because these are the API limits for the /tags.json call.
-    //
-    // FIXME: Technically, tag.length counts UTF-16 codepoints here when we
-    // should be counting bytes.
-    //
-    // Ref: http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-    const [tag_batches,,] = tag_names.reduce(
-      ([tags, tag_size, tag_count], tag) => {
-        tag_size += tag.length;
-        tag_count++;
+    const $wiki_links =
+      $(`a[href^="/wiki_pages/show_or_new?title="]`)
+      .filter((i, e) => $(e).text() != "?");
 
-        if (tag_count > 1000 || tag_size > 6500) {
-          tags.unshift([tag]);
-          tag_count = 0;
-          tag_size = 0;
-        } else {
-          tags[0].push(tag);
-        }
-
-        return [tags, tag_size, tag_count];
-      },
-      [ [[]], 0, 0 ] /* tags = [[]], tag_size = 0, tag_count = 0 */
-    );
+    const tag_names =
+      _($wiki_links.toArray())
+      .map(parse_tag_name)
+      .reject(tag => tag.match(meta_wikis))
+      .value();
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
-    tag_batches.forEach(tag_batch => {
-      const tag_query = encodeURIComponent(tag_batch.join(','));
+    Tag.search(tag_names).then(tags => {
+      $wiki_links.each((i, e) => {
+        const $wiki_link = $(e);
+        const name = parse_tag_name($wiki_link);
+        const tag = tags[name];
 
-      $.getJSON(`/tags.json?search[hide_empty]=no&search[name]=${tag_query}&limit=1000`).then(tags => {
-        _.each(tags, tag => {
-          // Encode some extra things manually because Danbooru
-          // encodes these things in URLs but encodeURIComponent doesn't.
-          const tag_name =
-            encodeURIComponent(tag.name)
-            .replace(/!/g,  '%21')
-            .replace(/'/g,  '%27')
-            .replace(/\(/g, '%28')
-            .replace(/\)/g, '%29')
-            .replace(/~/g,  '%7E');
+        if (name.match(meta_wikis)) {
+          return;
+        } else if (tag === undefined) {
+          $wiki_link.addClass('tag-dne');
+          return;
+        }
 
-          const tag_created_at =
-            moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
+        const tag_created_at = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
-          const tag_title =
-            `${Tag.categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+        const tag_title =
+          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
-          $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`)
-            .addClass(`tag-type-${tag.category}`)
-            .attr('title', tag_title);
-        });
+        _(tag).forOwn((value, key) =>
+          $wiki_link.attr(`data-tag-${_(key).kebabCase()}`, value)
+        );
+
+        $wiki_link.addClass(`tag-type-${tag.category}`).attr('title', tag_title);
+
+        if (tag.post_count === 0) {
+          $wiki_link.addClass("tag-post-count-empty");
+        } else if (tag.post_count < 100) {
+          $wiki_link.addClass("tag-post-count-small");
+        } else if (tag.post_count < 1000) {
+          $wiki_link.addClass("tag-post-count-medium");
+        } else if (tag.post_count < 10000) {
+          $wiki_link.addClass("tag-post-count-large");
+        } else if (tag.post_count < 100000) {
+          $wiki_link.addClass("tag-post-count-huge");
+        } else {
+          $wiki_link.addClass("tag-post-count-gigantic");
+        }
       });
     });
   }
@@ -1400,36 +1317,42 @@ UI.PostVersions = PostVersions;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-__$styleInject(".artist-table {\n  white-space: nowrap;\n}\n\n.artist-table .artist-id {\n  width: 10%;\n}\n\n.artist-table .artist-other-names {\n  width: 100%;\n  white-space: normal;\n}\n\n.ui-tooltip,\n.ui-tooltip .ex-thumbnail-tooltip img {\n  max-width:  450px !important;\n  max-height: 450px !important;\n}\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n}\n\n#c-artists #sidebar label {\n  pointer: auto;\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto;\n}\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important;\n}\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0;\n}\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0;\n}\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em;\n}\n\na.with-style[data-can-upload-free=\"false\"][data-can-approve-posts=\"true\"] {\n    text-decoration: underline;\n}\n\na.with-style[data-is-banned=\"true\"] {\n    color: black;\n    text-decoration: underline;\n}\n\n.tag-list-header h1, .tag-list-header h2 {\n    display: inline-block;\n}\n\n.tag-list-header .post-count {\n    margin-left: 0.5em;\n}\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n    color: #A00;\n}\n\n.spoiler:hover a.tag-type-3 {\n    color: #A0A;\n}\n\n.spoiler:hover a.tag-type-4 {\n    color: #0A0;\n}\n\n.spoiler:not(:hover) a {\n    color: black !important;\n}\n\n#sticky-header {\n    position: fixed;\n    display: flex;\n    width: 100%;\n    background: white;\n    z-index: 100;\n    border-bottom: 1px solid #EEE;\n}\n\n#sticky-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px;\n    //padding: 42px 0px 0px 0px;\n}\n\n#sticky-header #search-box {\n    display: inline-block;\n    margin: auto 30px;\n}\n\n#sticky-header #search-box #tags {\n    width: 640px;\n}\n\n#sticky-header #mode-box {\n    margin: auto 30px;\n}\n\n#sticky-header #mode-box form {\n    display: inline-block;\n}\n\n#sticky-header #mode-box form #tag-script-field {\n    margin-top: 0;\n}\n\n\n#notice {\n    top: 4.5em !important;\n}\n\n#top {\n    padding-top: 52px;\n}\n\n#top h1 {\n    display: none;\n}\n\n\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n    //display: flex;\n    //align-items: center;\n    padding-top: 52px;\n    margin-top: -52px;\n}\n\n#wiki-page-body a.ui-icon.collapsible-header {\n    display: inline-block;\n    margin-left: -8px;\n}\n\n\n\n.ui-selected {\n    background: lightblue;\n}\n\n.ui-selectable {\n    -ms-touch-action: none;\n    touch-action: none;\n}\n\n.ui-selectable-helper {\n    position: absolute;\n    z-index: 100;\n    border: 1px dotted black;\n}\n\n.ui-tooltip {\n    padding:   8px;\n    position:  absolute;\n    z-index:   9999;\n    max-width: 300px;\n    -webkit-box-shadow: 0 0 5px #aaa;\n    box-shadow: 0 0 5px #aaa;\n}\n\nbody .ui-tooltip {\n    border-width: 2px;\n}\n\n/*\n.user-member::before, .user-gold::before,\n.user-platinum::before, .user-builder::before,\n.user-janitor::before, .user-moderator::before,\n.user-admin::before {\n    content: '@';\n    color: grey;\n}\n*/\n\n/*\n.paginator {\n    clear: none !important;\n}\n*/\n",undefined);
+__$styleInject(".ex-artists {\n  white-space: nowrap;\n}\n\n.ex-artist .ex-artist-id {\n  width: 10%;\n}\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal;\n}\n\n.ui-tooltip,\n.ui-tooltip .ex-thumbnail-tooltip img {\n  max-width:  450px !important;\n  max-height: 450px !important;\n}\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n}\n\n#c-artists #sidebar label {\n  pointer: auto;\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto;\n}\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important;\n}\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0;\n}\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0;\n}\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em;\n}\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted;\n}\n\n.tag-dne {\n  text-decoration: line-through !important;\n}\n\na.with-style[data-can-upload-free=\"false\"][data-can-approve-posts=\"true\"] {\n    text-decoration: underline;\n}\n\na.with-style[data-is-banned=\"true\"] {\n    color: black;\n    text-decoration: underline;\n}\n\n.tag-list-header h1, .tag-list-header h2 {\n    display: inline-block;\n}\n\n.tag-list-header .post-count {\n    margin-left: 0.5em;\n}\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n    color: #A00;\n}\n\n.spoiler:hover a.tag-type-3 {\n    color: #A0A;\n}\n\n.spoiler:hover a.tag-type-4 {\n    color: #0A0;\n}\n\n.spoiler:not(:hover) a {\n    color: black !important;\n}\n\n#sticky-header {\n    position: fixed;\n    display: flex;\n    width: 100%;\n    background: white;\n    z-index: 100;\n    border-bottom: 1px solid #EEE;\n}\n\n#sticky-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px;\n    //padding: 42px 0px 0px 0px;\n}\n\n#sticky-header #search-box {\n    display: inline-block;\n    margin: auto 30px;\n}\n\n#sticky-header #search-box #tags {\n    width: 640px;\n}\n\n#sticky-header #mode-box {\n    margin: auto 30px;\n}\n\n#sticky-header #mode-box form {\n    display: inline-block;\n}\n\n#sticky-header #mode-box form #tag-script-field {\n    margin-top: 0;\n}\n\n\n#notice {\n    top: 4.5em !important;\n}\n\n#top {\n    padding-top: 52px;\n}\n\n#top h1 {\n    display: none;\n}\n\n\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n    //display: flex;\n    //align-items: center;\n    padding-top: 52px;\n    margin-top: -52px;\n}\n\n#wiki-page-body a.ui-icon.collapsible-header {\n    display: inline-block;\n    margin-left: -8px;\n}\n\n\n\n.ui-selected {\n    background: lightblue;\n}\n\n.ui-selectable {\n    -ms-touch-action: none;\n    touch-action: none;\n}\n\n.ui-selectable-helper {\n    position: absolute;\n    z-index: 100;\n    border: 1px dotted black;\n}\n\n.ui-tooltip {\n    padding:   8px;\n    position:  absolute;\n    z-index:   9999;\n    max-width: 300px;\n    -webkit-box-shadow: 0 0 5px #aaa;\n    box-shadow: 0 0 5px #aaa;\n}\n\nbody .ui-tooltip {\n    border-width: 2px;\n}\n\n/*\n.user-member::before, .user-gold::before,\n.user-platinum::before, .user-builder::before,\n.user-janitor::before, .user-moderator::before,\n.user-admin::before {\n    content: '@';\n    color: grey;\n}\n*/\n\n/*\n.paginator {\n    clear: none !important;\n}\n*/\n",undefined);
 
 class EX$1 {
+  static get Config() { return Config; }
+  static get DText() { return DText; }
+  static get Tag() { return Tag; }
+  static get UI() { return UI; }
+
   static search(url, search, { limit, page } = {}) {
     return $.getJSON(url, { search, limit: limit || 1000, page: page || 1 });
   }
+
+  static initialize() {
+    EX$1.config = new Config();
+    EX$1.UI.initialize();
+    EX$1.UI.Artists.initialize();
+    EX$1.UI.Comments.initialize();
+    EX$1.UI.ForumPosts.initialize();
+    EX$1.UI.ModeMenu.initialize();
+    EX$1.UI.Pools.initialize();
+    EX$1.UI.Posts.initialize();
+    EX$1.UI.PostVersions.initialize();
+    EX$1.UI.WikiPages.initialize();
+  }
 }
-
-EX$1.DText = DText;
-EX$1.Tag = Tag;
-EX$1.UI = UI;
-
-EX$1.initialize = function () {
-  EX$1.UI.initialize();
-  EX$1.UI.Artists.initialize();
-  EX$1.UI.Comments.initialize();
-  EX$1.UI.ForumPosts.initialize();
-  EX$1.UI.ModeMenu.initialize();
-  EX$1.UI.Pools.initialize();
-  EX$1.UI.Posts.initialize();
-  EX$1.UI.PostVersions.initialize();
-  EX$1.UI.WikiPages.initialize();
-};
 
 window.EX = EX$1;
 jQuery(function () {
-  "use strict";
-  EX$1.initialize();
+  try {
+    EX$1.initialize();
+  } catch(e) {
+    $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
+    throw e;
+  }
 });
 
 return EX$1;
 
-}(_,jQuery,moment));
+}(_,jQuery,moment,filesize));
