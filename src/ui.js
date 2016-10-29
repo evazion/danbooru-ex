@@ -223,38 +223,9 @@ export default class UI {
       decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1])
     ).toArray();
 
-    // Collect tags in batches, with each batch having a max count of 1000
-    // tags or a max combined size of 6500 bytes for all tags. This is
-    // necessary because these are the API limits for the /tags.json call.
-    //
-    // FIXME: Technically, tag.length counts UTF-16 codepoints here when we
-    // should be counting bytes.
-    //
-    // Ref: http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
-    const [tag_batches,,] = tag_names.reduce(
-      ([tags, tag_size, tag_count], tag) => {
-        tag_size += tag.length + 1; // Plus one for the trailing comma after tags are joined.
-        tag_count++;
-
-        if (tag_count > 1000 || tag_size > 6500) {
-          tags.unshift([tag]);
-          tag_count = 0;
-          tag_size = 0;
-        } else {
-          tags[0].push(tag);
-        }
-
-        return [tags, tag_size, tag_count];
-      },
-      [ [[]], 0, 0 ] /* tags = [[]], tag_size = 0, tag_count = 0 */
-    );
-
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
-    tag_batches.forEach(tag_batch => {
-      const tag_query = encodeURIComponent(tag_batch.join(','));
-
-      // EX.search("/tags", { hide_empty: "no", name: tag_query }, { limit: 1000 }).then(tags => {
-      $.getJSON(`/tags.json?search[hide_empty]=no&search[name]=${tag_query}&limit=1000`).then(tags => {
+    //tag_batches.forEach(tag_batch => {
+      Tag.search(tag_names).then(tags => {
         _.each(tags, tag => {
           // Encode some extra things manually because Danbooru
           // encodes these things in URLs but encodeURIComponent doesn't.
@@ -270,7 +241,7 @@ export default class UI {
             moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
           const tag_title =
-            `${Tag.categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+            `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
           const $wiki_link = $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`);
 
@@ -295,7 +266,7 @@ export default class UI {
           }
         });
       });
-    });
+    //});
   }
 
   /*
