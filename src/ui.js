@@ -224,49 +224,47 @@ export default class UI {
     ).toArray();
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
-    //tag_batches.forEach(tag_batch => {
-      Tag.search(tag_names).then(tags => {
-        _.each(tags, tag => {
-          // Encode some extra things manually because Danbooru
-          // encodes these things in URLs but encodeURIComponent doesn't.
-          const tag_name =
-            encodeURIComponent(tag.name)
-            .replace(/!/g,  '%21')
-            .replace(/'/g,  '%27')
-            .replace(/\(/g, '%28')
-            .replace(/\)/g, '%29')
-            .replace(/~/g,  '%7E');
+    Tag.search(tag_names).then(tags => {
+      _.each(tags, tag => {
+        // Encode some extra things manually because Danbooru
+        // encodes these things in URLs but encodeURIComponent doesn't.
+        const tag_name =
+          encodeURIComponent(tag.name)
+          .replace(/!/g,  '%21')
+          .replace(/'/g,  '%27')
+          .replace(/\(/g, '%28')
+          .replace(/\)/g, '%29')
+          .replace(/~/g,  '%7E');
 
-          const tag_created_at =
-            moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
+        const tag_created_at =
+          moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
-          const tag_title =
-            `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+        const tag_title =
+          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
-          const $wiki_link = $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`);
+        const $wiki_link = $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`);
 
-          _(tag).forOwn((value, key) =>
-            $wiki_link.attr(`data-tag-${_(key).kebabCase()}`, value)
-          );
+        _(tag).forOwn((value, key) =>
+          $wiki_link.attr(`data-tag-${_(key).kebabCase()}`, value)
+        );
 
-          $wiki_link.addClass(`tag-type-${tag.category}`).attr('title', tag_title);
+        $wiki_link.addClass(`tag-type-${tag.category}`).attr('title', tag_title);
 
-          if (tag.post_count === 0) {
-            $wiki_link.addClass("tag-post-count-empty");
-          } else if (tag.post_count < 100) {
-            $wiki_link.addClass("tag-post-count-small");
-          } else if (tag.post_count < 1000) {
-            $wiki_link.addClass("tag-post-count-medium");
-          } else if (tag.post_count < 10000) {
-            $wiki_link.addClass("tag-post-count-large");
-          } else if (tag.post_count < 100000) {
-            $wiki_link.addClass("tag-post-count-huge");
-          } else {
-            $wiki_link.addClass("tag-post-count-gigantic");
-          }
-        });
+        if (tag.post_count === 0) {
+          $wiki_link.addClass("tag-post-count-empty");
+        } else if (tag.post_count < 100) {
+          $wiki_link.addClass("tag-post-count-small");
+        } else if (tag.post_count < 1000) {
+          $wiki_link.addClass("tag-post-count-medium");
+        } else if (tag.post_count < 10000) {
+          $wiki_link.addClass("tag-post-count-large");
+        } else if (tag.post_count < 100000) {
+          $wiki_link.addClass("tag-post-count-huge");
+        } else {
+          $wiki_link.addClass("tag-post-count-gigantic");
+        }
       });
-    //});
+    });
   }
 
   /*
