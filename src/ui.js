@@ -13,15 +13,14 @@ import Tag from "./tag.js";
 export default class UI {
   static initialize() {
     UI.initialize_moment();
-
     UI.initialize_patches();
-    UI.initialize_post_thumbnail_tooltips();
-    UI.initialize_post_link_tooltips();
-    UI.initialize_user_links();
-    UI.initialize_wiki_links();
 
-    UI.initialize_header();
-    UI.initialize_relative_times();
+    EX.config.showHeaderBar && UI.initialize_header();
+    EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
+    EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
+    EX.config.styleUsernames && UI.initialize_user_links();
+    EX.config.styleWikiLinks && UI.initialize_wiki_links();
+    EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     UI.initialize_hotkeys();
   }
 
@@ -136,7 +135,7 @@ export default class UI {
   }
 
   // Show post previews when hovering over post #1234 links.
-  static initialize_post_link_tooltips() {
+  static initialize_post_link_previews() {
     $('a[href^="/posts/"]')
       .filter((i, e) => /post #\d+/.test($(e).text()))
       .addClass('ex-thumbnail-tooltip-link');
@@ -145,7 +144,7 @@ export default class UI {
   }
 
   // Show post previews when hovering over thumbnails.
-  static initialize_post_thumbnail_tooltips() {
+  static initialize_post_thumbnail_previews() {
     // The thumbnail container is .post-preview on every page but comments and
     // the mod queue. Handle those specially.
     if ($("#c-comments").length) {
@@ -215,10 +214,8 @@ export default class UI {
     });
   }
 
-  /*
-    * Color code tags linking to wiki pages. Also add a tooltip showing the
-    * tag creation date and post count.
-    */
+  // Color code tags linking to wiki pages. Also add a tooltip showing the tag
+  // creation date and post count.
   static initialize_wiki_links() {
     const $wiki_links = $(`a[href^="/wiki_pages/show_or_new?title="]`);
 
