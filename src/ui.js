@@ -217,7 +217,11 @@ export default class UI {
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
   // creation date and post count.
   static initialize_wiki_links() {
-    const $wiki_links = $(`a[href^="/wiki_pages/show_or_new?title="]`);
+    const meta_wikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
+
+    const $wiki_links =
+      $(`a[href^="/wiki_pages/show_or_new?title="]`)
+      .filter((i, e) => $(e).text() != "?");
 
     const tag_names =
       $wiki_links
@@ -234,8 +238,14 @@ export default class UI {
         const name = decodeURIComponent($(e).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
         const tag = tags[name];
 
-        const tag_created_at =
-          moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
+        if (tag.match(meta_wikis)) {
+          return;
+        } else if (tag === undefined) {
+          $wiki_link.addClass('tag-dne');
+          return;
+        }
+
+        const tag_created_at = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
         const tag_title =
           `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;

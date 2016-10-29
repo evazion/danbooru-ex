@@ -52,6 +52,10 @@
 }
 
 .tag-post-count-empty {
+  border-bottom: 1px dotted;
+}
+
+.tag-dne {
   text-decoration: line-through !important;
 }
 
