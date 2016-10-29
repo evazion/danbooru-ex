@@ -233,7 +233,7 @@ export default class UI {
     // Ref: http://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
     const [tag_batches,,] = tag_names.reduce(
       ([tags, tag_size, tag_count], tag) => {
-        tag_size += tag.length;
+        tag_size += tag.length + 1; // Plus one for the trailing comma after tags are joined.
         tag_count++;
 
         if (tag_count > 1000 || tag_size > 6500) {
@@ -253,6 +253,7 @@ export default class UI {
     tag_batches.forEach(tag_batch => {
       const tag_query = encodeURIComponent(tag_batch.join(','));
 
+      // EX.search("/tags", { hide_empty: "no", name: tag_query }, { limit: 1000 }).then(tags => {
       $.getJSON(`/tags.json?search[hide_empty]=no&search[name]=${tag_query}&limit=1000`).then(tags => {
         _.each(tags, tag => {
           // Encode some extra things manually because Danbooru
@@ -271,9 +272,27 @@ export default class UI {
           const tag_title =
             `${Tag.categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
 
-          $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`)
-            .addClass(`tag-type-${tag.category}`)
-            .attr('title', tag_title);
+          const $wiki_link = $(`a[href="/wiki_pages/show_or_new?title=${tag_name}"]`);
+
+          _(tag).forOwn((value, key) =>
+            $wiki_link.attr(`data-tag-${_(key).kebabCase()}`, value)
+          );
+
+          $wiki_link.addClass(`tag-type-${tag.category}`).attr('title', tag_title);
+
+          if (tag.post_count === 0) {
+            $wiki_link.addClass("tag-post-count-empty");
+          } else if (tag.post_count < 100) {
+            $wiki_link.addClass("tag-post-count-small");
+          } else if (tag.post_count < 1000) {
+            $wiki_link.addClass("tag-post-count-medium");
+          } else if (tag.post_count < 10000) {
+            $wiki_link.addClass("tag-post-count-large");
+          } else if (tag.post_count < 100000) {
+            $wiki_link.addClass("tag-post-count-huge");
+          } else {
+            $wiki_link.addClass("tag-post-count-gigantic");
+          }
         });
       });
     });
