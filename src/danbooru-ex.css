@@ -56,7 +56,9 @@
 }
 
 .tag-dne {
-  text-decoration: line-through !important;
+  border-bottom: 1px dotted;
+}
+
 }
 
 a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
