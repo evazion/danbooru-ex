@@ -59,6 +59,38 @@
   border-bottom: 1px dotted;
 }
 
+.ex-vertical-resizer {
+  cursor: col-resize;
+  width: 1em;
+}
+
+.ex-vertical-resizer-line {
+  background-color: #ebebeb;
+  height: 100%;
+  width: 1px;
+  margin: 0 auto;
+}
+
+.ex-panel {
+  overflow: hidden;
+}
+
+.ex-panel h1,
+.ex-panel h2 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* XXX do this in js */
+#c-posts > div,
+#c-wiki-pages > div {
+  display: flex;
+}
+
+#c-posts #content, #c-wiki-pages #content {
+  flex: 1;
+  margin-left: 0px !important;
 }
 
 a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {

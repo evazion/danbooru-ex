@@ -21,6 +21,7 @@ export default class UI {
     EX.config.styleUsernames && UI.initialize_user_links();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
+    EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
     UI.initialize_hotkeys();
   }
 
@@ -272,6 +273,28 @@ export default class UI {
           $wiki_link.addClass("tag-post-count-gigantic");
         }
       });
+    });
+  }
+
+  static initialize_resizeable_sidebar() {
+    if ($("#sidebar").length === 0) {
+      return;
+    }
+
+    $("#sidebar").width(EX.config.postSidebarWidth);
+    $("#sidebar").addClass("ex-panel");
+
+    $("#sidebar").after(`
+      <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
+        <div class="ex-vertical-resizer-line"></div>
+      </section>
+    `);
+
+    $("#ex-sidebar-resizer").draggable({
+      axis: "x",
+      helper: "clone",
+      drag: (event, ui) => { $("#sidebar").width(ui.position.left - 28) },
+      // stop: (event, ui) => { EX.config.postSidebarWidth = ui.position.left - 28 },
     });
   }
 

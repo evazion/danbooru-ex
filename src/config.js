@@ -10,6 +10,8 @@ export default class Config {
       styleUsernames: true,
       styleWikiLinks: true,
       useRelativeTimestamps: true,
+      resizeableSidebars: true,
+      postSidebarWidth: "15em",
     };
   }
 
@@ -46,7 +48,8 @@ export default class Config {
   get showPostLinkPreviews() { return this.get("showPostLinkPreviews"); }
   get styleUsernames() { return this.get("styleUsernames"); }
   get styleWikiLinks() { return this.get("styleWikiLinks"); }
-  get useRelativeTimestamps() { return this.get("useRelativeTimestamps"); }
+  get resizeableSidebars() { return this.get("resizeableSidebars"); }
+  get postSidebarWidth() { return this.get("postSidebarWidth"); }
 
   set schemaVersion(v) { return this.set("schemaVersion", v); }
   set showHeaderBar(v) { return this.set("showHeaderBar", v); }
@@ -54,6 +57,8 @@ export default class Config {
   set showPostLinkPreviews(v) { return this.set("showPostLinkPreviews", v); }
   set styleUsernames(v) { return this.set("styleUsernames", v); }
   set useRelativeTimestamps(v) { return this.set("useRelativeTimestamps", v); }
+  set resizeableSidebars(v) { return this.set("resizeableSidebars", v); }
+  set postSidebarWidth(v) { return this.set("postSidebarWidth", v); }
 
   // Define getters/setters for `Config.showHeaderBar` et al.
   /*
