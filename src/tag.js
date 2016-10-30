@@ -37,9 +37,13 @@ export default class Tag {
 
   static search(tags) {
     const requests = Tag.batch(tags).map(batch => {
-      const query = batch.map(encodeURIComponent).join(",");
-      return $.getJSON(`/tags.json?limit=1000&search[hide_empty]=no&search[name]=${query}`);
-    })
+      if (batch.length === 0) {
+        return Promise.resolve([]);
+      } else {
+        const query = batch.map(encodeURIComponent).join(",");
+        return $.getJSON(`/tags.json?limit=1000&search[hide_empty]=no&search[name]=${query}`);
+      }
+    });
 
     return Promise.all(requests).then(tags =>
       _(tags).flatten().groupBy("name").mapValues(_.first).value()
