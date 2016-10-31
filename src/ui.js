@@ -196,14 +196,18 @@ export default class UI {
   // Add data attributes to usernames so that banned users and approvers can be styled.
   static initialize_user_links() {
     const user_ids =
-      _($('a[href^="/users"]'))
+      _($('a[href^="/users"]').filter((i, e) => !$(e).text().match(/My Account/)))
       .map(e => $(e).attr('href').replace("/users/", ""))
       .map(Number)
       .sortBy()
       .sortedUniq()
       .join(',');
 
-    // XXX should do lookup in batches.
+    if (user_ids.length === 0) {
+      return;
+    }
+
+    // XXX should do lookup in batches. should also skip if no users. should also skip my account link.
     $.getJSON(`/users.json?limit=1000&search[id]=${user_ids}`).then(users => {
       for (const user of users) {
         let $user = $(`a[href^="/users/${user.id}"]`);
