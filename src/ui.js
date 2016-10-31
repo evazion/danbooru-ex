@@ -22,6 +22,7 @@ export default class UI {
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
+    EX.config.previewPanel && UI.initialize_preview_panel();
     UI.initialize_hotkeys();
   }
 
@@ -51,6 +52,7 @@ export default class UI {
           <form action="/">
             <select name="mode">
               <option value="view">View</option>
+              <option value="preview">Preview</option>
               <option value="edit">Edit</option>
               <option value="tag-script">Tag script</option>
               <option value="add-fav">Favorite</option>
@@ -295,6 +297,78 @@ export default class UI {
       helper: "clone",
       drag: (event, ui) => { $("#sidebar").width(ui.position.left - 28) },
       // stop: (event, ui) => { EX.config.postSidebarWidth = ui.position.left - 28 },
+    });
+  }
+
+  static initialize_preview_panel() {
+    if ($("article.post-preview").length === 0) {
+      return;
+    }
+
+    $("#content").after(`
+      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
+        <div class="ex-vertical-resizer-line"></div>
+      </section>
+      <section id="ex-preview-panel" class="ex-panel">
+        <div class="ex-sticky">
+          <img>
+        </div>
+      </section>
+    `);
+
+    const origTop = $(".ex-sticky").offset().top;
+    const headerHeight = $("#sticky-header").height();
+    const footerHeight = $("footer").outerHeight(true);
+
+    $(document).scroll(event => {
+      let height;
+
+      if (window.scrollY + headerHeight >= origTop) {
+        $(".ex-sticky").addClass("ex-fixed").css({ top: headerHeight });
+        height = `calc(100vh - ${headerHeight}px - 1em)`;
+      } else {
+        $(".ex-sticky").removeClass("ex-fixed");
+        height = `calc(100vh - ${origTop - window.scrollY}px - 1em)`;
+      }
+
+      if (window.scrollY + footerHeight >= $("body").height() - window.innerHeight) {
+        const diff = window.scrollY + footerHeight - $("body").height() + window.innerHeight;
+        height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
+      }
+
+      $("#ex-preview-panel .ex-sticky").css({ height });
+    });
+
+    $("#ex-preview-panel-resizer").draggable({
+      axis: "x",
+      helper: "clone",
+      drag: (event, ui) => {
+        const width = $("body").innerWidth() - ui.position.left - 28;
+
+        $("#ex-preview-panel").width(width);
+        $("#ex-preview-panel .ex-sticky").width(width);
+        // $("#ex-preview-panel .ex-sticky img").css({ "max-width": width });
+      },
+      // stop: (event, ui) => { EX.config.editPanelWidth = ui.position.left - 28 },
+    });
+
+    $("#mode-box select").change(e => {
+      e.preventDefault();
+
+      if ($(e.target).val() === "preview") {
+        $("article.post-preview a").off("click").on("click.danbooru-ex.open-preview", e => {
+          e.preventDefault();
+
+          const sample_src = $(e.target).closest("article").data("large-file-url");
+          const width = "15em";
+
+          $("#ex-preview-panel img").attr("src", sample_src);
+          // $("#ex-preview-panel img").css({ "max-width": width });
+          // $("#ex-preview-panel").width(width);
+        });
+      } else {
+        $("article.post-preview a").off("click.open-preview");
+      }
     });
   }
 
