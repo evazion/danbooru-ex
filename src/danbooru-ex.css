@@ -23,7 +23,6 @@
 }
 
 #c-artists #sidebar label {
-  pointer: auto;
   display: block;
   font-weight: bold;
   padding: 4px 0 4px 0;
@@ -97,13 +96,7 @@
   margin-top: 0.5em;
 }
 
-/* XXX do this in js */
-#c-posts > div,
-#c-wiki-pages > div {
-  display: flex;
-}
-
-#c-posts #content, #c-wiki-pages #content {
+.ex-preview-panel-container {
   flex: 1;
   margin-left: 0px !important;
 }
@@ -143,11 +136,13 @@ a.with-style[data-is-banned="true"] {
 }
 
 #sticky-header {
-    position: fixed;
     display: flex;
+    position: fixed;
+    top: 0;
+    padding-top: 5px;
     width: 100%;
-    background: white;
     z-index: 100;
+    background: white;
     border-bottom: 1px solid #EEE;
 }
 
@@ -155,41 +150,57 @@ a.with-style[data-is-banned="true"] {
     display: inline-block;
     font-size: 2.5em;
     margin: 0 30px;
-    //padding: 42px 0px 0px 0px;
 }
 
-#sticky-header #search-box {
+#sticky-header .ex-search-box {
+    margin: auto;
+    display: flex;
+    flex: 0 1 30%;
+}
+
+#sticky-header .ex-search-box input[name="tags"] {
+    flex: 0 1 100%;
+}
+
+#sticky-header .ex-search-box input[type="submit"] {
+    flex: 1;
+    margin: auto 1em;
+}
+
+#sticky-header .ex-mode-menu {
+    margin: auto;
+    flex: 1 2 70%;
+}
+
+#sticky-header .ex-mode-menu .ex-tag-script-controls {
     display: inline-block;
-    margin: auto 30px;
+    margin: auto;
 }
 
-#sticky-header #search-box #tags {
-    width: 640px;
+#sticky-header .ex-mode-menu label {
+    font-weight: bold;
+    cursor: auto;
 }
 
-#sticky-header #mode-box {
-    margin: auto 30px;
+@media (max-width: 1280px) {
+    #sticky-header h1,
+    header#top h1 {
+        font-size: 1.5em;
+    }
+
+    #sticky-header .ex-mode-menu label {
+        display: none;
+    }
 }
 
-#sticky-header #mode-box form {
-    display: inline-block;
+/*
+#top h1 {
+    display: none;
 }
-
-#sticky-header #mode-box form #tag-script-field {
-    margin-top: 0;
-}
-
+*/
 
 #notice {
     top: 4.5em !important;
-}
-
-#top {
-    padding-top: 52px;
-}
-
-#top h1 {
-    display: none;
 }
 
 
@@ -207,10 +218,27 @@ a.with-style[data-is-banned="true"] {
     margin-left: -8px;
 }
 
+body.mode-tag-script {
+    background-color: white;
+}
 
+body.mode-tag-script #sticky-header {
+    border-bottom: 2px solid #D6D;
+}
 
-.ui-selected {
+body.mode-preview #sticky-header {
+    border-bottom: 2px solid #0073ff;
+}
+
+body.mode-tag-script article.post-preview.ui-selected,
+body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,
+body.mode-tag-script #c-comments .post-preview .preview.ui-selected {
     background: lightblue;
+}
+
+body.mode-tag-script article.post-preview.ui-selected {
+    padding: 0 10px 10px 0;
+    margin: 0;
 }
 
 .ui-selectable {

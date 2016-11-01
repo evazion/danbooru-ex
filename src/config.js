@@ -13,6 +13,9 @@ export default class Config {
       resizeableSidebars: true,
       postSidebarWidth: "15em",
       previewPanel: true,
+      modeMenuState: "view",
+      tagScriptNumber: 1,
+      tagScripts: _.fill(Array(10), ""),
     };
   }
 
@@ -27,7 +30,7 @@ export default class Config {
   }
 
   set(key, value) {
-    this.storage["EX.config." + key] = value;
+    this.storage["EX.config." + key] = JSON.stringify(value);
     return this;
   }
 
@@ -52,6 +55,9 @@ export default class Config {
   get resizeableSidebars() { return this.get("resizeableSidebars"); }
   get postSidebarWidth() { return this.get("postSidebarWidth"); }
   get previewPanel() { return this.get("previewPanel"); }
+  get modeMenuState() { return this.get("modeMenuState"); }
+  get tagScriptNumber() { return this.get("tagScriptNumber"); }
+  get tagScripts() { return this.get("tagScripts"); }
 
   set schemaVersion(v) { return this.set("schemaVersion", v); }
   set showHeaderBar(v) { return this.set("showHeaderBar", v); }
@@ -62,6 +68,9 @@ export default class Config {
   set resizeableSidebars(v) { return this.set("resizeableSidebars", v); }
   set postSidebarWidth(v) { return this.set("postSidebarWidth", v); }
   set previewPanel(v) { return this.set("previewPanel", v); }
+  set modeMenuState(v) { return this.set("modeMenuState", v); }
+  set tagScriptNumber(v) { return this.set("tagScriptNumber", v); }
+  set tagScripts(v) { return this.set("tagScripts", v); }
 
   // Define getters/setters for `Config.showHeaderBar` et al.
   /*

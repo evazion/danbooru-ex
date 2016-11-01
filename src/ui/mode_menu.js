@@ -1,155 +1,181 @@
+import _ from "lodash";
+
 export default class ModeMenu {
   static initialize() {
-    /*
-     * Use the mode menu everywhere *but* on /posts/show (so as to not
-     * interfere with existing keyboard shortcuts on that page).
-     */
-    if ($("#c-posts #a-show").length) {
+    ModeMenu.uninitializeDanbooruModeMenu();
+    ModeMenu.initializeModeMenu();
+    ModeMenu.initializeTagScriptControls();
+    ModeMenu.initializeThumbnails();
+    ModeMenu.initializeHotkeys();
+  }
+
+  static uninitializeDanbooruModeMenu() {
+    Danbooru.PostModeMenu.initialize = _.noop;
+    Danbooru.PostModeMenu.show_notice = _.noop;
+    $(".post-preview a").unbind("click", Danbooru.PostModeMenu.click);
+    $(document).unbind("keydown", "1 2 3 4 5 6 7 8 9 0", Danbooru.PostModeMenu.change_tag_script);
+    $("#sidebar #mode-box").hide();
+  }
+
+  static initializeModeMenu() {
+    $('.ex-mode-menu select[name="mode"]').change(ModeMenu.switchMode);
+    ModeMenu.setMode(EX.config.modeMenuState);
+  }
+
+  static initializeTagScriptControls() {
+    $('.ex-mode-menu input[name="tag-script"]').on(
+      "input", _.debounce(ModeMenu.saveTagScript, 250)
+    );
+
+    $('.ex-mode-menu select[name="tag-script-number"]').change(ModeMenu.switchTagScript);
+    ModeMenu.setTagScriptNumber(EX.config.tagScriptNumber);
+
+    $('.ex-mode-menu button[name="apply"]').click(ModeMenu.applyTagScript);
+    $('.ex-mode-menu button[name="select-all"]').click(ModeMenu.selectAll);
+    $('.ex-mode-menu button[name="select-invert"]').click(ModeMenu.invertSelection);
+  }
+
+  static initializeThumbnails() {
+    $(`
+      .mod-queue-preview aside a,
+      div.post-preview .preview a,
+      article.post-preview a
+    `).click(ModeMenu.onThumbnailClick);
+  }
+
+  static initializeHotkeys() {
+    $(document).keydown("1 2 3 4 5 6 7 8 9", ModeMenu.switchToTagScript);
+
+    $(document).keydown("shift+a", ModeMenu.applyTagScript);
+    $(document).keydown("ctrl+a",  ModeMenu.selectAll);
+    $(document).keydown("ctrl+i",  ModeMenu.invertSelection);
+
+    $(document).keydown("esc", e => ModeMenu.setMode("view"));
+    $(document).keydown("`", e => ModeMenu.setMode("preview"));
+  }
+
+  static switchToTagScript(event) {
+    const newN = Number(String.fromCharCode(event.which));
+    const oldN = ModeMenu.getTagScriptNumber();
+
+    if (ModeMenu.getMode() === "tag-script" && newN === oldN) {
+      $('.ex-mode-menu input[name="tag-script"]').focus();
+    } else {
+      ModeMenu.setMode("tag-script");
+      ModeMenu.setTagScriptNumber(newN);
+    }
+
+    event.preventDefault();
+  }
+
+  static switchMode() {
+    const mode = ModeMenu.getMode();
+    EX.config.modeMenuState = mode;
+
+    $("body").removeClass((i, klass) => (klass.match(/mode-.*/) || []).join(' '));
+    // $("body").removeClass("mode-view mode-preview mode-tag-script");
+    $("body").addClass(`mode-${mode}`);
+
+    if (mode === "tag-script") {
+      $(".ex-mode-menu .ex-tag-script-controls").show();
+
+      $("#page").selectable({
+        filter: "article.post-preview, div.post-preview .preview, .mod-queue-preview aside",
+        delay: 200,
+      });
+    } else {
+      $(".ex-mode-menu .ex-tag-script-controls").hide();
+
+      if ($("#page").selectable("instance")) {
+        $("#page").selectable("destroy");
+      }
+    }
+  }
+
+  static switchTagScript(event) {
+    const n = ModeMenu.getTagScriptNumber();
+    EX.config.tagScriptNumber = n;
+
+    const script = EX.config.tagScripts[n];
+    $('.ex-mode-menu input[name="tag-script"]').val(script).change();
+  }
+
+  static onThumbnailClick(event) {
+    // Only apply on left click, not middle click and not ctrl+left click.
+    if (event.ctrlKey || event.which !== 1) {
       return;
     }
 
-    ModeMenu.initialize_patches();
+    const mode = ModeMenu.getMode();
+    if (mode === "view") {
+      return;
+    } else if (mode === "preview") {
+      const sample_src = $(event.target).closest(".post-preview").data("large-file-url");
+      $("#ex-preview-panel img").attr("src", sample_src);
 
-    Danbooru.PostModeMenu.initialize_selector();
-    Danbooru.PostModeMenu.initialize_preview_link();
-    Danbooru.PostModeMenu.initialize_edit_form();
-    Danbooru.PostModeMenu.initialize_tag_script_field();
-    Danbooru.PostModeMenu.initialize_shortcuts();
-    Danbooru.PostModeMenu.change();
+      event.preventDefault();
+    } else if (mode === "tag-script") {
+      const sample_src = $(event.target).closest(".post-preview").data("large-file-url");
+      $("#ex-preview-panel img").attr("src", sample_src);
 
-    $('#sticky-header .mode-box button').click(ModeMenu.apply_mode);
-
-    $(document).bind('keydown', 'ctrl+a',  ModeMenu.select_all);
-    $(document).bind('keydown', 'shift+a', ModeMenu.apply_mode);
-
-    const keys = {
-      "v":     "view",
-      "t":     "tag-script",
-
-      "f":     "add-fav",
-      "alt+f": "remove-fav",
-      "shift+e": "edit",
-
-      "alt+s": "rating-s",
-      "alt+q": "rating-q",
-      "alt+e": "rating-e",
-
-      "u":     "vote-up",
-      "alt+u": "vote-down",
-    };
-
-    $.each(keys, function (key, mode) {
-      $(document).keydown(key, function (e) {
-        e.preventDefault();
-
-        const prev_mode = $("#mode-box select").val();
-        $("#mode-box select").val(mode);
-
-        if (mode === "tag-script") {
-          let $tag_script_field = $("#tag-script-field").first();
-
-          /* Focus and select all in tag script entry box. */
-          if (prev_mode === "tag-script") {
-            $tag_script_field.focus().selectRange(0, $tag_script_field.val().length);
-            $tag_script_field.focus();
-          }
-          /*
-          if ($tag_script_field.val().length) {
-            $tag_script_field.val((i, v) => v.replace(/\s*$/, ' '));
-          }
-          */
-        }
-
-        Danbooru.notice(`Switched to ${mode} mode.`);
-        Danbooru.PostModeMenu.change();
-      });
-    });
-  }
-
-  static initialize_patches() {
-    // Display the new tag script in the popup notice when switching tag scripts.
-    Danbooru.PostModeMenu.show_notice = function (i) {
-      let current_script_id = Danbooru.Cookie.get("current_tag_script_id");
-      let tag_script = Danbooru.Cookie.get(`tag-script-${current_script_id}`).trim();
-      if (tag_script) {
-        Danbooru.notice(`Switched to tag script #${i}: <a href="/posts?tags=${encodeURIComponent(tag_script)}">${tag_script}</a>. To switch tag scripts, use the number keys.`);
-      } else {
-        Danbooru.notice(`Switched to tag script #${i}. To switch tag scripts, use the number keys.`);
-      }
-    };
-
-    const old_postmodemenu_change = Danbooru.PostModeMenu.change;
-    Danbooru.PostModeMenu.change = function () {
-      const mode = $("#mode-box select").val();
-
-      if (mode !== "view") {
-        // Only apply tag script on left click, not middle click and not
-        // ctrl+left click.
-        $("article.post-preview a").off("click").click(function (e) {
-          if (e.which == 1 && e.ctrlKey === false) {
-            return Danbooru.PostModeMenu.click(e);
-          }
-        });
-
-        // Enable selectable thumbnails.
-        $("#page").selectable({
-          filter: "article.post-preview",
-          delay: 300
-        });
-      }
-
-      return old_postmodemenu_change();
-    };
-  }
-
-  // Apply current mode to all selected posts.
-  static apply_mode(e) {
-    e.preventDefault();
-
-    $(".ui-selected").each((i, e) => {
-      var s = $("#mode-box select").val();
-      var post_id = $(e).data('id');
-
-      if (s === "add-fav") {
-        Danbooru.Favorite.create(post_id);
-      } else if (s === "remove-fav") {
-        Danbooru.Favorite.destroy(post_id);
-      } else if (s === "edit") {
-        Danbooru.PostModeMenu.open_edit(post_id);
-      } else if (s === 'vote-down') {
-        Danbooru.Post.vote("down", post_id);
-      } else if (s === 'vote-up') {
-        Danbooru.Post.vote("up", post_id);
-      } else if (s === 'rating-q') {
-        Danbooru.Post.update(post_id, {"post[rating]": "q"});
-      } else if (s === 'rating-s') {
-        Danbooru.Post.update(post_id, {"post[rating]": "s"});
-      } else if (s === 'rating-e') {
-        Danbooru.Post.update(post_id, {"post[rating]": "e"});
-      } else if (s === 'lock-rating') {
-        Danbooru.Post.update(post_id, {"post[is_rating_locked]": "1"});
-      } else if (s === 'lock-note') {
-        Danbooru.Post.update(post_id, {"post[is_note_locked]": "1"});
-      } else if (s === 'approve') {
-        Danbooru.Post.approve(post_id);
-      } else if (s === "tag-script") {
-        var current_script_id = Danbooru.Cookie.get("current_tag_script_id");
-        var tag_script = Danbooru.Cookie.get("tag-script-" + current_script_id);
-        Danbooru.TagScript.run(post_id, tag_script);
-      } else {
-        return;
-      }
-    });
-  }
-
-  // Toggle post selection between all or none.
-  static select_all(e) {
-    e.preventDefault();
-
-    if ($('.ui-selected').length) {
-      $('.ui-selected').removeClass('ui-selected');
-    } else {
-      $('.post-preview').addClass('ui-selected');
+      $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
+      event.preventDefault();
     }
+  }
+
+  static applyTagScript(event) {
+    const mode = ModeMenu.getMode();
+
+    if (mode === "tag-script") {
+      const tag_script = ModeMenu.getTagScript();
+      $(".ui-selected").each((i, e) => {
+        const post_id = $(e).closest(".post-preview").data("id");
+        Danbooru.TagScript.run(post_id, tag_script);
+      });
+    }
+  }
+
+  static selectAll(event) {
+    if ($(".ui-selected").length) {
+      $(".ui-selected").removeClass("ui-selected");
+    } else {
+      $(".ui-selectee").addClass("ui-selected");
+    }
+
+    event.preventDefault();
+  }
+
+  static invertSelection(event) {
+    let $unselected = $(".ui-selectee:not(.ui-selected)");
+    let $selected = $(".ui-selectee.ui-selected");
+
+    $unselected.addClass("ui-selected");
+    $selected.removeClass("ui-selected");
+  }
+
+  static getMode() {
+    return $(".ex-mode-menu select").val();
+  }
+
+  static setMode(mode) {
+    $('.ex-mode-menu select[name="mode"]').val(mode).change();
+  }
+
+  static getTagScript() {
+    return $('.ex-mode-menu input[name="tag-script"]').val().trim();
+  }
+
+  static saveTagScript() {
+    const scripts = EX.config.tagScripts;
+    scripts[ModeMenu.getTagScriptNumber()] = ModeMenu.getTagScript();
+    EX.config.tagScripts = scripts;
+  }
+
+  static getTagScriptNumber() {
+    return Number($('.ex-mode-menu select[name="tag-script-number"]').val());
+  }
+
+  static setTagScriptNumber(n) {
+    $('.ex-mode-menu select[name="tag-script-number"]').val(n).change();
   }
 }

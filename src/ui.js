@@ -43,32 +43,36 @@ export default class UI {
     let $sticky = $(`
       <header id="sticky-header">
         <h1><a href="/">Danbooru</a></h1>
-        <form id="search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input name="utf8" type="hidden" value="✓">
+        <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
           <input type="text" name="tags" id="tags" size="20" class="ui-autocomplete-input" autocomplete="off">
           <input type="submit" value="Go">
         </form>
-        <section id="mode-box">
-          <form action="/">
-            <select name="mode">
-              <option value="view">View</option>
-              <option value="preview">Preview</option>
-              <option value="edit">Edit</option>
-              <option value="tag-script">Tag script</option>
-              <option value="add-fav">Favorite</option>
-              <option value="remove-fav">Unfavorite</option>
-              <option value="rating-s">Rate safe</option>
-              <option value="rating-q">Rate questionable</option>
-              <option value="rating-e">Rate explicit</option>
-              <option value="vote-up">Vote up</option>
-              <option value="vote-down">Vote down</option>
-              <option value="lock-rating">Lock rating</option>
-              <option value="lock-note">Lock notes</option>
-              <option value="approve">Approve</option>
+        <section class="ex-mode-menu">
+          <label for="mode">Mode</label>
+          <select name="mode">
+            <option value="view">View</option>
+            <option value="preview">Preview</option>
+            <option value="tag-script">Tag script</option>
+          </select>
+          <fieldset class="ex-tag-script-controls" style="display: none">
+            <select name="tag-script-number">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
             </select>
-          </form>
-          <input id="tag-script-field" placeholder="Enter tag script" style="display: none; margin-top: 0.5em;">
-          <button type="button">Apply</button>
+            <input name="tag-script" type="text" list="tag-scripts" placeholder="Enter tag script">
+            <button name="apply" type="button">Apply</button>
+
+            <label>Select</label>
+            <button name="select-all" type="button">All/None</button>
+            <button name="select-invert" type="button">Invert</button>
+          </fieldset>
         </section>
       </header>
     `).insertBefore("#top");
@@ -167,14 +171,20 @@ export default class UI {
     $(".ex-thumbnail-tooltip-link").tooltip({
       items: "*",
       content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: 350 },
+      show: { delay: 550 },
       position: {
         my: "left+10 top",
         at: "right top",
       },
       open: (e, ui) => {
         try {
-          let $e = $(e.toElement);
+          // XXX
+          if (ModeMenu.getMode() === "preview" || ModeMenu.getMode() === "tag-script") {
+            $(ui.tooltip).css({ visibility: "hidden" });
+            return;
+          }
+
+          let $e = $(e.target);
           let $link = $e;
 
           if ($e.prop("nodeName") === "IMG") {
@@ -305,11 +315,22 @@ export default class UI {
   }
 
   static initialize_preview_panel() {
-    if ($("article.post-preview").length === 0) {
+    let $container = $(`
+      #c-posts #content,
+      #c-notes #a-index,
+      #c-pools #a-gallery,
+      #c-pools #a-show,
+      #c-comments #a-index,
+      #c-moderator-post-queues #a-show
+    `);
+
+    if ($container.length === 0) {
       return;
     }
 
-    $("#content").after(`
+    $container.parent().css({ display: "flex" });
+    $container.addClass("ex-preview-panel-container");
+    $container.after(`
       <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
         <div class="ex-vertical-resizer-line"></div>
       </section>
@@ -320,7 +341,7 @@ export default class UI {
       </section>
     `);
 
-    const origTop = $(".ex-sticky").offset().top;
+    const origTop = $("#ex-preview-panel .ex-sticky").offset().top;
     const headerHeight = $("#sticky-header").height();
     const footerHeight = $("footer").outerHeight(true);
 
@@ -355,25 +376,6 @@ export default class UI {
       },
       // stop: (event, ui) => { EX.config.editPanelWidth = ui.position.left - 28 },
     });
-
-    $("#mode-box select").change(e => {
-      e.preventDefault();
-
-      if ($(e.target).val() === "preview") {
-        $("article.post-preview a").off("click").on("click.danbooru-ex.open-preview", e => {
-          e.preventDefault();
-
-          const sample_src = $(e.target).closest("article").data("large-file-url");
-          const width = "15em";
-
-          $("#ex-preview-panel img").attr("src", sample_src);
-          // $("#ex-preview-panel img").css({ "max-width": width });
-          // $("#ex-preview-panel").width(width);
-        });
-      } else {
-        $("article.post-preview a").off("click.open-preview");
-      }
-    });
   }
 
   /*
@@ -389,7 +391,7 @@ export default class UI {
 
     // Escape: Unfocus text entry field.
     $('#tag-script-field').attr('type', 'text');
-    $('input[type=text],textarea').keydown('esc', e => $(e.currentTarget).blur());
+    $('input[type=text],textarea').keydown('esc', e => $(e.target).blur());
 
     UI.initialize_scroll_hotkeys();
 
