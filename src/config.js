@@ -45,42 +45,14 @@ export default class Config {
 
     return this;
   }
+}
 
-  get schemaVersion() { return this.get("schemaVersion"); }
-  get showHeaderBar() { return this.get("showHeaderBar"); }
-  get showThumbnailPreviews() { return this.get("showThumbnailPreviews"); }
-  get showPostLinkPreviews() { return this.get("showPostLinkPreviews"); }
-  get styleUsernames() { return this.get("styleUsernames"); }
-  get styleWikiLinks() { return this.get("styleWikiLinks"); }
-  get resizeableSidebars() { return this.get("resizeableSidebars"); }
-  get postSidebarWidth() { return this.get("postSidebarWidth"); }
-  get previewPanel() { return this.get("previewPanel"); }
-  get modeMenuState() { return this.get("modeMenuState"); }
-  get tagScriptNumber() { return this.get("tagScriptNumber"); }
-  get tagScripts() { return this.get("tagScripts"); }
-
-  set schemaVersion(v) { return this.set("schemaVersion", v); }
-  set showHeaderBar(v) { return this.set("showHeaderBar", v); }
-  set showThumbnailPreviews(v) { return this.set("showThumbnailPreviews", v); }
-  set showPostLinkPreviews(v) { return this.set("showPostLinkPreviews", v); }
-  set styleUsernames(v) { return this.set("styleUsernames", v); }
-  set useRelativeTimestamps(v) { return this.set("useRelativeTimestamps", v); }
-  set resizeableSidebars(v) { return this.set("resizeableSidebars", v); }
-  set postSidebarWidth(v) { return this.set("postSidebarWidth", v); }
-  set previewPanel(v) { return this.set("previewPanel", v); }
-  set modeMenuState(v) { return this.set("modeMenuState", v); }
-  set tagScriptNumber(v) { return this.set("tagScriptNumber", v); }
-  set tagScripts(v) { return this.set("tagScripts", v); }
-
-  // Define getters/setters for `Config.showHeaderBar` et al.
-  /*
-  for (const key of _.keys(Config.Defaults)) {
-    Object.defineProperty(Config.prototype, key, {
-      get: ()  => function ()  { return this.get(key) },
-      set: (v) => function (v) { return this.set(key, v) },
-      enumerable: true,
-      configurable: true,
-    });
-  }
-  */
+// Define getters/setters for `Config.showHeaderBar` et al.
+for (const key of _.keys(Config.Defaults)) {
+  Object.defineProperty(Config.prototype, key, {
+    get: function ()  { return this.get(key) },
+    set: function (v) { return this.set(key, v) },
+    enumerable: true,
+    configurable: true,
+  });
 }
