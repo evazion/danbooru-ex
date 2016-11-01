@@ -79,21 +79,7 @@ export default class UI {
 
     // Initalize sticky header search box.
     $("#sticky-header #tags").val($("#sidebar #tags").val());
-
-    /* Q: Focus search box. */
-    /* XXX: Doesn't override site keybinding. */
-    /*
-    $(document).keydown("keydown", "q", e => {
-        let $input = $("#tags, #search_name, #search_name_matches, #query").first();
-        console.log($input);
-
-        // Add a space to end if box is non-empty and doesn't already have trailing space.
-        $input.val().length && $input.val((i, v) => v.replace(/\s*$/, ' '));
-        $input.first().trigger("focus").selectEnd();
-
-        e.preventDefault();
-    });
-    */
+    Danbooru.Autocomplete.initialize_all();
 
     // Shift+Q: Focus and select all in search box.
     $(document).keydown('shift+q', e => {
