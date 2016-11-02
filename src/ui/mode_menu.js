@@ -76,7 +76,6 @@ export default class ModeMenu {
     EX.config.modeMenuState = mode;
 
     $("body").removeClass((i, klass) => (klass.match(/mode-.*/) || []).join(' '));
-    // $("body").removeClass("mode-view mode-preview mode-tag-script");
     $("body").addClass(`mode-${mode}`);
 
     if (mode === "tag-script") {
@@ -92,6 +91,12 @@ export default class ModeMenu {
       if ($("#page").selectable("instance")) {
         $("#page").selectable("destroy");
       }
+    }
+
+    if (mode === "view") {
+      $("#ex-preview-panel").hide({ effect: "slide", direction: "right" }, 1000);
+    } else {
+      $("#ex-preview-panel").show({ effect: "slide", direction: "left" }, 1000);
     }
   }
 
