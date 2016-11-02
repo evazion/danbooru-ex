@@ -1,6 +1,7 @@
 export default class PreviewPanel {
   static initialize() {
-    let $container = $(`
+    // This is the main content panel that comes before the preview panel.
+    let $content = $(`
       #c-posts #content,
       #c-notes #a-index,
       #c-pools #a-gallery,
@@ -9,13 +10,13 @@ export default class PreviewPanel {
       #c-moderator-post-queues #a-show
     `);
 
-    if ($container.length === 0) {
+    if ($content.length === 0) {
       return;
     }
 
-    $container.parent().css({ display: "flex" });
-    $container.addClass("ex-preview-panel-container"); // XXX container is a misnomer, this is the element before the panel.
-    $container.after(`
+    $content.parent().css({ display: "flex" });
+    $content.addClass("ex-content-panel");
+    $content.after(`
       <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
         <div class="ex-vertical-resizer-line"></div>
       </section>

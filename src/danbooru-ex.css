@@ -101,7 +101,7 @@
   position: fixed;
 }
 
-.ex-preview-panel-container {
+.ex-content-panel {
   flex: 1;
   margin-left: 0px !important;
 }
