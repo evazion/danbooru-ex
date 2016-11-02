@@ -1,35 +1,54 @@
-* The flicker as things are added to the page is annoying, especially for the
-  search bar and tag lists.
-* Autocomplete in the search bar doesn't work.
-* There is no way to disable tweaks you don't want.
+* Header
+** Layout breaks at <960px or so.
 
-* The search box in the sticky header is fixed at 640px. This breaks down at <1024px width.
-* Collapsible wiki headers:
-** Uncollapses lower level headings if they're already collapsed.
-** Interfere with existing table of contents.
-** Have alignment issues.
-** Are generally annoying.
+* Sidebar
+** Resizeable sidebar doesn't work on /artists or /wiki_pages.
+** Should be able to pin sidebar so it scrolls with you.
+** Tag headings should be collapsible.
 
-* Mode menu:
-** Mode menu and apply buttons are nonfunctional sometimes.
-** Mode menu doesn't work on /posts/1234.
-** Mode menu should be disabled on the uploads page, in the forum, anywhere
-   without thumnbnails.
-** If you're in tag script mode on /posts, and you open a thumbnail in a new
-   tab, you will still be in tag script mode. This is annoying.
+* Preview panel
+** Doesn't work on /post_versions.
+** Image should be centered.
+** Should include metadata: tags, pools, notes, comments, parent/children, etc.
+** Should include tag edit box.
+** Left click image should toggle between fit to panel and full size. Drag
+   should pan around full size.
+** Middle click image should open post in new tab.
+** Should be able to see list of all selected posts by scrolling up and down.
 
-* Links to nonexistent tags don't get colorized or get tooltips. This includes
-  empty aliased tags.
+* Tag scripts
+** Holding shift while dragging should add posts to selection.
+** Should be able to shift+click to select everything between two points.
+** Ctrl+T should invert script (foo -bar becomes -foo bar).
+** Should support ctrl+z to undo.
+** If you're in tag script mode on /posts and you visit a post (or anywhere
+   else), you will still be in tag script mode. This is annoying.
+
+* Wiki:
+*** Collapsible headers:
+*** Uncollapses lower level headings if they're already collapsed.
+*** Interfere with existing table of contents.
+*** Have alignment issues.
+*** Are generally annoying.
+
 * Tags on posts and comments don't get tooltips.
 * Tags in DText previews aren't colorized and don't get tooltips.
 
 * @mentions and user #1234 links aren't colorized or given data attributes.
 * Colorizing user links can't handle more than 1000 usernames being on one page.
 
-* This code is shit and needs to be rewritten.
-** Break it up into classes in multiple files.
-** Investigate router libs so that tweaks can be scoped to pages more easily.
-** Investigate Facebook React for fully rendering stuff clientside instead of
-   trying to reshape existing HTML with jquery like a caveman.
-** Use babel to transpile from ES6.
-** The CSS styles should be external.
+* /artists:
+** Broken on http://danbooru.donmai.us/artists?search[order]=name
+*** Problem is an artist entry with a blank name. Should validate artist name is non-blank server-side.
+** Clicking a group name should search all name fields (name, other names, group), not just group names.
+** Searches should be wildcard searches (if user has permission for it).
+** Should show aliases somehow. Some posts counts are wrong because the artist was aliased & moved.
+** Should prettify artist tags (i.e. "tony_taka" -> "tony taka")
+** Should parse pixiv/twitter out of urls and include columns for those.
+** Should include last updater.
+** Should include version number.
+** Should use stupid_table.js to make table sortable.
+** /artists sidebar
+*** Long artist names should be truncated to avoid line wrapping.
+*** Headings should be collapsible.
+*** Lists should have a "More..." link at the bottom to load more entries.
