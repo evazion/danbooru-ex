@@ -40,6 +40,9 @@
 // Disable the new mode menu with the new tag script and preview modes. Enables the old mode menu.
 // EX.config.enableModeMenu = false;
 
+// Disable the image preview panel.
+// EX.config.enablePreviewPanel = false;
+
 // Enable thumbnail previews when hovering over thumbnails.
 // EX.config.showThumbnailPreviews = false;
 
@@ -64,6 +67,3 @@
 
 // Set the default width of the tag sidebar.
 // EX.config.defaultSidebarWidth = "15em";
-
-// Disable the image preview panel.
-// EX.config.previewPanel = false;

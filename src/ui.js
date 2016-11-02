@@ -1,8 +1,10 @@
+import Header       from "./ui/header.js";
+import ModeMenu     from "./ui/mode_menu.js";
+import PreviewPanel from "./ui/preview_panel.js";
+
 import Artists      from "./ui/artists.js";
 import Comments     from "./ui/comments.js";
 import ForumPosts   from "./ui/forum_posts.js";
-import Header       from "./ui/header.js";
-import ModeMenu     from "./ui/mode_menu.js";
 import Pools        from "./ui/pools.js";
 import Posts        from "./ui/posts.js";
 import PostVersions from "./ui/post_versions.js";
@@ -22,7 +24,6 @@ export default class UI {
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
-    EX.config.previewPanel && UI.initialize_preview_panel();
     UI.initialize_hotkeys();
   }
 
@@ -270,89 +271,6 @@ export default class UI {
     });
   }
 
-  static initialize_preview_panel() {
-    let $container = $(`
-      #c-posts #content,
-      #c-notes #a-index,
-      #c-pools #a-gallery,
-      #c-pools #a-show,
-      #c-comments #a-index,
-      #c-moderator-post-queues #a-show
-    `);
-
-    if ($container.length === 0) {
-      return;
-    }
-
-    $container.parent().css({ display: "flex" });
-    $container.addClass("ex-preview-panel-container"); // XXX container is a misnomer, this is the element before the panel.
-    $container.after(`
-      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
-        <div class="ex-vertical-resizer-line"></div>
-      </section>
-      <section id="ex-preview-panel" class="ex-panel">
-        <div>
-          <article>
-            No image selected. Click a thumbnail to open image preview.
-          </article>
-        </div>
-      </section>
-    `);
-
-    // XXX DRY
-    let controller = $("#page > div:nth-child(2)").attr("id");
-    let action     = $("#page > div:nth-child(2) > div").attr("id");
-    const width = EX.config.previewPanelState[`${controller} ${action}`] || 0;
-    $("#ex-preview-panel").width(width);
-
-    const origTop = $("#ex-preview-panel > div").offset().top;
-    const headerHeight = $("#ex-header").outerHeight(true);
-    const footerHeight = $("footer").outerHeight(true);
-
-    // XXX set height on initialization as well as scroll.
-    const onScroll = function (event) {
-      let height;
-
-      if (window.scrollY + headerHeight >= origTop) {
-        $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
-        height = `calc(100vh - ${headerHeight}px - 1em)`;
-      } else {
-        $("#ex-preview-panel > div").removeClass("ex-fixed");
-        height = `calc(100vh - ${origTop - window.scrollY}px - 1em)`;
-      }
-
-      if (window.scrollY + footerHeight >= $("body").height() - window.innerHeight) {
-        const diff = window.scrollY + footerHeight - $("body").height() + window.innerHeight;
-        height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
-      }
-
-      $("#ex-preview-panel > div").css({ height });
-      $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
-    };
-    $(document).scroll(_.throttle(onScroll, 16));
-
-    const resizeDrag = function (e, ui) {
-      // XXX magic number
-      const width = $("body").innerWidth() - ui.position.left - 28;
-
-      $("#ex-preview-panel").width(width);
-      $("#ex-preview-panel > div").width(width);
-    };
-
-    const resizeStop = function (e, ui) {
-      let state = EX.config.previewPanelState;
-      state[`${controller} ${action}`] = $("#ex-preview-panel").width();
-      EX.config.previewPanelState = state;
-    };
-
-    $("#ex-preview-panel-resizer").draggable({
-      axis: "x",
-      helper: "clone",
-      drag: _.throttle(resizeDrag, 16),
-      stop: _.debounce(resizeStop, 100),
-    });
-  }
-
   /*
    * Global keybindings.
    * - Escape: Close notice popups.
@@ -456,11 +374,13 @@ export default class UI {
   }
 }
 
+UI.Header = Header;
+UI.ModeMenu = ModeMenu;
+UI.PreviewPanel = PreviewPanel;
+
 UI.Artists = Artists;
 UI.Comments = Comments;
 UI.ForumPosts = ForumPosts;
-UI.Header = Header;
-UI.ModeMenu = ModeMenu;
 UI.Pools = Pools;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;

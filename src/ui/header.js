@@ -1,4 +1,5 @@
 import ModeMenu from "./mode_menu.js";
+import PreviewPanel from "./preview_panel.js";
 
 export default class Header {
   static initialize() {
@@ -6,6 +7,7 @@ export default class Header {
     Header.initializeHotkeys();
 
     EX.config.enableModeMenu && Header.initializeModeMenu();
+    EX.config.enablePreviewPanel && PreviewPanel.initialize();
   }
 
   static initializeHeader() {
