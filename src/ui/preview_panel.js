@@ -30,10 +30,7 @@ export default class PreviewPanel {
       </section>
     `);
 
-    // XXX DRY
-    let controller = $("#page > div:nth-child(2)").attr("id");
-    let action     = $("#page > div:nth-child(2) > div").attr("id");
-    const width = EX.config.previewPanelState[`${controller} ${action}`] || 0;
+    const width = EX.config.previewPanelState[EX.config.pageKey()] || 0;
     $("#ex-preview-panel").width(width);
 
     const origTop = $("#ex-preview-panel > div").offset().top;

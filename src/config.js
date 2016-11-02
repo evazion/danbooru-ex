@@ -52,6 +52,12 @@ export default class Config {
 
     return this;
   }
+
+  pageKey() {
+    const controller = $("#page > div:nth-child(2)").attr("id");
+    const action = $("#page > div:nth-child(2) > div").attr("id");
+    return `${controller} ${action}`;
+  }
 }
 
 // Define getters/setters for `Config.showHeaderBar` et al.

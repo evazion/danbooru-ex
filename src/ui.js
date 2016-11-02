@@ -241,9 +241,7 @@ export default class UI {
       return;
     }
 
-    let controller = $("#page > div:nth-child(2)").attr("id");
-    let action     = $("#page > div:nth-child(2) > div").attr("id");
-    const width = EX.config.sidebarState[`${controller} ${action}`] || EX.config.defaultSidebarWidth;
+    const width = EX.config.sidebarState[EX.config.pageKey()] || EX.config.defaultSidebarWidth;
 
     $sidebar.addClass("ex-panel").width(width).after(`
       <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
