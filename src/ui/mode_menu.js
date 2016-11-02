@@ -1,5 +1,7 @@
 import _ from "lodash";
 
+import Posts from "./posts.js";
+
 export default class ModeMenu {
   static initialize() {
     ModeMenu.uninitializeDanbooruModeMenu();
@@ -106,20 +108,22 @@ export default class ModeMenu {
       return;
     }
 
-    const mode = ModeMenu.getMode();
-    if (mode === "view") {
-      return;
-    } else if (mode === "preview") {
-      const sample_src = $(event.target).closest(".post-preview").data("large-file-url");
-      $("#ex-preview-panel img").attr("src", sample_src);
+    switch (ModeMenu.getMode()) {
+      case "view":
+        return;
 
-      event.preventDefault();
-    } else if (mode === "tag-script") {
-      const sample_src = $(event.target).closest(".post-preview").data("large-file-url");
-      $("#ex-preview-panel img").attr("src", sample_src);
+      case "tag-script":
+        $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
+        /* fallthrough */
 
-      $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
-      event.preventDefault();
+      case "preview":
+        let post = Posts.normalize($(event.target).closest(".post-preview").data());
+
+        const html = Posts.preview(post, post.large_file_url);
+        $("#ex-preview-panel article").replaceWith(html);
+
+        event.preventDefault();
+        break;
     }
   }
 

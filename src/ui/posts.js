@@ -67,6 +67,27 @@ export default class Posts {
     $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
   }
 
+  // Convert the object returned by $(post).data() to an object with the same
+  // properties that the JSON API returns.
+  static normalize(data) {
+    let post = _.mapKeys(data, (v, k) => _.snakeCase(k));
+    post.md5 = post.md_5;
+
+    const flags = post.flags.split(/\s+/);
+    post.is_pending = _.indexOf(flags, "pending") !== -1;
+    post.is_flagged = _.indexOf(flags, "flagged") !== -1;
+    post.is_deleted = _.indexOf(flags, "deleted") !== -1;
+
+    post.has_visible_children = post.has_children;
+    post.tag_string = post.tags;
+    post.pool_string = post.pools;
+    post.status_flags = post.flags;
+    post.image_width = post.width;
+    post.image_height = post.height;
+
+    return post;
+  }
+
   // Generate the post thumbnail HTML.
   static preview(post, src, klass = "") {
     let preview_class = "post-preview";
