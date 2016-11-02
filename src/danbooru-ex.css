@@ -78,17 +78,27 @@
 
 #ex-preview-panel {
   width: 0;
+  overflow: hidden;
 }
 
-#ex-preview-panel img {
+#ex-preview-panel > div {
+  display: flex;
+}
+
+#ex-preview-panel > div > article {
+  width: auto;
+  height: auto;
+  margin: auto;
+}
+
+#ex-preview-panel > div > article.post-preview img {
   max-width: 100%;
   max-height: 100%;
-  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 #ex-preview-panel .ex-fixed {
   position: fixed;
-  margin-top: 0.5em;
 }
 
 .ex-preview-panel-container {
