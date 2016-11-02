@@ -100,7 +100,7 @@ export default class UI {
     $(".ex-thumbnail-tooltip-link").tooltip({
       items: "*",
       content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: 650 },
+      show: { delay: EX.config.thumbnailPreviewDelay },
       position: {
         my: "left+10 top",
         at: "right top",
