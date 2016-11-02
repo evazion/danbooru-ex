@@ -53,7 +53,8 @@ export default class ModeMenu {
     $(document).keydown("ctrl+i",  ModeMenu.invertSelection);
 
     $(document).keydown("esc", e => ModeMenu.setMode("view"));
-    $(document).keydown("`", e => ModeMenu.setMode("preview"));
+    $(document).keydown("`", e => ModeMenu.toggleMode("preview"));
+    $(document).keydown("shift+`", e => ModeMenu.toggleMode("preview"));
   }
 
   static switchToTagScript(event) {
@@ -163,6 +164,10 @@ export default class ModeMenu {
 
   static setMode(mode) {
     $('.ex-mode-menu select[name="mode"]').val(mode).change();
+  }
+
+  static toggleMode(mode) {
+    ModeMenu.setMode(ModeMenu.getMode() === mode ? "view" : mode);
   }
 
   static getTagScript() {
