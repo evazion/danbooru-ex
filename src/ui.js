@@ -282,7 +282,7 @@ export default class UI {
     }
 
     $container.parent().css({ display: "flex" });
-    $container.addClass("ex-preview-panel-container");
+    $container.addClass("ex-preview-panel-container"); // XXX container is a misnomer, this is the element before the panel.
     $container.after(`
       <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
         <div class="ex-vertical-resizer-line"></div>
@@ -293,6 +293,12 @@ export default class UI {
         </div>
       </section>
     `);
+
+    // XXX DRY
+    let controller = $("#page > div:nth-child(2)").attr("id");
+    let action     = $("#page > div:nth-child(2) > div").attr("id");
+    const width = EX.config.previewPanelState[`${controller} ${action}`] || 0;
+    $("#ex-preview-panel").width(width);
 
     const origTop = $("#ex-preview-panel > div").offset().top;
     const headerHeight = $("#ex-header").height();
@@ -316,20 +322,27 @@ export default class UI {
 
       $("#ex-preview-panel > div").css({ height });
     };
-
     $(document).scroll(_.throttle(onScroll, 16));
+
+    const resizeDrag = function (e, ui) {
+      // XXX magic number
+      const width = $("body").innerWidth() - ui.position.left - 28;
+
+      $("#ex-preview-panel").width(width);
+      $("#ex-preview-panel > div").width(width);
+    };
+
+    const resizeStop = function (e, ui) {
+      let state = EX.config.previewPanelState;
+      state[`${controller} ${action}`] = $("#ex-preview-panel").width();
+      EX.config.previewPanelState = state;
+    };
 
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
       helper: "clone",
-      drag: (event, ui) => {
-        const width = $("body").innerWidth() - ui.position.left - 28;
-
-        $("#ex-preview-panel").width(width);
-        $("#ex-preview-panel > div").width(width);
-        // $("#ex-preview-panel .ex-sticky img").css({ "max-width": width });
-      },
-      // stop: (event, ui) => { EX.config.editPanelWidth = ui.position.left - 28 },
+      drag: _.throttle(resizeDrag, 16),
+      stop: _.debounce(resizeStop, 100),
     });
   }
 

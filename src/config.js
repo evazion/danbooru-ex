@@ -18,6 +18,7 @@ export default class Config {
       defaultSidebarWidth: "15em",
 
       sidebarState: {},
+      previewPanelState: {},
       modeMenuState: "view",
       tagScriptNumber: 1,
       tagScripts: _.fill(Array(10), ""),
