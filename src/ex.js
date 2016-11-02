@@ -35,6 +35,8 @@ export default class EX {
 }
 
 window.EX = EX;
+window.moment = moment;
+
 jQuery(function () {
   try {
     EX.initialize();
