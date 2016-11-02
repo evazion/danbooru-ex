@@ -20,11 +20,13 @@ export default class EX {
 
   static initialize() {
     EX.config = new Config();
+
+    EX.config.replaceHeader && UI.Header.initialize();
+
     EX.UI.initialize();
     EX.UI.Artists.initialize();
     EX.UI.Comments.initialize();
     EX.UI.ForumPosts.initialize();
-    EX.UI.ModeMenu.initialize();
     EX.UI.Pools.initialize();
     EX.UI.Posts.initialize();
     EX.UI.PostVersions.initialize();

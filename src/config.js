@@ -4,7 +4,8 @@ export default class Config {
   static get Defaults() {
     return {
       schemaVersion: 1,
-      showHeaderBar: true,
+      replaceHeader: true,
+      replaceModeMenu: true,
       showThumbnailPreviews: true,
       showPostLinkPreviews: true,
       styleUsernames: true,

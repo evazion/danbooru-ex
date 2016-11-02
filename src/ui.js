@@ -1,6 +1,7 @@
 import Artists      from "./ui/artists.js";
 import Comments     from "./ui/comments.js";
-import ForumPosts   from "./ui/forum_posts.js";;
+import ForumPosts   from "./ui/forum_posts.js";
+import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
 import Pools        from "./ui/pools.js";
 import Posts        from "./ui/posts.js";
@@ -15,7 +16,6 @@ export default class UI {
     UI.initialize_moment();
     UI.initialize_patches();
 
-    EX.config.showHeaderBar && UI.initialize_header();
     EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
     EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
     EX.config.styleUsernames && UI.initialize_user_links();
@@ -34,63 +34,6 @@ export default class UI {
         return old_toggle_tag(e);
       }
     };
-  }
-
-  /*
-   * Add sticky header.
-   */
-  static initialize_header() {
-    let $sticky = $(`
-      <header id="sticky-header">
-        <h1><a href="/">Danbooru</a></h1>
-        <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" name="tags" id="tags" size="20" class="ui-autocomplete-input" autocomplete="off">
-          <input type="submit" value="Go">
-        </form>
-        <section class="ex-mode-menu">
-          <label for="mode">Mode</label>
-          <select name="mode">
-            <option value="view">View</option>
-            <option value="preview">Preview</option>
-            <option value="tag-script">Tag script</option>
-          </select>
-          <fieldset class="ex-tag-script-controls" style="display: none">
-            <select name="tag-script-number">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-            </select>
-            <input name="tag-script" type="text" list="tag-scripts" placeholder="Enter tag script">
-            <button name="apply" type="button">Apply</button>
-
-            <label>Select</label>
-            <button name="select-all" type="button">All/None</button>
-            <button name="select-invert" type="button">Invert</button>
-          </fieldset>
-        </section>
-      </header>
-    `).insertBefore("#top");
-
-    // Initalize sticky header search box.
-    $("#sticky-header #tags").val($("#sidebar #tags").val());
-    Danbooru.Autocomplete.initialize_all();
-
-    // Shift+Q: Focus and select all in search box.
-    $(document).keydown('shift+q', e => {
-      e.preventDefault();
-
-      let $input = $("#tags, #search_name, #search_name_matches, #query").first();
-
-      // Add a space to end if  box is non-empty and doesn't already have trailing space.
-      $input.val().length && $input.val((i, v) => v.replace(/\s*$/, ' '));
-      $input.focus().selectRange(0, $input.val().length);
-    });
   }
 
   // Use relative times everywhere.
@@ -157,7 +100,7 @@ export default class UI {
     $(".ex-thumbnail-tooltip-link").tooltip({
       items: "*",
       content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: 550 },
+      show: { delay: 650 },
       position: {
         my: "left+10 top",
         at: "right top",
@@ -328,7 +271,7 @@ export default class UI {
     `);
 
     const origTop = $("#ex-preview-panel .ex-sticky").offset().top;
-    const headerHeight = $("#sticky-header").height();
+    const headerHeight = $("#ex-header").height();
     const footerHeight = $("footer").outerHeight(true);
 
     $(document).scroll(event => {
@@ -470,6 +413,7 @@ export default class UI {
 UI.Artists = Artists;
 UI.Comments = Comments;
 UI.ForumPosts = ForumPosts;
+UI.Header = Header;
 UI.ModeMenu = ModeMenu;
 UI.Pools = Pools;
 UI.Posts = Posts;

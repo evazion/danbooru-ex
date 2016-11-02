@@ -1,3 +1,5 @@
+@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
+
 .ex-artists {
   white-space: nowrap;
 }
@@ -91,7 +93,7 @@
   margin: 0 auto;
 }
 
-.ex-fixed {
+.ex-sticky .ex-fixed {
   position: fixed;
   margin-top: 0.5em;
 }
@@ -135,9 +137,9 @@ a.with-style[data-is-banned="true"] {
     color: black !important;
 }
 
-#sticky-header {
+#ex-header {
     display: flex;
-    position: fixed;
+    position: absolute;
     top: 0;
     padding-top: 5px;
     width: 100%;
@@ -146,49 +148,60 @@ a.with-style[data-is-banned="true"] {
     border-bottom: 1px solid #EEE;
 }
 
-#sticky-header h1 {
+#ex-header.ex-fixed {
+    position: fixed;
+}
+
+#ex-header h1 {
     display: inline-block;
     font-size: 2.5em;
     margin: 0 30px;
 }
 
-#sticky-header .ex-search-box {
+#ex-header .ex-search-box {
     margin: auto;
     display: flex;
     flex: 0 1 30%;
 }
 
-#sticky-header .ex-search-box input[name="tags"] {
+#ex-header .ex-search-box input[name="tags"] {
     flex: 0 1 100%;
 }
 
-#sticky-header .ex-search-box input[type="submit"] {
+#ex-header .ex-search-box input[type="submit"] {
     flex: 1;
     margin: auto 1em;
 }
 
-#sticky-header .ex-mode-menu {
+#ex-header .ex-mode-menu {
     margin: auto;
     flex: 1 2 70%;
 }
 
-#sticky-header .ex-mode-menu .ex-tag-script-controls {
+#ex-header .ex-mode-menu .ex-tag-script-controls {
     display: inline-block;
     margin: auto;
 }
 
-#sticky-header .ex-mode-menu label {
+#ex-header .ex-mode-menu label {
     font-weight: bold;
     cursor: auto;
 }
 
+#ex-header .ex-header-close-button {
+    margin: auto;
+    margin-right: 30px;
+    color: #0073ff;
+    cursor: pointer;
+}
+
 @media (max-width: 1280px) {
-    #sticky-header h1,
+    #ex-header h1,
     header#top h1 {
         font-size: 1.5em;
     }
 
-    #sticky-header .ex-mode-menu label {
+    #ex-header .ex-mode-menu label {
         display: none;
     }
 }
@@ -222,11 +235,11 @@ body.mode-tag-script {
     background-color: white;
 }
 
-body.mode-tag-script #sticky-header {
+body.mode-tag-script #ex-header {
     border-bottom: 2px solid #D6D;
 }
 
-body.mode-preview #sticky-header {
+body.mode-preview #ex-header {
     border-bottom: 2px solid #0073ff;
 }
 
