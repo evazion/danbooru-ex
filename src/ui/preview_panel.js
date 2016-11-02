@@ -7,7 +7,8 @@ export default class PreviewPanel {
       #c-pools #a-gallery,
       #c-pools #a-show,
       #c-comments #a-index,
-      #c-moderator-post-queues #a-show
+      #c-moderator-post-queues #a-show,
+      #c-users #a-show
     `);
 
     if ($content.length === 0) {
