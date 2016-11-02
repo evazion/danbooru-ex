@@ -234,7 +234,9 @@ export default class UI {
   }
 
   static initialize_resizeable_sidebar() {
-    if ($("#sidebar").length === 0) {
+    let $sidebar = $("#sidebar");
+
+    if ($sidebar.length === 0) {
       return;
     }
 
@@ -242,7 +244,7 @@ export default class UI {
     let action     = $("#page > div:nth-child(2) > div").attr("id");
     const width = EX.config.sidebarState[`${controller} ${action}`] || EX.config.defaultSidebarWidth;
 
-    $("#sidebar").addClass("ex-panel").width(width).after(`
+    $sidebar.addClass("ex-panel").width(width).after(`
       <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
         <div class="ex-vertical-resizer-line"></div>
       </section>
@@ -250,7 +252,8 @@ export default class UI {
 
     // XXX fix magic numbers (28 = 2em).
     const drag = function (e, ui) {
-      $("#sidebar").width(ui.position.left - 28);
+      $sidebar.width(ui.position.left - 28);
+      $sidebar.toggle($sidebar.width() > 0);
     }
 
     const stop = function (e, ui) {
