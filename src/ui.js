@@ -292,7 +292,9 @@ export default class UI {
       </section>
       <section id="ex-preview-panel" class="ex-panel">
         <div>
-          <img>
+          <article>
+            No image selected. Click a thumbnail to open image preview.
+          </article>
         </div>
       </section>
     `);
@@ -304,9 +306,10 @@ export default class UI {
     $("#ex-preview-panel").width(width);
 
     const origTop = $("#ex-preview-panel > div").offset().top;
-    const headerHeight = $("#ex-header").height();
+    const headerHeight = $("#ex-header").outerHeight(true);
     const footerHeight = $("footer").outerHeight(true);
 
+    // XXX set height on initialization as well as scroll.
     const onScroll = function (event) {
       let height;
 
@@ -324,6 +327,7 @@ export default class UI {
       }
 
       $("#ex-preview-panel > div").css({ height });
+      $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
     };
     $(document).scroll(_.throttle(onScroll, 16));
 
