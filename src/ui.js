@@ -156,6 +156,18 @@ export default class UI {
         _(user).forOwn((value, key) =>
           $user.attr(`data-${_(key).kebabCase()}`, value)
         );
+
+        let privileges =
+          user.level_string +
+          (user.is_banned         ? " Banned"      : "") + 
+          (user.is_super_voter    ? " Supervoter"  : "") +
+          (user.can_approve_posts ? " Approver"    : "") +
+          (user.can_upload_free   ? " Contributor" : "");
+
+        let tooltip =
+          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
+
+        $user.attr("title", tooltip);
       }
     });
   }
