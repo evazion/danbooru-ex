@@ -113,7 +113,7 @@ export default class Posts {
         <a href="/posts/${post.id}${tag_params}">
           <img itemprop="thumbnailUrl"
                src="${src}"
-               alt="${_.escape(post.tag_string)}">
+               title="${_.escape(post.tag_string)}">
         </a>
       </article>
     `;
