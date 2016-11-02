@@ -12,11 +12,13 @@ export default class Config {
       styleWikiLinks: true,
       useRelativeTimestamps: true,
       resizeableSidebars: true,
+
       postSidebarWidth: "15em",
       previewPanel: true,
       modeMenuState: "view",
       tagScriptNumber: 1,
       tagScripts: _.fill(Array(10), ""),
+      headerState: "ex-fixed",
     };
   }
 

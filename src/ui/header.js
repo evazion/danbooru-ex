@@ -10,7 +10,7 @@ export default class Header {
 
   static initializeHeader() {
     let $header = $(`
-      <header id="ex-header" class="ex-fixed">
+      <header id="ex-header">
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
@@ -48,8 +48,8 @@ export default class Header {
           </fieldset>
         </section>
 
-	<a class="ex-header-close-button">
-          <i class="fa fa-times-circle fa-lg" aria-hidden="true"></i>
+	<a class="ex-header-close">
+          <i class="fa fa-lg" aria-hidden="true"></i>
 	</span>
       </header>
     `).insertBefore("#top");
@@ -58,20 +58,9 @@ export default class Header {
     $("#ex-header #tags").val($("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
 
-    let $close = $(".ex-header-close-button");
-    $close.click(event => {
-      if ($header.hasClass("ex-fixed")) {
-        $header.slideUp().promise().then(e => {
-          $header.removeClass("ex-fixed").show();
-          $close.find("i").removeClass("fa-times-circle").addClass("fa-thumb-tack");
-        });
-      } else {
-        $header.addClass("ex-fixed");
-        $close.find("i").addClass("fa-times-circle").removeClass("fa-thumb-tack");
-      }
+    $(".ex-header-close").click(Header.toggleClose);
 
-      event.preventDefault();
-    });
+    $header.addClass(EX.config.headerState);
   }
 
   static initializeHotkeys() {
@@ -89,5 +78,21 @@ export default class Header {
   static initializeModeMenu() {
     $(".ex-mode-menu").show();
     ModeMenu.initialize();
+  }
+
+  static toggleClose(event) {
+    let $header = $("#ex-header");
+
+    if ($header.hasClass("ex-fixed")) {
+      $header.slideUp().promise().then(e => {
+        $header.toggleClass("ex-fixed ex-static").show();
+        EX.config.headerState = $header.attr("class");
+      });
+    } else {
+      $header.toggleClass("ex-fixed ex-static");
+      EX.config.headerState = $header.attr("class");
+    }
+
+    event.preventDefault();
   }
 }

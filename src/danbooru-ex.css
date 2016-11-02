@@ -188,11 +188,21 @@ a.with-style[data-is-banned="true"] {
     cursor: auto;
 }
 
-#ex-header .ex-header-close-button {
+#ex-header .ex-header-close {
     margin: auto;
     margin-right: 30px;
     color: #0073ff;
     cursor: pointer;
+}
+
+/* http://fontawesome.io/icon/times-circle/ */
+#ex-header.ex-fixed .ex-header-close .fa::before {
+    content: "\f057";
+}
+
+/* http://fontawesome.io/icon/thumb-tack/ */
+#ex-header.ex-static .ex-header-close .fa::before {
+    content: "\f08d";
 }
 
 @media (max-width: 1280px) {
