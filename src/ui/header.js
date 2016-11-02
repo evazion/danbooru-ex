@@ -64,12 +64,18 @@ export default class Header {
   }
 
   static initializeHotkeys() {
+    let $search = $("#ex-header #tags");
+
+    $search.keydown("ctrl+return", e => {
+      const tags = $(e.target).val().trim();
+      window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
+    });
+
     // Shift+Q: Focus and search box.
     $(document).keydown('shift+q', e => {
       // Add a space to end if box is non-empty and doesn't already have trailing space.
-      let $input = $("#ex-header #tags").first();
-      $input.val().length && $input.val((i, v) => v.replace(/\s*$/, ' '));
-      // $input.focus().selectRange(0, $input.val().length);
+      $search.val().length && $search.val((i, v) => v.replace(/\s*$/, ' '));
+      $search.focus();
 
       e.preventDefault();
     });
