@@ -27,3 +27,43 @@
 /*
  * What is a userscript? A miserable pile of hacks.
  */
+
+/*
+ * Danbooru EX user settings.
+ *
+ * To disable a setting, remove the "//" in front of `EX.config.setting = false;`
+ */
+
+// Disable the new header bar that contains the search box and mode menu.
+// EX.config.enableHeader = false;
+
+// Disable the new mode menu with the new tag script and preview modes. Enables the old mode menu.
+// EX.config.enableModeMenu = false;
+
+// Enable thumbnail previews when hovering over thumbnails.
+// EX.config.showThumbnailPreviews = false;
+
+// Set the hover delay in milliseconds before the preview appears.
+// EX.config.thumbnailPreviewDelay = 600;
+
+// Disable thumbnail previews when hovering over post #1234 links.
+// EX.config.showPostLinkPreviews = false;
+
+// Disable tooltips on usernames.
+// EX.config.usernameTooltips = false;
+
+// Disable tag tooltips, colorizing tags in the wiki and forum, and underlining
+// links to nonexistent tags.
+// EX.config.styleWikiLinks = false;
+
+// Disable replacing fixed dates ("2016-08-10") with relative times ("3 months ago").
+// EX.config.useRelativeTimestamps = false;
+
+// Disable the resizeable tag sidebar.
+// EX.config.resizeableSidebars = false;
+
+// Set the default width of the tag sidebar.
+// EX.config.defaultSidebarWidth = "15em";
+
+// Disable the image preview panel.
+// EX.config.previewPanel = false;
