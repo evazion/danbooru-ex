@@ -12,9 +12,12 @@ export default class Config {
       styleWikiLinks: true,
       useRelativeTimestamps: true,
       resizeableSidebars: true,
-
-      postSidebarWidth: "15em",
       previewPanel: true,
+
+      thumbnailPreviewDelay: 650,
+      defaultSidebarWidth: "15em",
+
+      sidebarState: {},
       modeMenuState: "view",
       tagScriptNumber: 1,
       tagScripts: _.fill(Array(10), ""),

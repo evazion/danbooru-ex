@@ -226,20 +226,32 @@ export default class UI {
       return;
     }
 
-    $("#sidebar").width(EX.config.postSidebarWidth);
-    $("#sidebar").addClass("ex-panel");
+    let controller = $("#page > div:nth-child(2)").attr("id");
+    let action     = $("#page > div:nth-child(2) > div").attr("id");
+    const width = EX.config.sidebarState[`${controller} ${action}`] || EX.config.defaultSidebarWidth;
 
-    $("#sidebar").after(`
+    $("#sidebar").addClass("ex-panel").width(width).after(`
       <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
         <div class="ex-vertical-resizer-line"></div>
       </section>
     `);
 
+    // XXX fix magic numbers (28 = 2em).
+    const drag = function (e, ui) {
+      $("#sidebar").width(ui.position.left - 28);
+    }
+
+    const stop = function (e, ui) {
+      let state = EX.config.sidebarState;
+      state[`${controller} ${action}`] = ui.position.left - 28;
+      EX.config.sidebarState = state;
+    };
+
     $("#ex-sidebar-resizer").draggable({
       axis: "x",
       helper: "clone",
-      drag: (event, ui) => { $("#sidebar").width(ui.position.left - 28) },
-      // stop: (event, ui) => { EX.config.postSidebarWidth = ui.position.left - 28 },
+      drag: _.throttle(drag, 16),
+      stop: _.debounce(stop, 100),
     });
   }
 
