@@ -288,24 +288,24 @@ export default class UI {
         <div class="ex-vertical-resizer-line"></div>
       </section>
       <section id="ex-preview-panel" class="ex-panel">
-        <div class="ex-sticky">
+        <div>
           <img>
         </div>
       </section>
     `);
 
-    const origTop = $("#ex-preview-panel .ex-sticky").offset().top;
+    const origTop = $("#ex-preview-panel > div").offset().top;
     const headerHeight = $("#ex-header").height();
     const footerHeight = $("footer").outerHeight(true);
 
-    $(document).scroll(event => {
+    const onScroll = function (event) {
       let height;
 
       if (window.scrollY + headerHeight >= origTop) {
-        $(".ex-sticky").addClass("ex-fixed").css({ top: headerHeight });
+        $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
         height = `calc(100vh - ${headerHeight}px - 1em)`;
       } else {
-        $(".ex-sticky").removeClass("ex-fixed");
+        $("#ex-preview-panel > div").removeClass("ex-fixed");
         height = `calc(100vh - ${origTop - window.scrollY}px - 1em)`;
       }
 
@@ -314,8 +314,10 @@ export default class UI {
         height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
       }
 
-      $("#ex-preview-panel .ex-sticky").css({ height });
-    });
+      $("#ex-preview-panel > div").css({ height });
+    };
+
+    $(document).scroll(_.throttle(onScroll, 16));
 
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
@@ -324,7 +326,7 @@ export default class UI {
         const width = $("body").innerWidth() - ui.position.left - 28;
 
         $("#ex-preview-panel").width(width);
-        $("#ex-preview-panel .ex-sticky").width(width);
+        $("#ex-preview-panel > div").width(width);
         // $("#ex-preview-panel .ex-sticky img").css({ "max-width": width });
       },
       // stop: (event, ui) => { EX.config.editPanelWidth = ui.position.left - 28 },
