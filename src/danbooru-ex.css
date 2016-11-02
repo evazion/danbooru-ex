@@ -80,13 +80,13 @@
   width: 0;
 }
 
-.ex-sticky img {
+#ex-preview-panel img {
   max-width: 100%;
   max-height: 100%;
   margin: 0 auto;
 }
 
-.ex-sticky .ex-fixed {
+#ex-preview-panel .ex-fixed {
   position: fixed;
   margin-top: 0.5em;
 }
@@ -94,15 +94,6 @@
 .ex-preview-panel-container {
   flex: 1;
   margin-left: 0px !important;
-}
-
-a.with-style[data-can-upload-free="false"][data-can-approve-posts="true"] {
-    text-decoration: underline;
-}
-
-a.with-style[data-is-banned="true"] {
-    color: black;
-    text-decoration: underline;
 }
 
 .tag-list-header h1, .tag-list-header h2 {
@@ -223,8 +214,8 @@ a.with-style[data-is-banned="true"] {
 
 #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
 #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
-    //display: flex;
-    //align-items: center;
+    /* display: flex; */
+    /* align-items: center; */
     padding-top: 52px;
     margin-top: -52px;
 }
@@ -280,19 +271,3 @@ body.mode-tag-script article.post-preview.ui-selected {
 body .ui-tooltip {
     border-width: 2px;
 }
-
-/*
-.user-member::before, .user-gold::before,
-.user-platinum::before, .user-builder::before,
-.user-janitor::before, .user-moderator::before,
-.user-admin::before {
-    content: '@';
-    color: grey;
-}
-*/
-
-/*
-.paginator {
-    clear: none !important;
-}
-*/
