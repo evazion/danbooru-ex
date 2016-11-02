@@ -15,7 +15,7 @@ export default class PreviewPanel {
       return;
     }
 
-    $content.parent().css({ display: "flex" });
+    $content.parent().addClass("ex-preview-panel-container");
     $content.addClass("ex-content-panel");
     $content.after(`
       <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">

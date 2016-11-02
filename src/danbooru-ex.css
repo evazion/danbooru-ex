@@ -76,6 +76,10 @@
   overflow: hidden;
 }
 
+.ex-preview-panel-container {
+  display: flex;
+}
+
 #ex-preview-panel {
   width: 0;
   overflow: hidden;
