@@ -5,7 +5,7 @@ export default class Header {
     Header.initializeHeader();
     Header.initializeHotkeys();
 
-    EX.config.replaceModeMenu && Header.initializeModeMenu();
+    EX.config.enableModeMenu && Header.initializeModeMenu();
   }
 
   static initializeHeader() {

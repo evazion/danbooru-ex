@@ -21,7 +21,7 @@ export default class EX {
   static initialize() {
     EX.config = new Config();
 
-    EX.config.replaceHeader && UI.Header.initialize();
+    EX.config.enableHeader && UI.Header.initialize();
 
     EX.UI.initialize();
     EX.UI.Artists.initialize();

@@ -4,11 +4,11 @@ export default class Config {
   static get Defaults() {
     return {
       schemaVersion: 1,
-      replaceHeader: true,
-      replaceModeMenu: true,
+      enableHeader: true,
+      enableModeMenu: true,
       showThumbnailPreviews: true,
       showPostLinkPreviews: true,
-      styleUsernames: true,
+      usernameTooltips: true,
       styleWikiLinks: true,
       useRelativeTimestamps: true,
       resizeableSidebars: true,

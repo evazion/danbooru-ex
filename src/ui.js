@@ -18,7 +18,7 @@ export default class UI {
 
     EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
     EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
-    EX.config.styleUsernames && UI.initialize_user_links();
+    EX.config.usernameTooltips && UI.initialize_user_links();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
@@ -107,7 +107,7 @@ export default class UI {
       },
       open: (e, ui) => {
         try {
-          // XXX
+          // XXX should instead disable thumbnails when preview panel is open.
           if (ModeMenu.getMode() === "preview" || ModeMenu.getMode() === "tag-script") {
             $(ui.tooltip).css({ visibility: "hidden" });
             return;
@@ -116,12 +116,14 @@ export default class UI {
           let $e = $(e.target);
           let $link = $e;
 
+          // XXX hack
           if ($e.prop("nodeName") === "IMG") {
             $link = $e.closest("a");
           }
 
           const id = $link.attr('href').match(/\/posts\/(\d+)/)[1];
 
+          // XXX avoid lookup on tooltip open.
           $.getJSON(`/posts/${id}.json`).then(post =>
             $(ui.tooltip).html(Posts.preview(post, post.large_file_url, "ex-thumbnail-tooltip"))
           );
@@ -132,7 +134,7 @@ export default class UI {
     });
   }
 
-  // Add data attributes to usernames so that banned users and approvers can be styled.
+  // Add tooltips to usernames. Also add data attributes for custom CSS styling.
   static initialize_user_links() {
     const user_ids =
       _($('a[href^="/users"]').filter((i, e) => !$(e).text().match(/My Account/)))
@@ -146,12 +148,10 @@ export default class UI {
       return;
     }
 
-    // XXX should do lookup in batches. should also skip if no users. should also skip my account link.
+    // XXX should do lookup in batches.
     $.getJSON(`/users.json?limit=1000&search[id]=${user_ids}`).then(users => {
       for (const user of users) {
         let $user = $(`a[href^="/users/${user.id}"]`);
-
-        // $user.addClass(`user-${user.level_string.toLowerCase()}`);
 
         _(user).forOwn((value, key) =>
           $user.attr(`data-${_(key).kebabCase()}`, value)
