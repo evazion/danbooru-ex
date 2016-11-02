@@ -76,13 +76,6 @@
   overflow: hidden;
 }
 
-.ex-panel h1,
-.ex-panel h2 {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 #ex-preview-panel {
   width: 0;
 }
