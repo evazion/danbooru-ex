@@ -123,6 +123,7 @@ export default class ModeMenu {
         const html = Posts.preview(post, post.large_file_url);
         $("#ex-preview-panel article").replaceWith(html);
 
+        PreviewPanel.setHeight();
         event.preventDefault();
         break;
     }

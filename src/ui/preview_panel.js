@@ -33,18 +33,17 @@ export default class PreviewPanel {
     `);
 
     const width = EX.config.previewPanelState[EX.config.pageKey()] || EX.config.defaultPreviewPanelWidth;
-    $("#ex-preview-panel").width(width);
+    PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
+    PreviewPanel.setWidth(width);
+    PreviewPanel.setHeight();
     PreviewPanel.save();
 
     if (ModeMenu.getMode() === "view") {
       $("#ex-preview-panel").hide();
     }
 
-    $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
-
-    PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
     $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
-
+    $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
       helper: "clone",
@@ -55,10 +54,7 @@ export default class PreviewPanel {
 
   static resize(e, ui) {
     // XXX magic number
-    const width = $("body").innerWidth() - ui.position.left - 28;
-
-    $("#ex-preview-panel").width(width);
-    $("#ex-preview-panel > div").width(width);
+    PreviewPanel.setWidth($("body").innerWidth() - ui.position.left - 28);
   }
 
   static save() {
@@ -87,6 +83,11 @@ export default class PreviewPanel {
     }
   }
 
+  static setWidth(width) {
+    $("#ex-preview-panel").width(width);
+    $("#ex-preview-panel > div").width(width);
+  }
+
   static setHeight() {
     const headerHeight = $("#ex-header").outerHeight(true);
     const footerHeight = $("footer").outerHeight(true);
@@ -94,14 +95,14 @@ export default class PreviewPanel {
     let height;
     if (window.scrollY + headerHeight >= PreviewPanel.origTop) {
       $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
-      height = `calc(100vh - ${headerHeight}px - 1em)`;
+      height = `calc(100vh - ${headerHeight}px)`;
     } else {
       $("#ex-preview-panel > div").removeClass("ex-fixed");
-      height = `calc(100vh - ${PreviewPanel.origTop - window.scrollY}px - 1em)`;
+      height = `calc(100vh - ${PreviewPanel.origTop - window.scrollY}px)`;
     }
 
-    if (window.scrollY + footerHeight >= $("body").height() - window.innerHeight) {
-      const diff = window.scrollY + footerHeight - $("body").height() + window.innerHeight;
+    const diff = window.scrollY + window.innerHeight + footerHeight - $("body").height();
+    if (diff >= 0) {
       height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
     }
 
