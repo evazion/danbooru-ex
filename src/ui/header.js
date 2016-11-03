@@ -6,8 +6,13 @@ export default class Header {
     Header.initializeHeader();
     Header.initializeHotkeys();
 
-    EX.config.enableModeMenu && Header.initializeModeMenu();
-    EX.config.enablePreviewPanel && PreviewPanel.initialize();
+    if (EX.config.enableModeMenu) {
+      Header.initializeModeMenu();
+
+      if (EX.config.enablePreviewPanel) {
+        PreviewPanel.initialize();
+      }
+    }
   }
 
   static initializeHeader() {
