@@ -33,8 +33,11 @@ export default class PreviewPanel {
       </section>
     `);
 
+    // XXX: sometimes a huge offset is calculated. don't know why.
+    // PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
+    PreviewPanel.origTop = 127;
+
     const width = _.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
-    PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
     PreviewPanel.setWidth(width);
     PreviewPanel.setHeight();
     PreviewPanel.save();
