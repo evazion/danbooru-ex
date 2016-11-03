@@ -257,7 +257,7 @@ export default class UI {
 
     const stop = function (e, ui) {
       let state = EX.config.sidebarState;
-      state[`${controller} ${action}`] = ui.position.left - 28;
+      state[EX.config.pageKey()] = ui.position.left - 28;
       EX.config.sidebarState = state;
     };
 

@@ -16,6 +16,7 @@ export default class Config {
 
       thumbnailPreviewDelay: 650,
       defaultSidebarWidth: "15em",
+      defaultPreviewPanelWidth: "25%",
 
       sidebarState: {},
       previewPanelState: {},

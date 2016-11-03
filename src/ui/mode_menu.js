@@ -1,6 +1,7 @@
 import _ from "lodash";
 
 import Posts from "./posts.js";
+import PreviewPanel from "./preview_panel.js";
 
 export default class ModeMenu {
   static initialize() {
@@ -91,12 +92,6 @@ export default class ModeMenu {
       if ($("#page").selectable("instance")) {
         $("#page").selectable("destroy");
       }
-    }
-
-    if (mode === "view") {
-      $("#ex-preview-panel").hide({ effect: "slide", direction: "right" }, 1000);
-    } else {
-      $("#ex-preview-panel").show({ effect: "slide", direction: "left" }, 1000);
     }
   }
 

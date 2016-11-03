@@ -1,3 +1,5 @@
+import ModeMenu from "./mode_menu.js";
+
 export default class PreviewPanel {
   static initialize() {
     // This is the main content panel that comes before the preview panel.
@@ -30,54 +32,80 @@ export default class PreviewPanel {
       </section>
     `);
 
-    const width = EX.config.previewPanelState[EX.config.pageKey()] || 0;
+    const width = EX.config.previewPanelState[EX.config.pageKey()] || EX.config.defaultPreviewPanelWidth;
     $("#ex-preview-panel").width(width);
+    PreviewPanel.save();
 
-    const origTop = $("#ex-preview-panel > div").offset().top;
-    const headerHeight = $("#ex-header").outerHeight(true);
-    const footerHeight = $("footer").outerHeight(true);
+    if (ModeMenu.getMode() === "view") {
+      $("#ex-preview-panel").hide();
+    }
 
-    // XXX set height on initialization as well as scroll.
-    const onScroll = function (event) {
-      let height;
+    $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
 
-      if (window.scrollY + headerHeight >= origTop) {
-        $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
-        height = `calc(100vh - ${headerHeight}px - 1em)`;
-      } else {
-        $("#ex-preview-panel > div").removeClass("ex-fixed");
-        height = `calc(100vh - ${origTop - window.scrollY}px - 1em)`;
-      }
-
-      if (window.scrollY + footerHeight >= $("body").height() - window.innerHeight) {
-        const diff = window.scrollY + footerHeight - $("body").height() + window.innerHeight;
-        height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
-      }
-
-      $("#ex-preview-panel > div").css({ height });
-      $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
-    };
-    $(document).scroll(_.throttle(onScroll, 16));
-
-    const resizeDrag = function (e, ui) {
-      // XXX magic number
-      const width = $("body").innerWidth() - ui.position.left - 28;
-
-      $("#ex-preview-panel").width(width);
-      $("#ex-preview-panel > div").width(width);
-    };
-
-    const resizeStop = function (e, ui) {
-      let state = EX.config.previewPanelState;
-      state[`${controller} ${action}`] = $("#ex-preview-panel").width();
-      EX.config.previewPanelState = state;
-    };
+    PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
+    $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
 
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
       helper: "clone",
-      drag: _.throttle(resizeDrag, 16),
-      stop: _.debounce(resizeStop, 100),
+      drag: _.throttle(PreviewPanel.resize, 16),
+      stop: _.debounce(PreviewPanel.save, 100),
     });
+  }
+
+  static resize(e, ui) {
+    // XXX magic number
+    const width = $("body").innerWidth() - ui.position.left - 28;
+
+    $("#ex-preview-panel").width(width);
+    $("#ex-preview-panel > div").width(width);
+  }
+
+  static save() {
+    let state = EX.config.previewPanelState;
+    state[EX.config.pageKey()] = $("#ex-preview-panel").width();
+    EX.config.previewPanelState = state;
+  };
+
+  static open() {
+    $("#ex-preview-panel").show({ effect: "slide", direction: "left" }).promise().then((e) => {
+      PreviewPanel.save();
+    });
+  }
+
+  static close() {
+    $("#ex-preview-panel").hide({ effect: "slide", direction: "right" }).promise().then((e) => {
+      PreviewPanel.save();
+    });
+  }
+
+  static switchMode() {
+    if (ModeMenu.getMode() === "view") {
+      PreviewPanel.close();
+    } else {
+      PreviewPanel.open();
+    }
+  }
+
+  static setHeight() {
+    const headerHeight = $("#ex-header").outerHeight(true);
+    const footerHeight = $("footer").outerHeight(true);
+
+    let height;
+    if (window.scrollY + headerHeight >= PreviewPanel.origTop) {
+      $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
+      height = `calc(100vh - ${headerHeight}px - 1em)`;
+    } else {
+      $("#ex-preview-panel > div").removeClass("ex-fixed");
+      height = `calc(100vh - ${PreviewPanel.origTop - window.scrollY}px - 1em)`;
+    }
+
+    if (window.scrollY + footerHeight >= $("body").height() - window.innerHeight) {
+      const diff = window.scrollY + footerHeight - $("body").height() + window.innerHeight;
+      height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
+    }
+
+    $("#ex-preview-panel > div").css({ height });
+    $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
   }
 }
