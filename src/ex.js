@@ -20,6 +20,10 @@ export default class EX {
 
   static initialize() {
     EX.config = new Config();
+   $("footer").append(
+     ` – Danbooru EX (<a href="#" onclick="confirm('Reset Danbooru EX settings?') && EX.config.reset();">reset</a>)`
+    );
+
 
     EX.config.enableHeader && UI.Header.initialize();
 
