@@ -23,8 +23,8 @@ export default class Config {
       wikiRedesign: true,
 
       thumbnailPreviewDelay: 650,
-      defaultSidebarWidth: "15em",
-      defaultPreviewPanelWidth: "25%",
+      defaultSidebarWidth: 210, // 15em
+      defaultPreviewPanelWidth: 480,
 
       sidebarState: {},
       previewPanelState: {},
