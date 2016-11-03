@@ -41,6 +41,7 @@ window.moment = moment;
 
 jQuery(function () {
   try {
+    EX.config = new EX.Config();
     EX.initialize();
   } catch(e) {
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
