@@ -18,7 +18,9 @@
 ** Broken on webm/mp4/ugoira.
 
 * Tag scripts
-** Holding shift while dragging should add posts to selection.
+** Sometimes Ctrl+A selects all text on page.
+** Dragging unselects currently selected posts. Holding shift while dragging
+   should add posts to selection.
 ** Should be able to shift+click to select everything between two points.
 ** Ctrl+T should invert script (foo -bar becomes -foo bar).
 ** Should support ctrl+z to undo.
