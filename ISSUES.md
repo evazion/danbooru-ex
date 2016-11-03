@@ -7,6 +7,7 @@
 * Preview panel
 ** Doesn't work on popular pages and /post_versions.
 ** Broken on webm/mp4/ugoira.
+** Can't resize wide enough on posts with too many children in parent/child bar.
 ** Should include metadata: tags, pools, notes, comments, parent/children, etc.
 ** Should include tag edit box.
 ** Left click image should toggle between fit vertical, fit horizontal, and full size
@@ -16,6 +17,9 @@
 
 * Thumbnails previews
 ** Broken on webm/mp4/ugoira.
+** Placement can be very wonky.
+** Currently disabled in preview/tag script mode - need a smarter way to
+   trigger popups so they don't get in the way.
 
 * Tag scripts
 ** Sometimes Ctrl+A selects all text on page.
