@@ -14,6 +14,14 @@ export default class Config {
       useRelativeTimestamps: true,
       resizeableSidebars: true,
 
+      artistsRedesign: true,
+      commentsRedesign: true,
+      forumRedesign: true,
+      poolsRedesign: true,
+      postsRedesign: true,
+      postVersionsRedesign: true,
+      wikiRedesign: true,
+
       thumbnailPreviewDelay: 650,
       defaultSidebarWidth: "15em",
       defaultPreviewPanelWidth: "25%",
