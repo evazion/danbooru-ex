@@ -1,6 +1,12 @@
 Danbooru EX is a userscript that adds a variety of enhancements and new
 features that make Danbooru faster and easier to use.
 
+# Demo
+
+* Thumbnail previews / preview panel: https://gfycat.com/IllfatedSpanishImperialeagle
+
+* Tag scripting: https://gfycat.com/BountifulFlippantAnkolewatusi
+
 # Installation
 
 Chrome: [Install Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en)
