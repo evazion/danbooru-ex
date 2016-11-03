@@ -22,7 +22,8 @@ export default class ModeMenu {
 
   static initializeModeMenu() {
     $('.ex-mode-menu select[name="mode"]').change(ModeMenu.switchMode);
-    ModeMenu.setMode(EX.config.modeMenuState);
+    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], "view");
+    ModeMenu.setMode(mode);
   }
 
   static initializeTagScriptControls() {
@@ -74,7 +75,10 @@ export default class ModeMenu {
 
   static switchMode() {
     const mode = ModeMenu.getMode();
-    EX.config.modeMenuState = mode;
+
+    let state = EX.config.modeMenuState;
+    state[EX.config.pageKey()] = mode;
+    EX.config.modeMenuState = state;
 
     $("body").removeClass((i, klass) => (klass.match(/mode-.*/) || []).join(' '));
     $("body").addClass(`mode-${mode}`);

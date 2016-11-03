@@ -28,7 +28,7 @@ export default class Config {
 
       sidebarState: {},
       previewPanelState: {},
-      modeMenuState: "view",
+      modeMenuState: {},
       tagScriptNumber: 1,
       tagScripts: _.fill(Array(10), ""),
       headerState: "ex-fixed",
