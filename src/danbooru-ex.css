@@ -251,6 +251,16 @@ body.mode-preview #ex-header {
     border-bottom: 2px solid #0073ff;
 }
 
+/* Highlight thumbnails in grey when hovering in preview or tag script mode. */
+body.mode-preview article.post-preview:hover,
+body.mode-preview #c-moderator-post-queues .post-preview aside:hover,
+body.mode-preview #c-comments .post-preview .preview:hover,
+body.mode-tag-script article.post-preview:hover,
+body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,
+body.mode-tag-script #c-comments .post-preview .preview:hover {
+    background: #EEEEEE;
+}
+
 body.mode-tag-script article.post-preview.ui-selected,
 body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,
 body.mode-tag-script #c-comments .post-preview .preview.ui-selected {
