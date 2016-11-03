@@ -1,4 +1,5 @@
 import ModeMenu from "./mode_menu.js";
+import _ from "lodash";
 
 export default class PreviewPanel {
   static initialize() {
@@ -32,7 +33,7 @@ export default class PreviewPanel {
       </section>
     `);
 
-    const width = EX.config.previewPanelState[EX.config.pageKey()] || EX.config.defaultPreviewPanelWidth;
+    const width = _.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
     PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
     PreviewPanel.setWidth(width);
     PreviewPanel.setHeight();

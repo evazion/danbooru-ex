@@ -13,6 +13,8 @@ import WikiPages    from "./ui/wiki_pages.js";
 
 import Tag from "./tag.js";
 
+import _ from "lodash";
+
 export default class UI {
   static initialize() {
     UI.initialize_moment();
@@ -241,7 +243,8 @@ export default class UI {
       return;
     }
 
-    const width = EX.config.sidebarState[EX.config.pageKey()] || EX.config.defaultSidebarWidth;
+    const width = _.defaultTo(EX.config.sidebarState[EX.config.pageKey()], EX.config.defaultSidebarWidth);
+    $sidebar.toggle(width > 0);
 
     $sidebar.addClass("ex-panel").width(width).after(`
       <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
@@ -251,13 +254,13 @@ export default class UI {
 
     // XXX fix magic numbers (28 = 2em).
     const drag = function (e, ui) {
-      $sidebar.width(ui.position.left - 28);
+      $sidebar.width(Math.max(0, ui.position.left - 28));
       $sidebar.toggle($sidebar.width() > 0);
     }
 
     const stop = function (e, ui) {
       let state = EX.config.sidebarState;
-      state[EX.config.pageKey()] = ui.position.left - 28;
+      state[EX.config.pageKey()] = Math.max(0, ui.position.left - 28);
       EX.config.sidebarState = state;
     };
 
