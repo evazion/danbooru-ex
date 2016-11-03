@@ -78,6 +78,7 @@
 
 .ex-preview-panel-container {
   display: flex;
+  min-height: 100vh;
 }
 
 #ex-preview-panel {
