@@ -46,6 +46,8 @@
 * @mentions and user #1234 links aren't colorized or given data attributes.
 * Colorizing user links can't handle more than 1000 usernames being on one page.
 
+* Username tooltips are broken sometimes - use albert's info instead.
+
 * /artists:
 ** Broken on http://danbooru.donmai.us/artists?search[order]=name
 *** Problem is an artist entry with a blank name. Should validate artist name is non-blank server-side.
