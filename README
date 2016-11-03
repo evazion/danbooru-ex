@@ -19,10 +19,10 @@ See the instructions at the top of the script for how to disable tweaks you don'
 * Preview panel: Select Preview from the Mode menu then click a thumbnail. A
   panel will appear showing you the full size image.
 
-* New tag script mode: Clicking opens a preview and select the post instead of
-  applying tags immediately. After your posts are selected, click Apply or
-  press Shift+A to apply tags. This lets you avoid misclicks and see full
-  images as you work.
+* Redesigned tag script mode: Clicking thumbnails selects the post and opens a
+  preview instead of applying tags immediately. After your posts are selected,
+  click Apply or press Shift+A to apply tags. This helps you avoid misclicks and
+  lets you see the full image as you work.
 
 * Add search bar and mode menu in the header. This lets you:
 
