@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX (dev)
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      1285
+// @version      1299
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
