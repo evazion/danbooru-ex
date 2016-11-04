@@ -1,6 +1,7 @@
 # Release 1339
 
-* Fix broken Show button in Table of Content expandable in wiki.
+* Fix broken Show button in Table of Contents expandables in the wiki.
+* Don't add automatic Table of Contents to wiki pages that already have one.
 
 # Release 1337
 
