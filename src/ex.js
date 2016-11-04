@@ -20,7 +20,7 @@ export default class EX {
 
   static initialize() {
     $("footer").append(
-      ` – Danbooru EX (<a href="#" onclick="confirm('Reset Danbooru EX settings?') && EX.config.reset();">reset</a>)`
+      ` – Danbooru EX (<a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">settings</a>)`
     );
 
     EX.config.enableHeader && UI.Header.initialize();

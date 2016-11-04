@@ -161,6 +161,11 @@ export default class Config {
     $("#advanced-settings-section").after(`
       <fieldset id="ex-settings-section" style="display: none">
         ${settingsHtml}
+
+        <div class="input">
+            <label><a href="#" id="factory_reset">Factory Reset</a></label>
+            <div class="hint">Clear all Danbooru EX data and reset settings to default state.</div>
+        </div>
       </fieldset>
     `);
 
@@ -183,6 +188,10 @@ export default class Config {
 
       this.set(name, value);
       Danbooru.notice("Setting saved.");
+    });
+
+    $("#factory_reset").click(e => {
+      confirm('Reset Danbooru EX settings?') && this.reset() && Danbooru.notice("Danbooru EX reset.");
     });
   }
 
