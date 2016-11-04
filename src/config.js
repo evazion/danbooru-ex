@@ -42,11 +42,13 @@ export default class Config {
   get(key) {
     const value = this.storage["EX.config." + key]
 
+    console.log("EX.config." + key, (value === undefined) ? Config.Defaults[key] : JSON.parse(value));
     return (value === undefined) ? Config.Defaults[key] : JSON.parse(value);
   }
 
   set(key, value) {
     this.storage["EX.config." + key] = JSON.stringify(value);
+    console.log("EX.config." + key, JSON.stringify(value));
     return this;
   }
 
