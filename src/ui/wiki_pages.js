@@ -39,7 +39,13 @@ export default class WikiPages {
   static initialize_table_of_contents() {
     const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
 
-    if ($headings.length < 3) {
+    const hasToC =
+      $("div.expandable-header > span")
+      .filter((i, e) =>
+        $(e).text().match(/table of contents/i)
+      ).length > 0;
+
+    if ($headings.length < 3 || hasToC) {
       return;
     }
 
