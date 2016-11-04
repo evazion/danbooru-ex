@@ -26,7 +26,7 @@ export default class UI {
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
-    UI.initialize_hotkeys();
+    EX.config.enableHotkeys && UI.initialize_hotkeys();
   }
 
   // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).

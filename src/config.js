@@ -18,6 +18,11 @@ export default class Config {
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
         value: true,
       },
+      enableHotkeys: {
+        configurable: true,
+        help: "Enable additional keyboard shortcuts.",
+        value: true,
+      },
       showThumbnailPreviews: {
         configurable: true,
         help: "Show post preview tooltips when hovering over thumbnails.",
