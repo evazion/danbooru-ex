@@ -133,6 +133,10 @@
 
 /* Overrides for Danbooru's responsive layout */
 @media screen and (max-width: 660px) {
+    body {
+        overflow-x: hidden;
+    }
+
     #ex-header input {
         font-size: 1em;
     }
@@ -154,6 +158,18 @@
 
     header#top menu li a {
         padding: 6px 5px;
+    }
+
+    .ex-preview-panel-container {
+        display: block;
+        min-height: initial;
+    }
+
+    #sidebar,
+    #ex-sidebar-resizer,
+    #ex-preview-panel-resizer,
+    #ex-preview-panel {
+        display: none !important;
     }
 }
 
