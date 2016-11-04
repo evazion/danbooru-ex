@@ -272,13 +272,11 @@ export default class UI {
     });
   }
 
-  /*
-   * Global keybindings.
-   * - Escape: Close notice popups.
-   * - W: Smooth scroll up.
-   * - S: Smooth scroll down.
-   * - Shift+Q: Focus top search bar.
-   */
+  // Global keybindings.
+  // - Escape: Close notice popups.
+  // - W: Smooth scroll up.
+  // - S: Smooth scroll down.
+  // - Ctrl+Enter: Submit form.
   static initialize_hotkeys() {
     // Escape: Close notice popups.
     $(document).keydown('esc', e => $('#close-notice-link').click());
@@ -292,6 +290,11 @@ export default class UI {
     if ($(".paginator").length) {
       UI.initialize_paginator_hotkeys();
     }
+
+    $(".dtext-previewable textarea").keydown("ctrl+return", e => {
+      $(e.target).closest("form").find('input[type="submit"][value="Submit"]').click();
+      e.preventDefault();
+    });
   }
 
   static initialize_scroll_hotkeys() {
