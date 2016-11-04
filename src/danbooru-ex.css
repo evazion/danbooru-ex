@@ -134,12 +134,26 @@
 /* Overrides for Danbooru's responsive layout */
 @media screen and (max-width: 660px) {
     #ex-header input {
-        font-size: 1em !important;
+        font-size: 1em;
     }
 
     #ex-header {
         text-align: initial;
         line-height: initial;
+    }
+
+    #nav {
+        display: block;
+        float: none;
+        font-size: 1em;
+    }
+
+    header#top menu {
+        width: initial;
+    }
+
+    header#top menu li a {
+        padding: 6px 5px;
     }
 }
 
