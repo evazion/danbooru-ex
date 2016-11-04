@@ -215,6 +215,10 @@
   margin: 0.75em 0 0.25em 0;
 }
 
+#c-users #a-edit #ex-settings-section label {
+  display: inline-block;
+}
+
 #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
 #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
     /* display: flex; */

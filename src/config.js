@@ -3,47 +3,127 @@ import _ from "lodash";
 export default class Config {
   static get Defaults() {
     return {
-      schemaVersion: 1,
-      enableHeader: true,
-      enableModeMenu: true,
-      enablePreviewPanel: true,
-      showThumbnailPreviews: true,
-      showPostLinkPreviews: true,
-      usernameTooltips: true,
-      styleWikiLinks: true,
-      useRelativeTimestamps: true,
-      resizeableSidebars: true,
+      enableHeader: {
+        configurable: true,
+        help: "Enable header bar containing search box and mode menu.",
+        value: true,
+      },
+      enableModeMenu: {
+        configurable: true,
+        help: "Enable mode menu in header bar, disable mode menu in the sidebar. Required for preview panel.",
+        value: true,
+      },
+      enablePreviewPanel: {
+        configurable: true,
+        help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
+        value: true,
+      },
+      showThumbnailPreviews: {
+        configurable: true,
+        help: "Show post preview tooltips when hovering over thumbnails.",
+        value: true,
+      },
+      showPostLinkPreviews: {
+        configurable: true,
+        help: "Show post preview tooltips when hovering over post #1234 links.",
+        value: true,
+      },
+      usernameTooltips: {
+        configurable: true,
+        help: "Enable tooltips on usernames",
+        value: true,
+      },
+      styleWikiLinks: {
+        configurable: true,
+        help: "Colorize tags in the wiki and forum, underline links to empty tags, and add tooltips to tags.",
+        value: true,
+      },
+      useRelativeTimestamps: {
+        configurable: true,
+        help: 'Replace fixed times ("2016-08-10 23:25") with relative times ("3 months ago").',
+        value: true,
+      },
+      resizeableSidebars: {
+        configurable: true,
+        help: "Make the tag sidebar resizeable (drag edge to resize).",
+        value: true,
+      },
 
-      artistsRedesign: true,
-      commentsRedesign: true,
-      forumRedesign: true,
-      poolsRedesign: true,
-      postsRedesign: true,
-      postVersionsRedesign: true,
-      wikiRedesign: true,
+      artistsRedesign: {
+        configurable: true,
+        help: "Enable the redesigned /artists index.",
+        value: true,
+      },
+      commentsRedesign: {
+        configurable: true,
+        help: "Enable comment scores and extra info on posts in /comments",
+        value: true,
+      },
+      forumRedesign: {
+        configurable: true,
+        help: 'Replace Permalinks on forum posts with "forum #1234" links',
+        value: true,
+      },
+      postsRedesign: {
+        configurable: true,
+        help: 'Move artist tags to the top of the tag list, put tag counts next to tag list headers, and add hotkeys for rating / voting on posts.',
+        value: true,
+      },
+      postVersionsRedesign: {
+        configurable: true,
+        help: "Add thumbnails on the /post_versions page",
+        value: true,
+      },
+      wikiRedesign: {
+        configurable: true,
+        help: "Make header sections in wiki entries collapsible and add table of contents to long wiki pages",
+        value: true,
+      },
+      thumbnailPreviewDelay: {
+        configurable: false,
+        help: "The delay in milliseconds when hovering over a thumbnail before the preview appears.",
+        value: 650,
+      },
 
-      thumbnailPreviewDelay: 650,
-      defaultSidebarWidth: 210, // 15em
-      defaultPreviewPanelWidth: 480,
-
-      sidebarState: {},
-      previewPanelState: {},
-      modeMenuState: {},
-      tagScriptNumber: 1,
-      tagScripts: _.fill(Array(10), ""),
-      headerState: "ex-fixed",
+      schemaVersion: {
+        configurable: false, value: 1,
+      }, defaultSidebarWidth: {
+        configurable: false, value: 210,
+      }, defaultPreviewPanelWidth: {
+        configurable: false, value: 480,
+      }, sidebarState: {
+        configurable: false, value: {},
+      }, previewPanelState: {
+        configurable: false, value: {},
+      }, modeMenuState: {
+        configurable: false, value: {},
+      }, tagScriptNumber: {
+        configurable: false, value: 1,
+      }, tagScripts: {
+        configurable: false,
+        value: _.fill(Array(10), ""),
+      }, headerState: {
+        configurable: false, value: "ex-fixed",
+      },
     };
   }
 
   constructor() {
     this.storage = window.localStorage;
+
+    if ($("#c-users #a-edit").length) {
+      this.initializeForm();
+    }
   }
 
   get(key) {
-    const value = this.storage["EX.config." + key]
+    const value = JSON.parse(_.defaultTo(
+      this.storage["EX.config." + key],
+      JSON.stringify(Config.Defaults[key].value)
+    ));
 
-    console.log("GET EX.config." + key, (value === undefined) ? Config.Defaults[key] : JSON.parse(value));
-    return (value === undefined) ? Config.Defaults[key] : JSON.parse(value);
+    console.log("GET EX.config." + key, value);
+    return value;
   }
 
   set(key, value) {
@@ -68,6 +148,56 @@ export default class Config {
     const controller = $("#page > div:nth-child(2)").attr("id");
     const action = $("#page > div:nth-child(2) > div").attr("id");
     return `${controller} ${action}`;
+  }
+
+  initializeForm() {
+    const settingsHtml =
+      _(Config.Defaults)
+      .map((props, name) => _.merge(props, { name }))
+      .filter("configurable")
+      .map(setting => this.renderOption(setting))
+      .join("");
+
+    $("#advanced-settings-section").after(`
+      <fieldset id="ex-settings-section" style="display: none">
+        ${settingsHtml}
+      </fieldset>
+    `);
+
+    $("#edit-options > a:nth-child(2)").after('| <a href="#ex-settings">EX Settings</a>');
+
+    let $tabs = $("#edit-options a:not(#delete-account):not(#change-password)");
+    $tabs.off("click").click(e => {
+      $tabs.removeClass("active");
+      $(e.target).addClass("active");
+
+      $("#a-edit form fieldset").hide();
+      $($(e.target).attr("href") + "-section").show();
+
+      e.preventDefault();
+    });
+
+    $("#ex-settings-section input").change(e => {
+      const name = $(e.target).attr("name");
+      const value = e.target.checked;
+
+      this.set(name, value);
+      Danbooru.notice("Setting saved.");
+    });
+  }
+
+  renderOption(setting) {
+    const name = setting.name;
+    const id = "ex_config_" + _.snakeCase(name);
+    const value = this.get(name) ? "checked" : "";
+
+    return `
+      <div class="input checkbox optional">
+        <input class="boolean optional" type="checkbox" ${value} name="${_.camelCase(name)}" id="${id}">
+        <label class="boolean optional" for="${id}">${_.startCase(name)}</label>
+        <div class="hint">${setting.help}</div>
+      </div>
+    `;
   }
 }
 
