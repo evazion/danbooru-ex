@@ -1,65 +1,5 @@
 @import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
 
-.ex-artists {
-  white-space: nowrap;
-}
-
-.ex-artist .ex-artist-id {
-  width: 10%;
-}
-
-.ex-artist .ex-artist-other-names {
-  width: 100%;
-  white-space: normal;
-}
-
-.ui-tooltip,
-.ui-tooltip .ex-thumbnail-tooltip img {
-  max-width:  450px !important;
-  max-height: 450px !important;
-}
-
-.ui-tooltip .post-preview {
-  width: auto;
-  height: auto;
-}
-
-#c-artists #sidebar label {
-  display: block;
-  font-weight: bold;
-  padding: 4px 0 4px 0;
-  width: auto;
-  cursor: auto;
-}
-
-#c-artists #sidebar input[type="text"] {
-  width: 100% !important;
-}
-
-#c-artists #sidebar button[type="submit"] {
-  display: block;
-  margin: 4px 0 4px 0;
-}
-
-#c-artists #sidebar h2 {
-  font-size: 1em;
-  display: inline-block;
-  margin: 0.75em 0 0.25em 0;
-}
-
-.ex-short-relative-time {
-  color: #CCC;
-  margin-left: 0.2em;
-}
-
-.tag-post-count-empty {
-  border-bottom: 1px dotted;
-}
-
-.tag-dne {
-  border-bottom: 1px dotted;
-}
-
 .ex-vertical-resizer {
   cursor: col-resize;
   width: 1em;
@@ -88,6 +28,7 @@
 
 #ex-preview-panel > div {
   display: flex;
+  overflow-y: scroll;
 }
 
 #ex-preview-panel > div > article {
@@ -109,31 +50,6 @@
 .ex-content-panel {
   flex: 1;
   margin-left: 0px !important;
-}
-
-.tag-list-header h1, .tag-list-header h2 {
-    display: inline-block;
-}
-
-.tag-list-header .post-count {
-    margin-left: 0.5em;
-}
-
-/* Ensure colorized tags are still hidden. */
-.spoiler:hover a.tag-type-1 {
-    color: #A00;
-}
-
-.spoiler:hover a.tag-type-3 {
-    color: #A0A;
-}
-
-.spoiler:hover a.tag-type-4 {
-    color: #0A0;
-}
-
-.spoiler:not(:hover) a {
-    color: black !important;
 }
 
 #ex-header {
@@ -215,17 +131,47 @@
     }
 }
 
-/*
-#top h1 {
-    display: none;
-}
-*/
-
 #notice {
     top: 4.5em !important;
 }
 
 
+
+.ex-artists {
+  white-space: nowrap;
+}
+
+.ex-artist .ex-artist-id {
+  width: 10%;
+}
+
+.ex-artist .ex-artist-other-names {
+  width: 100%;
+  white-space: normal;
+}
+
+#c-artists #sidebar label {
+  display: block;
+  font-weight: bold;
+  padding: 4px 0 4px 0;
+  width: auto;
+  cursor: auto;
+}
+
+#c-artists #sidebar input[type="text"] {
+  width: 100% !important;
+}
+
+#c-artists #sidebar button[type="submit"] {
+  display: block;
+  margin: 4px 0 4px 0;
+}
+
+#c-artists #sidebar h2 {
+  font-size: 1em;
+  display: inline-block;
+  margin: 0.75em 0 0.25em 0;
+}
 
 #wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
 #wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
@@ -293,6 +239,55 @@ body.mode-tag-script article.post-preview.ui-selected {
     box-shadow: 0 0 5px #aaa;
 }
 
+.ui-tooltip,
+.ui-tooltip .ex-thumbnail-tooltip img {
+  max-width:  450px !important;
+  max-height: 450px !important;
+}
+
 body .ui-tooltip {
     border-width: 2px;
+}
+
+.ui-tooltip .post-preview {
+  width: auto;
+  height: auto;
+}
+
+.ex-short-relative-time {
+  color: #CCC;
+  margin-left: 0.2em;
+}
+
+.tag-post-count-empty {
+  border-bottom: 1px dotted;
+}
+
+.tag-dne {
+  border-bottom: 1px dotted;
+}
+
+.tag-list-header h1, .tag-list-header h2 {
+    display: inline-block;
+}
+
+.tag-list-header .post-count {
+    margin-left: 0.5em;
+}
+
+/* Ensure colorized tags are still hidden. */
+.spoiler:hover a.tag-type-1 {
+    color: #A00;
+}
+
+.spoiler:hover a.tag-type-3 {
+    color: #A0A;
+}
+
+.spoiler:hover a.tag-type-4 {
+    color: #0A0;
+}
+
+.spoiler:not(:hover) a {
+    color: black !important;
 }
