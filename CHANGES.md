@@ -1,3 +1,15 @@
+# Release 1337
+
+* Add settings page for disabling tweaks under My Account > Settings > EX Settings.
+
+# Release 1322
+
+* Add debug output.
+
+* Partial fixes for broken header/nav menu layout at <660px.
+
+* Disable sidebar and preview panel at <660px.
+
 # Release 1301
 
 * Greatly improved performance and reduced flickering.
