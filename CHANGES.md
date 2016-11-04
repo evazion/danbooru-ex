@@ -1,3 +1,7 @@
+# Release 1339
+
+* Fix broken Show button in Table of Content expandable in wiki.
+
 # Release 1337
 
 * Add settings page for disabling tweaks under My Account > Settings > EX Settings.
