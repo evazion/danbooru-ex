@@ -131,6 +131,18 @@
     }
 }
 
+/* Overrides for Danbooru's responsive layout */
+@media screen and (max-width: 660px) {
+    #ex-header input {
+        font-size: 1em !important;
+    }
+
+    #ex-header {
+        text-align: initial;
+        line-height: initial;
+    }
+}
+
 #notice {
     top: 4.5em !important;
 }
