@@ -33,6 +33,11 @@ export default class Config {
         help: "Show post preview tooltips when hovering over post #1234 links.",
         value: true,
       },
+      enableNotesLivePreview: {
+        configurable: true,
+        help: "Automatically update note preview as you edit.",
+        value: true,
+      },
       usernameTooltips: {
         configurable: true,
         help: "Enable tooltips on usernames",

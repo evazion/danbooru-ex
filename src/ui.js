@@ -1,5 +1,6 @@
 import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
+import Notes        from "./ui/notes.js";
 import PreviewPanel from "./ui/preview_panel.js";
 
 import Artists      from "./ui/artists.js";
@@ -380,6 +381,7 @@ export default class UI {
 
 UI.Header = Header;
 UI.ModeMenu = ModeMenu;
+UI.Notes = Notes;
 UI.PreviewPanel = PreviewPanel;
 
 UI.Artists = Artists;

@@ -26,6 +26,8 @@ export default class EX {
     EX.config.enableHeader && UI.Header.initialize();
 
     EX.UI.initialize();
+    EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
+
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
     EX.config.forumRedesign && EX.UI.ForumPosts.initialize();
