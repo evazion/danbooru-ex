@@ -4,14 +4,14 @@ import moment from "moment";
 
 import Config from "./config.js";
 import DText from "./dtext.js";
-import Tag   from "./tag.js";
-import UI    from "./ui.js";
+import Resource from "./resource.js";
+import UI from "./ui.js";
 import "./danbooru-ex.css";
 
 export default class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
-  static get Tag() { return Tag; }
+  static get Resource() { return Resource; }
   static get UI() { return UI; }
 
   static search(url, search, { limit, page } = {}) {

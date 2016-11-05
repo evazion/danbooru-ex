@@ -189,14 +189,15 @@ export default class UI {
       $(`a[href^="/wiki_pages/show_or_new?title="]`)
       .filter((i, e) => $(e).text() != "?");
 
-    const tag_names =
+    const tags =
       _($wiki_links.toArray())
       .map(parse_tag_name)
       .reject(tag => tag.match(meta_wikis))
       .value();
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
-    Tag.search(tag_names).then(tags => {
+    Tag.search("name", tags).then(tags => {
+      tags = _.keyBy(tags,"name");
       $wiki_links.each((i, e) => {
         const $wiki_link = $(e);
         const name = parse_tag_name($wiki_link);
