@@ -6,6 +6,9 @@ export default class PreviewPanel {
     // This is the main content panel that comes before the preview panel.
     let $content = $(`
       #c-posts #content,
+      #c-post-appeals #a-index,
+      #c-post-flags #a-index,
+      #c-post-versions #a-index,
       #c-notes #a-index,
       #c-pools #a-gallery,
       #c-pools #a-show,
