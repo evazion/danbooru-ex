@@ -24,7 +24,6 @@ export default class UI {
 
     EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
     EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
-    EX.config.usernameTooltips && UI.initialize_user_links();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
@@ -136,43 +135,6 @@ export default class UI {
           console.log(e);
         }
       }
-    });
-  }
-
-  // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initialize_user_links() {
-    const parseUserId = ($user) => _.nth($user.attr("href").match(/^\/users\/(\d+)$/), 1);
-
-    const $users =
-      $('a[href^="/users/"]')
-      .filter((i, e) => !$(e).text().match(/My Account|Profile/))
-      .filter((i, e) => parseUserId($(e)));
-
-    const ids = $users.map((i, e) => parseUserId($(e)));
-
-    User.search("id", ids).then(users => {
-      users = _.keyBy(users, "id");
-      $users.each((i, e) => {
-        const $user = $(e);
-        const id = parseUserId($user);
-        const user = users[id];
-
-        _(user).forOwn((value, key) =>
-          $user.attr(`data-${_(key).kebabCase()}`, value)
-        );
-
-        let privileges =
-          user.level_string +
-          (user.is_banned         ? " Banned"      : "") + 
-          (user.is_super_voter    ? " Supervoter"  : "") +
-          (user.can_approve_posts ? " Approver"    : "") +
-          (user.can_upload_free   ? " Contributor" : "");
-
-        let tooltip =
-          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
-
-        $user.attr("title", tooltip);
-      });
     });
   }
 

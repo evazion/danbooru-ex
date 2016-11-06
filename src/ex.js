@@ -1,4 +1,3 @@
-import _ from "lodash";
 import jQuery from "jquery";
 import moment from "moment";
 
@@ -27,6 +26,7 @@ export default class EX {
 
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
+    EX.config.usernameTooltips && EX.UI.Users.initialize();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
@@ -55,4 +55,3 @@ $(function () {
     throw e;
   }
 });
-
