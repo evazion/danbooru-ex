@@ -20,7 +20,7 @@ export default class EX {
 
   static initialize() {
     $("footer").append(
-      ` – Danbooru EX (<a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">settings</a>)`
+      `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`
     );
 
     EX.config.enableHeader && UI.Header.initialize();
