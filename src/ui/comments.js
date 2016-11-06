@@ -9,7 +9,7 @@ export default class Comments {
       });
     }
 
-    if ($("#c-comments #a-index").length) {
+    if ($("#c-comments #a-index").length && window.location.search.match(/group_by=post/)) {
       Comments.initialize_tag_list();
     }
   }
