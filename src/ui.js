@@ -211,9 +211,7 @@ export default class UI {
     $sidebar.toggle(width > 0);
 
     $sidebar.addClass("ex-panel").width(width).after(`
-      <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
-        <div class="ex-vertical-resizer-line"></div>
-      </section>
+      <section id="ex-sidebar-resizer" class="ex-vertical-resizer"></section>
     `);
 
     // XXX fix magic numbers (28 = 2em).

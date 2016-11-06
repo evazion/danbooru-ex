@@ -2,14 +2,15 @@
 
 .ex-vertical-resizer {
   cursor: col-resize;
-  width: 1em;
+  width: 1px;
+  border: 0.5em solid white;
+  background: hsla(0, 0%, 95%, 1);
+  transition: background 0.125s;
 }
 
-.ex-vertical-resizer-line {
-  background-color: #ebebeb;
-  height: 100%;
-  width: 1px;
-  margin: 0 auto;
+.ex-vertical-resizer:hover {
+  background: hsla(0, 0%, 80%, 1);
+  transition: background 0.125s;
 }
 
 .ex-panel {
@@ -242,6 +243,10 @@ body.mode-tag-script #ex-header {
 
 body.mode-preview #ex-header {
     border-bottom: 2px solid #0073ff;
+}
+
+body.mode-view #ex-preview-panel-resizer {
+    display: none;
 }
 
 /* Highlight thumbnails in grey when hovering in preview or tag script mode. */

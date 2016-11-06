@@ -24,9 +24,7 @@ export default class PreviewPanel {
     $content.parent().addClass("ex-preview-panel-container");
     $content.addClass("ex-content-panel");
     $content.after(`
-      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
-        <div class="ex-vertical-resizer-line"></div>
-      </section>
+      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer"></section>
       <section id="ex-preview-panel" class="ex-panel">
         <div>
           <article>
