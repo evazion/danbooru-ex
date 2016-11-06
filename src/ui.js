@@ -141,16 +141,21 @@ export default class UI {
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
   static initialize_user_links() {
-    const ids = _
-      .chain($('a[href^="/users/"]'))
-      .reject(e => $(e).text().match(/My Account/))
-      .map(e => _.nth($(e).attr('href').match(/^\/users\/(\d+)$/), 1))
-      .compact()
-      .value();
+    const parseUserId = ($user) => _.nth($user.attr("href").match(/^\/users\/(\d+)$/), 1);
+
+    const $users =
+      $('a[href^="/users/"]')
+      .filter((i, e) => !$(e).text().match(/My Account|Profile/))
+      .filter((i, e) => parseUserId($(e)));
+
+    const ids = $users.map((i, e) => parseUserId($(e)));
 
     User.search("id", ids).then(users => {
-      for (const user of users) {
-        let $user = $(`a[href^="/users/${user.id}"]`);
+      users = _.keyBy(users, "id");
+      $users.each((i, e) => {
+        const $user = $(e);
+        const id = parseUserId($user);
+        const user = users[id];
 
         _(user).forOwn((value, key) =>
           $user.attr(`data-${_(key).kebabCase()}`, value)
@@ -167,7 +172,7 @@ export default class UI {
           `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
 
         $user.attr("title", tooltip);
-      }
+      });
     });
   }
 
@@ -192,7 +197,7 @@ export default class UI {
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
     Tag.search("name", tags).then(tags => {
-      tags = _.keyBy(tags,"name");
+      tags = _.keyBy(tags, "name");
       $wiki_links.each((i, e) => {
         const $wiki_link = $(e);
         const name = parse_tag_name($wiki_link);
