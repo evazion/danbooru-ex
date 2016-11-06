@@ -13,6 +13,7 @@ import Users        from "./ui/users.js";
 import WikiPages    from "./ui/wiki_pages.js";
 
 import Tag from "./tag.js";
+import User from "./user.js";
 
 import _ from "lodash";
 
@@ -140,20 +141,14 @@ export default class UI {
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
   static initialize_user_links() {
-    const user_ids =
-      _($('a[href^="/users"]').filter((i, e) => !$(e).text().match(/My Account/)))
-      .map(e => $(e).attr('href').replace("/users/", ""))
-      .map(Number)
-      .sortBy()
-      .sortedUniq()
-      .join(',');
+    const ids = _
+      .chain($('a[href^="/users/"]'))
+      .reject(e => $(e).text().match(/My Account/))
+      .map(e => _.nth($(e).attr('href').match(/^\/users\/(\d+)$/), 1))
+      .compact()
+      .value();
 
-    if (user_ids.length === 0) {
-      return;
-    }
-
-    // XXX should do lookup in batches.
-    $.getJSON(`/users.json?limit=1000&search[id]=${user_ids}`).then(users => {
+    User.search("id", ids).then(users => {
       for (const user of users) {
         let $user = $(`a[href^="/users/${user.id}"]`);
 
