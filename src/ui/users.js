@@ -6,6 +6,15 @@ import User from "../user.js";
 export default class Users {
   static initialize() {
     this.initializeUserLinks();
+    this.initializeWordBreaks();
+  }
+
+  // Wordbreak long usernames (e.g. GiantCaveMushroom) by inserting
+  // zero-width spaces at lowercase -> non-lowercase transitions.
+  static initializeWordBreaks() {
+    this.userLinks().text((i, name) =>
+      name.replace(/([a-z])(?=[^a-z])/g, c => c + "\u200B")
+    );
   }
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
