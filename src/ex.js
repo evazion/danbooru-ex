@@ -41,12 +41,18 @@ export default class EX {
 window.EX = EX;
 window.moment = moment;
 
-jQuery(function () {
+console.timeEnd("booted");
+$(function () {
   try {
+    console.timeEnd("loaded");
+
     EX.config = new EX.Config();
     EX.initialize();
+
+    console.timeEnd("initialized");
   } catch(e) {
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
     throw e;
   }
 });
+

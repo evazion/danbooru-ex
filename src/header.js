@@ -21,3 +21,9 @@
 /*
  * What is a userscript? A miserable pile of hacks.
  */
+
+console.time("booted");
+console.time("loaded");
+console.time("initialized");
+
+console.log("Danbooru EX", GM_info.script.version);

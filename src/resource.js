@@ -4,12 +4,18 @@ import $ from "jquery";
 export default class Resource {
   static search(param, values) {
     const requests = this.batch(values).map(batch => {
-      const controller = _.snakeCase(this.name.toLowerCase() + "s");
+      const url = "/" + _.snakeCase(this.name.toLowerCase() + "s");
+      const params = _.merge(this.searchParams, { search: { [param]: batch.join(",") }});
+      const query = `${url}.json?${decodeURIComponent($.param(params))}`;
+      const request = $.getJSON(url, params);
 
-      return $.getJSON(
-        '/' + controller,
-        _.merge(this.searchParams, { search: { [param]: batch.join(",") }})
-      );
+      console.time(`GET ${query}`);
+      console.log(`[NET] GET ${query}`, request);
+
+      return request.always(() => {
+        console.timeEnd(`GET ${query}`);
+        console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request)
+      });
     });
 
     return Promise.all(requests).then(_.flatten);

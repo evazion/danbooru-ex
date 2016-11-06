@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX (dev)
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      1339
+// @version      1716
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -21,3 +21,9 @@
 /*
  * What is a userscript? A miserable pile of hacks.
  */
+
+console.time("booted");
+console.time("loaded");
+console.time("initialized");
+
+console.log("Danbooru EX", GM_info.script.version);

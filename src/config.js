@@ -132,13 +132,13 @@ export default class Config {
       JSON.stringify(Config.Defaults[key].value)
     ));
 
-    console.log("GET EX.config." + key, value);
+    console.log(`[CFG] READ EX.config.${key}:`, value);
     return value;
   }
 
   set(key, value) {
     this.storage["EX.config." + key] = JSON.stringify(value);
-    console.log("PUT EX.config." + key, JSON.stringify(value));
+    console.log(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
