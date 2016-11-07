@@ -136,9 +136,9 @@ export default class Posts {
               : (options.size === "large")   ? post.large_file_url
               : post.file_url;
 
-    const autoplay = (options.size === "preview" || EX.config.autoplayVideos) ? "autoplay" : "";
-    const loop     = (options.size === "preview" || EX.config.loopVideos)     ? "loop"     : "";
-    const muted    = (options.size === "preview" || EX.config.muteVideos)     ? "muted"    : "";
+    const autoplay = (options.size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
+    const loop     = (options.size === "large" || EX.config.loopVideos)     ? "loop"     : "";
+    const muted    = (options.size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
     const media = (post.file_ext.match(/webm|mp4|zip/))
                 ? `<video ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
