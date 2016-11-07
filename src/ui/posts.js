@@ -99,9 +99,9 @@ export default class Posts {
   }
 
   // Generate the post thumbnail HTML.
-  static preview(post, options = { size: "preview", classes: [] }) {
+  static preview(post, { size="preview", classes=[] } = {}) {
     let preview_class = "post-preview";
-    preview_class += " " + options.classes.join(" ");
+    preview_class += " " + classes.join(" ");
     preview_class += post.is_pending           ? " post-status-pending"      : "";
     preview_class += post.is_flagged           ? " post-status-flagged"      : "";
     preview_class += post.is_deleted           ? " post-status-deleted"      : "";
@@ -132,13 +132,13 @@ export default class Posts {
       data-preview-file-url="${post.preview_file_url}"
     `;
 
-    const src = (options.size === "preview") ? post.preview_file_url
-              : (options.size === "large")   ? post.large_file_url
+    const src = (size === "preview") ? post.preview_file_url
+              : (size === "large")   ? post.large_file_url
               : post.file_url;
 
-    const autoplay = (options.size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
-    const loop     = (options.size === "large" || EX.config.loopVideos)     ? "loop"     : "";
-    const muted    = (options.size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+    const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
+    const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
+    const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
     const media = (post.file_ext.match(/webm|mp4|zip/))
                 ? `<video ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
