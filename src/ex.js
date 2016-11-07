@@ -41,16 +41,17 @@ export default class EX {
 window.EX = EX;
 window.moment = moment;
 
-console.timeEnd("booted");
+console.timeEnd("loaded");
 $(function () {
   try {
-    console.timeEnd("loaded");
+    console.timeEnd("preinit");
 
     EX.config = new EX.Config();
     EX.initialize();
 
     console.timeEnd("initialized");
   } catch(e) {
+    console.trace(e);
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
     throw e;
   }
