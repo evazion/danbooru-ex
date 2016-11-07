@@ -184,6 +184,16 @@
     height: auto;
 }
 
+/*
+ * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent
+ * blowing out the page width.
+ */
+#has-parent-relationship-preview {
+    height: 164px;
+    overflow: auto;
+    white-space: initial;
+}
+
 .ex-artists {
   white-space: nowrap;
 }
