@@ -141,8 +141,8 @@ export default class Posts {
     const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
     const media = (post.file_ext.match(/webm|mp4|zip/))
-                ? `<video ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
-                : `<img itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
+                ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
+                : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
 
     // XXX get the tag params from the URL if on /posts.
     const tag_params = "";

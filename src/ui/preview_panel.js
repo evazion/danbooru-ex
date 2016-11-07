@@ -112,6 +112,6 @@ export default class PreviewPanel {
     }
 
     $("#ex-preview-panel > div").css({ height });
-    $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
+    $("#ex-preview-panel > div > article.post-preview .post-media").css({ "max-height": height });
   }
 }

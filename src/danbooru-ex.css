@@ -38,7 +38,7 @@
   margin: auto;
 }
 
-#ex-preview-panel > div > article.post-preview img {
+#ex-preview-panel > div > article.post-preview .post-media {
   max-width: 100%;
   max-height: 100%;
   box-sizing: border-box;
@@ -181,14 +181,15 @@
 /* Fit posts to screen width. */
 #image {
     max-width: 100%;
-    height: auto;
+    height: auto !important;
 }
 
 /*
  * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent
  * blowing out the page width.
  */
-#has-parent-relationship-preview {
+#has-parent-relationship-preview,
+#has-children-relationship-preview {
     height: 164px;
     overflow: auto;
     white-space: initial;
@@ -310,8 +311,7 @@ body.mode-tag-script article.post-preview.ui-selected {
   border-width: 2px;
 }
 
-.ui-tooltip .ex-thumbnail-tooltip img,
-.ui-tooltip .ex-thumbnail-tooltip video {
+.ui-tooltip .ex-thumbnail-tooltip .post-media {
   max-width:  450px;
   max-height: 450px;
   height: auto;
