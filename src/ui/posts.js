@@ -10,6 +10,7 @@ export default class Posts {
     Posts.initialize_artist_tags();
     Posts.initialize_tag_type_counts();
     Posts.initialize_hotkeys();
+    Posts.initialize_video();
   }
 
   // Update Rating in sidebar when it changes.
@@ -65,6 +66,14 @@ export default class Posts {
 
     $(document).keydown("u",     e => Danbooru.Post.vote('up',   post_id));
     $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
+  }
+
+  static initialize_video() {
+    const $video = $("video#image").get(0);
+    if ($video) {
+      $video.muted = EX.config.muteVideos;
+      $video.loop = EX.config.loopVideos;;
+    }
   }
 
   // Convert the object returned by $(post).data() to an object with the same

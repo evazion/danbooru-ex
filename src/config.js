@@ -58,6 +58,16 @@ export default class Config {
         help: "Make the tag sidebar resizeable (drag edge to resize).",
         value: true,
       },
+      loopVideos: {
+        configurable: true,
+        help: "Enable looping for video_with_sound posts (normally disabled by Danbooru).",
+        value: true,
+      },
+      muteVideos: {
+        configurable: true,
+        help: "Mute video_with_sound posts by default.",
+        value: false,
+      },
 
       artistsRedesign: {
         configurable: true,
