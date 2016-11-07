@@ -29,7 +29,7 @@
 
 #ex-preview-panel > div {
   display: flex;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 #ex-preview-panel > div > article {
