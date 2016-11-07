@@ -252,11 +252,11 @@ body.mode-tag-script {
 }
 
 body.mode-tag-script #ex-header {
-    border-bottom: 2px solid #D6D;
+    border-top: 2px solid #D6D;
 }
 
 body.mode-preview #ex-header {
-    border-bottom: 2px solid #0073ff;
+    border-top: 2px solid #0073ff;
 }
 
 body.mode-view #ex-preview-panel-resizer {
