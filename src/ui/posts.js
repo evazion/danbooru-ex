@@ -71,8 +71,9 @@ export default class Posts {
   static initialize_video() {
     const $video = $("video#image").get(0);
     if ($video) {
+      $video.autoplay = EX.config.autoplayVideos;
       $video.muted = EX.config.muteVideos;
-      $video.loop = EX.config.loopVideos;;
+      $video.loop = EX.config.loopVideos;
     }
   }
 
@@ -135,11 +136,12 @@ export default class Posts {
               : (options.size === "large")   ? post.large_file_url
               : post.file_url;
 
+    const autoplay = (options.size === "preview" || EX.config.autoplayVideos) ? "autoplay" : "";
     const loop     = (options.size === "preview" || EX.config.loopVideos)     ? "loop"     : "";
     const muted    = (options.size === "preview" || EX.config.muteVideos)     ? "muted"    : "";
 
     const media = (post.file_ext.match(/webm|mp4|zip/))
-                ? `<video autoplay ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
+                ? `<video ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
                 : `<img itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
 
     // XXX get the tag params from the URL if on /posts.

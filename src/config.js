@@ -58,6 +58,11 @@ export default class Config {
         help: "Make the tag sidebar resizeable (drag edge to resize).",
         value: true,
       },
+      autoplayVideos: {
+        configurable: true,
+        help: "Enable autoplay for webm and mp4 posts (normally enabled by Danbooru).",
+        value: true,
+      },
       loopVideos: {
         configurable: true,
         help: "Enable looping for video_with_sound posts (normally disabled by Danbooru).",
