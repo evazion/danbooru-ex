@@ -236,7 +236,8 @@ export default class Config {
 }
 
 // Define getters/setters for `Config.showHeaderBar` et al.
-for (const key of _.keys(Config.Defaults)) {
+for (let k of _.keys(Config.Defaults)) {
+  const key = k;
   Object.defineProperty(Config.prototype, key, {
     get: function ()  { return this.get(key) },
     set: function (v) { return this.set(key, v) },

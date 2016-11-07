@@ -28,7 +28,7 @@ export default class Resource {
     let item_batches = [[]];
     items = _(items).sortBy().sortedUniq().value();
 
-    for (const item of items) {
+    for (let item of items) {
       const current_batch = item_batches[0];
       const next_batch = current_batch.concat([item]);
 
