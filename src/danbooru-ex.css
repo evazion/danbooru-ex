@@ -178,7 +178,11 @@
     top: 4.5em !important;
 }
 
-
+/* Fit posts to screen width. */
+#image {
+    max-width: 100%;
+    height: auto;
+}
 
 .ex-artists {
   white-space: nowrap;
