@@ -98,12 +98,9 @@ export default class Posts {
   }
 
   // Generate the post thumbnail HTML.
-  static preview(post, src, klass = "") {
+  static preview(post, options = { size: "preview", classes: [] }) {
     let preview_class = "post-preview";
-
-    src = src || post.preview_file_url;
-
-    preview_class += " " + klass;
+    preview_class += " " + options.classes.join(" ");
     preview_class += post.is_pending           ? " post-status-pending"      : "";
     preview_class += post.is_flagged           ? " post-status-flagged"      : "";
     preview_class += post.is_deleted           ? " post-status-deleted"      : "";
@@ -134,17 +131,24 @@ export default class Posts {
       data-preview-file-url="${post.preview_file_url}"
     `;
 
+    const src = (options.size === "preview") ? post.preview_file_url
+              : (options.size === "large")   ? post.large_file_url
+              : post.file_url;
+
+    const loop     = (options.size === "preview" || EX.config.loopVideos)     ? "loop"     : "";
+    const muted    = (options.size === "preview" || EX.config.muteVideos)     ? "muted"    : "";
+
+    const media = (post.file_ext.match(/webm|mp4|zip/))
+                ? `<video autoplay ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
+                : `<img itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
+
     // XXX get the tag params from the URL if on /posts.
     const tag_params = "";
 
     return `
       <article itemscope itemtype="http://schema.org/ImageObject"
                id="post_${post.id}" class="${preview_class}" ${data_attributes}>
-        <a href="/posts/${post.id}${tag_params}">
-          <img itemprop="thumbnailUrl"
-               src="${src}"
-               title="${_.escape(post.tag_string)}">
-        </a>
+        <a href="/posts/${post.id}${tag_params}">${media}</a>
       </article>
     `;
   }

@@ -6,7 +6,6 @@
 
 * Preview panel
 ** Doesn't work on popular pages and /post_versions.
-** Broken on webm/mp4/ugoira.
 ** Can't resize wide enough on posts with too many children in parent/child bar.
 ** Should include metadata: tags, pools, notes, comments, parent/children, etc.
 ** Should include tag edit box.
@@ -16,7 +15,6 @@
 ** Should be able to see all selected posts in preview panel by scrolling up and down.
 
 * Thumbnails previews
-** Broken on webm/mp4/ugoira.
 ** Placement can be very wonky.
 ** Currently disabled in preview/tag script mode - need a smarter way to
    trigger popups so they don't get in the way.
@@ -28,6 +26,7 @@
 ** Should be able to shift+click to select everything between two points.
 ** Ctrl+T should invert script (foo -bar becomes -foo bar).
 ** Should support ctrl+z to undo.
+** Don't play nicely with thumbnails on /post_versions (conflicting click handlers).
 
 * Mode menu
 ** If you're in preview mode or tag script mode on /posts and you visit a post

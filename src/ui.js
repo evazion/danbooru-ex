@@ -129,7 +129,7 @@ export default class UI {
 
           // XXX avoid lookup on tooltip open.
           $.getJSON(`/posts/${id}.json`).then(post =>
-            $(ui.tooltip).html(Posts.preview(post, post.large_file_url, "ex-thumbnail-tooltip"))
+            $(ui.tooltip).html(Posts.preview(post, { size: "large", classes: [ "ex-thumbnail-tooltip" ]}))
           );
         } catch (e) {
           console.log(e);
