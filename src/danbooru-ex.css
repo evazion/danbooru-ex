@@ -304,19 +304,24 @@ body.mode-tag-script article.post-preview.ui-selected {
     box-shadow: 0 0 5px #aaa;
 }
 
-.ui-tooltip,
-.ui-tooltip .ex-thumbnail-tooltip img {
+.ui-tooltip {
   max-width:  450px !important;
   max-height: 450px !important;
+  border-width: 2px;
 }
 
-body .ui-tooltip {
-    border-width: 2px;
+.ui-tooltip .ex-thumbnail-tooltip img,
+.ui-tooltip .ex-thumbnail-tooltip video {
+  max-width:  450px;
+  max-height: 450px;
+  height: auto;
+  box-sizing: border-box;
 }
 
 .ui-tooltip .post-preview {
   width: auto;
   height: auto;
+  margin: 0;
 }
 
 .ex-short-relative-time {
