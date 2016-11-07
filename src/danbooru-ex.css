@@ -195,6 +195,11 @@
     white-space: initial;
 }
 
+/* Break tags that are too long for the tag list (e.g. kuouzumiaiginsusutakeizumonokamimeichoujin_mika) */
+#tag-list {
+    word-break: break-word;
+}
+
 .ex-artists {
   white-space: nowrap;
 }
