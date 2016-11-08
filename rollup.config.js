@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
-import postcss from 'rollup-plugin-postcss';
+import sass from 'rollup-plugin-sass';
 
 const header = process.env.HEADER;
 
@@ -27,8 +27,9 @@ export default {
         'moment',
     ],
     plugins: [
-        postcss({
-            extensions: [ '.css' ],
+        sass({
+            insert: true,
+            output: true,
         }),
 	resolve({
             jsnext: true,

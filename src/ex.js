@@ -5,7 +5,7 @@ import Config from "./config.js";
 import DText from "./dtext.js";
 import Resource from "./resource.js";
 import UI from "./ui.js";
-import "./danbooru-ex.css";
+import "./danbooru-ex.scss";
 
 export default class EX {
   static get Config() { return Config; }
