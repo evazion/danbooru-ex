@@ -17,7 +17,7 @@ export default class Header {
 
   static initializeHeader() {
     let $header = $(`
-      <header id="ex-header">
+      <header style="display: none;" id="ex-header" class="${EX.config.headerState}">
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
@@ -60,14 +60,13 @@ export default class Header {
 	</span>
       </header>
     `).insertBefore("#top");
+    _.defer(() => $header.show());
 
     // Initalize header search box.
     $("#ex-header #tags").val($("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
 
     $(".ex-header-close").click(Header.toggleClose);
-
-    $header.addClass(EX.config.headerState);
   }
 
   static initializeHotkeys() {
