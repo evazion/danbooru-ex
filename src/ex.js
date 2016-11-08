@@ -45,10 +45,12 @@ console.timeEnd("loaded");
 $(function () {
   try {
     console.timeEnd("preinit");
+    console.groupCollapsed("settings");
 
     EX.config = new EX.Config();
     EX.initialize();
 
+    console.groupEnd("settings");
     console.timeEnd("initialized");
   } catch(e) {
     console.trace(e);
