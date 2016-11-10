@@ -1,5 +1,6 @@
 import jQuery from "jquery";
 import moment from "moment";
+window.moment = moment;
 
 import Config from "./config.js";
 import DText from "./dtext.js";
@@ -7,19 +8,19 @@ import Resource from "./resource.js";
 import UI from "./ui.js";
 import "./danbooru-ex.scss";
 
-export default class EX {
+export default window.EX = class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
   static initialize() {
-    $("footer").append(
-      `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`
-    );
+    console.timeEnd("preinit");
+
+    console.groupCollapsed("settings");
+    EX.config = new EX.Config();
 
     EX.config.enableHeader && UI.Header.initialize();
-
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initialize();
@@ -31,23 +32,16 @@ export default class EX {
     EX.config.postsRedesign && EX.UI.Posts.initialize();
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
+
+    console.groupEnd("settings");
+    console.timeEnd("initialized");
   }
 }
-
-window.EX = EX;
-window.moment = moment;
 
 console.timeEnd("loaded");
 $(function () {
   try {
-    console.timeEnd("preinit");
-    console.groupCollapsed("settings");
-
-    EX.config = new EX.Config();
     EX.initialize();
-
-    console.groupEnd("settings");
-    console.timeEnd("initialized");
   } catch(e) {
     console.trace(e);
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);

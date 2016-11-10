@@ -19,6 +19,7 @@ import _ from "lodash";
 
 export default class UI {
   static initialize() {
+    UI.initialize_footer();
     UI.initialize_moment();
     UI.initialize_patches();
 
@@ -49,6 +50,12 @@ export default class UI {
       const time_ago = moment($(e).attr('datetime')).fromNow();
       $(e).text(time_ago);
     });
+  }
+
+  static initialize_footer() {
+    $("footer").append(
+      `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`
+    );
   }
 
   static initialize_moment() {
