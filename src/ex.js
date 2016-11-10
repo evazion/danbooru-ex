@@ -23,7 +23,7 @@ export default window.EX = class EX {
     EX.config.enableHeader && UI.Header.initialize();
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
-    EX.config.usernameTooltips && EX.UI.Users.initialize();
+    EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
@@ -32,6 +32,7 @@ export default window.EX = class EX {
     EX.config.postsRedesign && EX.UI.Posts.initialize();
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
+    EX.config.usersRedesign && EX.UI.Users.initialize();
 
     console.groupEnd("settings");
     console.timeEnd("initialized");

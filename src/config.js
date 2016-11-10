@@ -104,6 +104,11 @@ export default class Config {
         help: "Make header sections in wiki entries collapsible and add table of contents to long wiki pages",
         value: true,
       },
+      usersRedesign: {
+        configurable: true,
+        help: "Add expandable saved searches to user account pages",
+        value: true,
+      },
       thumbnailPreviewDelay: {
         configurable: false,
         help: "The delay in milliseconds when hovering over a thumbnail before the preview appears.",
