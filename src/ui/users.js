@@ -54,41 +54,43 @@ export default class Users {
   }
 
   static initializeUserPage() {
+    // Rewrite favorites link into ordfav: search.
     $(".box a[href^='/favorites?user_id=']").attr(
-      "href", `/posts?tags=ordfav:${Danbooru.meta("current-user-name")}`
+      "href", `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`
     );
 
     $("#c-users #a-show > .box").each((i, e) => {
       let $box = $(e);
 
+      $box.addClass("ex-post-gallery ex-post-gallery-collapsed");
       $box.find("h2").wrap('<span>');
       $box.find("span").append(`
-        (<a class="ex-expand-section-link ex-expand-section-closed" href="#">more</a>)
+        (<a class="ex-post-gallery-expand" href="#">Show »</a>)
       `);
 
       let [, tags] = $box.find("h2 a").attr("href").match(/\/posts\?tags=(.*)/);
       tags = decodeURIComponent(tags);
 
-      $box.find(".ex-expand-section-link").click(event => {
+      $box.find(".ex-post-gallery-expand").click(event => {
         const $expand = $(event.target);
-        const $container = $box.find("div");
+        const $gallery = $expand.closest(".ex-post-gallery");
 
-        $expand.toggleClass("ex-expand-section-closed ex-expand-section-open");
+        $gallery.toggleClass("ex-post-gallery-collapsed ex-post-gallery-expanded");
 
-        if ($expand.hasClass("ex-expand-section-open")) {
-          if ($container.find("article:hidden").length) {
-            $expand.text("close");
-            $container.find("article").show();
+        if ($gallery.hasClass("ex-post-gallery-expanded")) {
+          if ($gallery.find("article:hidden").length) {
+            $expand.text("Hide «");
+            $gallery.find("article").show();
           } else {
-            Post.get({ tags, limit: 20 }).then(posts => {
-              $expand.text("close");
+            Post.get({ tags, limit: 30 }).then(posts => {
+              $expand.text("Hide «");
               const html = posts.map(Posts.preview).join("");
-              $container.html(html);
+              $gallery.find("div").html(html);
             });
           }
         } else {
-          $expand.text("more");
-          $container.find("article").slice(6).hide();
+          $expand.text("Show »");
+          $gallery.find("article").slice(6).hide();
         }
 
         return false;
