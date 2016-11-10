@@ -38,6 +38,9 @@ export default window.EX = class EX {
   }
 }
 
+console.log("Danbooru:", window.Danbooru);
+console.log("EX:", EX);
+
 console.timeEnd("loaded");
 $(function () {
   try {
