@@ -1,4 +1,5 @@
 @import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
+@import "ui/posts.scss";
 
 .ex-vertical-resizer {
   cursor: col-resize;
@@ -70,7 +71,7 @@
 
 #ex-header h1 {
     display: inline-block;
-    font-size: 2.5em !important;
+    font-size: 2.5em;
     margin: 0 30px;
 }
 
@@ -176,28 +177,6 @@
 
 #notice {
     top: 4.5em !important;
-}
-
-/* Fit posts to screen width. */
-#image {
-    max-width: 100%;
-    height: auto !important;
-}
-
-/*
- * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent
- * blowing out the page width.
- */
-#has-parent-relationship-preview,
-#has-children-relationship-preview {
-    height: 164px;
-    overflow: auto;
-    white-space: initial;
-}
-
-/* Break tags that are too long for the tag list (e.g. kuouzumiaiginsusutakeizumonokamimeichoujin_mika) */
-#tag-list {
-    word-break: break-word;
 }
 
 .ex-artists {
@@ -349,14 +328,6 @@ body.mode-tag-script article.post-preview.ui-selected {
 
 .tag-dne {
   border-bottom: 1px dotted;
-}
-
-.tag-list-header h1, .tag-list-header h2 {
-    display: inline-block;
-}
-
-.tag-list-header .post-count {
-    margin-left: 0.5em;
 }
 
 /* Ensure colorized tags are still hidden. */

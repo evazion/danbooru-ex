@@ -1,0 +1,41 @@
+/* /posts/1234 */
+
+/* Move artist tags to top of the tag list. */
+#tag-list {
+    /*
+     * Break tags that are too long for the tag list (e.g.
+     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)
+     */
+    word-break: break-word;
+
+    display: flex;
+    flex-direction: column;
+
+    /* Move artist tags to top of tag list. */
+    .ex-artist-tag-list-header,
+    .ex-artist-tag-list {
+      order: -1;
+    }
+
+    .ex-tag-list-header {
+        h1, h2 { display: inline-block; }
+        .post-count { margin-left: 0.5em; }
+    }
+}
+
+/*
+ * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent
+ * long child lists from blowing out the page width.
+ */
+#has-parent-relationship-preview,
+#has-children-relationship-preview {
+    height: 164px;
+    overflow: auto;
+    white-space: initial;
+}
+
+/* Fit posts to screen width. */
+#image {
+    max-width: 100%;
+    height: auto !important;
+}

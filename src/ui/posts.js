@@ -7,8 +7,7 @@ export default class Posts {
     }
 
     Posts.initialize_patches();
-    Posts.initialize_artist_tags();
-    Posts.initialize_tag_type_counts();
+    Posts.initializeTagList();
     Posts.initialize_hotkeys();
     Posts.initialize_video();
   }
@@ -28,19 +27,19 @@ export default class Posts {
     Danbooru.Post.update_data = _.wrap(Danbooru.Post.update_data, patched_update_data);
   }
 
-  // Move artist tags to the top of the tag list.
-  static initialize_artist_tags() {
-    let $artist_h2 = $('#tag-list h2').filter((i, e) => $(e).text().match(/Artist/));
-    let $artist_tags = $artist_h2.next('ul');
-    $("#tag-list").prepend($artist_tags).prepend($artist_h2);
-  }
+  static initializeTagList() {
+    _.forOwn({
+      "Artist": "artist",
+      "Copyrights": "copyright",
+      "Characters": "character",
+      "Tags": "general",
+    }, (category, heading) => {
+      let $header = $('#tag-list :header').filter((i, e) => $(e).text().match(heading));
+      let $tags = $header.next('ul');
 
-  // Add tag counts to the artist/copyright/characters headers.
-  static initialize_tag_type_counts() {
-    $("#tag-list h1, #tag-list h2").wrap('<span class="tag-list-header">');
-    $('#tag-list .tag-list-header').each((i, e) => {
-        const tag_count = $(e).next('ul').children().size();
-        $(e).append(`<span class="post-count">${tag_count}</span>`);
+      $tags.addClass(`ex-${category}-tag-list`);
+      $header.wrap(`<span class="ex-tag-list-header ex-${category}-tag-list-header">`);
+      $header.parent().append(`<span class="post-count">${$tags.children().size()}</span>`);
     });
   }
 
