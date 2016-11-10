@@ -1,5 +1,6 @@
-import EX from "../ex.js";
 import UI from "../ui.js";
+import Artist from "../artist.js";
+import Tag from "../tag.js";
 
 import moment from "moment";
 
@@ -27,11 +28,11 @@ export default class Artists {
     }));
 
     let requests = [
-      EX.search("/artists.json", { id: artists.map("id").join(","), order: UI.query("search[order]") }),
-      EX.search("/tags.json",    { name: artists.map("name").join(","), hide_empty: "no" }),
-      EX.search("/artists.json", { order: "created_at" }, { limit:  8 }),
-      EX.search("/artists.json", { is_active: true, order: "updated_at" }, { limit: 8 }),
-      EX.search("/artists.json", { is_active: false, order: "updated_at" }, { limit: 8 }),
+      Artist.search(artists.map("id"), { order: UI.query("search[order]") }),
+      Tag.search(artists.map("name"), { hide_empty: "no" }),
+      Artist.get({ search: { is_active: true, order: "created_at" }, limit: 8 }),
+      Artist.get({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
+      Artist.get({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
     ]
 
     Promise.all(requests).then(([artists, tags, created, updated, deleted]) => {

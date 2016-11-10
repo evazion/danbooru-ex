@@ -13,10 +13,6 @@ export default class EX {
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
-  static search(url, search, { limit, page } = {}) {
-    return $.getJSON(url, { search, limit: limit || 1000, page: page || 1 });
-  }
-
   static initialize() {
     $("footer").append(
       `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`

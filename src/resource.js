@@ -2,20 +2,25 @@ import _ from "lodash";
 import $ from "jquery";
 
 export default class Resource {
-  static search(param, values) {
+  static get(params) {
+    const url = "/" + _.snakeCase(this.name.toLowerCase() + "s");
+    const query = `${url}.json?${decodeURIComponent($.param(params))}`;
+    const request = $.getJSON(url, params);
+
+    console.time(`GET ${query}`);
+    console.log(`[NET] GET ${query}`, request);
+
+    return request.always(() => {
+      console.timeEnd(`GET ${query}`);
+      console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request)
+    });
+  }
+
+  static search(values, otherParams) {
+    const key = this.primaryKey;
     const requests = this.batch(values).map(batch => {
-      const url = "/" + _.snakeCase(this.name.toLowerCase() + "s");
-      const params = _.merge(this.searchParams, { search: { [param]: batch.join(",") }});
-      const query = `${url}.json?${decodeURIComponent($.param(params))}`;
-      const request = $.getJSON(url, params);
-
-      console.time(`GET ${query}`);
-      console.log(`[NET] GET ${query}`, request);
-
-      return request.always(() => {
-        console.timeEnd(`GET ${query}`);
-        console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request)
-      });
+      const params = _.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
+      return this.get(params);
     });
 
     return Promise.all(requests).then(_.flatten);

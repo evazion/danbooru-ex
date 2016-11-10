@@ -15,4 +15,6 @@ export default Resource.Tag = class Tag extends Resource {
   static get searchParams() {
     return _.merge({}, super.searchParams, { search: { hide_empty: "no" }});
   }
+
+  static get primaryKey() { return "name"; }
 }

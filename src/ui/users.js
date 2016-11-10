@@ -22,7 +22,7 @@ export default class Users {
     const $users = this.userLinks();
     const ids = $users.map((i, e) => this.parseUserId($(e)));
 
-    User.search("id", ids).then(users => {
+    User.search(ids).then(users => {
       users = _.keyBy(users, "id");
       $users.each((i, e) => {
         const $user = $(e);
