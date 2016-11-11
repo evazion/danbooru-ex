@@ -38,8 +38,10 @@
 ** Have alignment issues.
 ** Are generally annoying.
 
-* /users/1234:
-** Blacklists may not work on posts loaded in expandable sections.
+* /users/1234 expandable post sections:
+** Blacklists may not work on loaded posts.
+** Additional posts aren't loaded properly for uncategorized saved searches (Danbooru bug).
+** Sometimes tag scripting doesn work on loaded posts.
 
 * Note live preview:
 ** Can be wonky when in the middle of typing html since the html is invalid and incomplete.

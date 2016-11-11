@@ -1,4 +1,4 @@
-Danbooru EX is a userscript that adds a variety of enhancements and new features that make Danbooru faster and easier to use.
+Danbooru EX is a userscript that adds a variety of enhancements and new features to Danbooru, making it faster and easier to use.
 
 # Demos
 
