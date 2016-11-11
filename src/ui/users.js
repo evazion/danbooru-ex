@@ -88,6 +88,8 @@ export default class Users {
           // Append new posts, moving the "More »" link to the end.
           const $more = $gallery.find(".ex-text-post-preview").detach();
           $gallery.find("div").append(html, $more);
+
+          $gallery.find(".ex-post-preview").trigger("ex.post-preview:create");
         });
 
         return false;

@@ -45,6 +45,10 @@ export default class ModeMenu {
       div.post-preview .preview a,
       article.post-preview a
     `).click(ModeMenu.onThumbnailClick);
+
+    $(document).on("ex.post-preview:create", event => {
+      $(event.target).find("a").click(ModeMenu.onThumbnailClick);
+    });
   }
 
   static initializeHotkeys() {

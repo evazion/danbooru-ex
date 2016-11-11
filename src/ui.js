@@ -87,7 +87,7 @@ export default class UI {
       .filter((i, e) => /post #\d+/.test($(e).text()))
       .addClass('ex-thumbnail-tooltip-link');
 
-    UI.install_tooltips();
+    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
   }
 
   // Show post previews when hovering over thumbnails.
@@ -102,13 +102,19 @@ export default class UI {
       $(".post-preview img").addClass('ex-thumbnail-tooltip-link');
     }
 
-    UI.install_tooltips();
+    $(document).on("ex.post-preview:create", event => {
+      const $post = $(event.target).find("img").addClass('ex-thumbnail-tooltip-link');
+      UI.install_tooltips($post);
+      return false;
+    });
+
+    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
   }
 
-  static install_tooltips(items) {
+  static install_tooltips($target) {
     const max_size = 450;
 
-    $(".ex-thumbnail-tooltip-link").tooltip({
+    $target.tooltip({
       items: "*",
       content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
       show: { delay: EX.config.thumbnailPreviewDelay },
