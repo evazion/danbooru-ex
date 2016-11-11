@@ -41,7 +41,7 @@ export default class Config {
       usernameTooltips: {
         configurable: true,
         help: "Enable tooltips on usernames",
-        value: true,
+        value: false,
       },
       styleWikiLinks: {
         configurable: true,
