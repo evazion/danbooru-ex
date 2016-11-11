@@ -99,7 +99,7 @@ export default class Posts {
 
   // Generate the post thumbnail HTML.
   static preview(post, { size="preview", classes=[] } = {}) {
-    let preview_class = "post-preview";
+    let preview_class = "post-preview ex-post-preview";
     preview_class += " " + classes.join(" ");
     preview_class += post.is_pending           ? " post-status-pending"      : "";
     preview_class += post.is_flagged           ? " post-status-flagged"      : "";
@@ -135,6 +135,7 @@ export default class Posts {
               : (size === "large")   ? post.large_file_url
               : post.file_url;
 
+    // XXX only do this if <video>.
     const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
     const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
     const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";

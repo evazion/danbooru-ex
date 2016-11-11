@@ -10,7 +10,7 @@ export default class Users {
     this.initializeWordBreaks();
 
     if ($("#c-users #a-show").length) {
-      this.initializeUserPage();
+      this.initializeExpandableGalleries();
     }
   }
 
@@ -53,45 +53,42 @@ export default class Users {
     });
   }
 
-  static initializeUserPage() {
-    // Rewrite favorites link into ordfav: search.
+  static initializeExpandableGalleries() {
+    // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
     $(".box a[href^='/favorites?user_id=']").attr(
       "href", `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`
     );
 
     $("#c-users #a-show > .box").each((i, e) => {
-      let $box = $(e);
+      const $gallery = $(e).addClass("ex-post-gallery");
 
-      $box.addClass("ex-post-gallery ex-post-gallery-collapsed");
-      $box.find("h2").wrap('<span>');
-      $box.find("span").append(`
-        (<a class="ex-post-gallery-expand" href="#">Show »</a>)
+      // Store the tag search corresponding to this gallery section in a data
+      // attribute for the click handler.
+      const [match, tags] = $gallery.find("h2 a").attr("href").match(/\/posts\?tags=(.*)/);
+      $gallery.attr("data-tags", decodeURIComponent(tags));
+
+      $gallery.find("div").append(`
+        <article class="ex-text-post-preview">
+          <a href="#">More »</a>
+        </article>
       `);
 
-      let [, tags] = $box.find("h2 a").attr("href").match(/\/posts\?tags=(.*)/);
-      tags = decodeURIComponent(tags);
+      $gallery.find(".ex-text-post-preview a").click(event => {
+        const $gallery = $(event.target).closest(".ex-post-gallery");
 
-      $box.find(".ex-post-gallery-expand").click(event => {
-        const $expand = $(event.target);
-        const $gallery = $expand.closest(".ex-post-gallery");
+        const limit = 30;
+        const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
-        $gallery.toggleClass("ex-post-gallery-collapsed ex-post-gallery-expanded");
+        Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
+          const html = posts.map(Posts.preview).join("");
 
-        if ($gallery.hasClass("ex-post-gallery-expanded")) {
-          if ($gallery.find("article:hidden").length) {
-            $expand.text("Hide «");
-            $gallery.find("article").show();
-          } else {
-            Post.get({ tags, limit: 30 }).then(posts => {
-              $expand.text("Hide «");
-              const html = posts.map(Posts.preview).join("");
-              $gallery.find("div").html(html);
-            });
-          }
-        } else {
-          $expand.text("Show »");
-          $gallery.find("article").slice(6).hide();
-        }
+          // Hide the original posts to avoid appending duplicate posts.
+          $gallery.find("div .post-preview:not(.ex-post-preview)").hide();
+
+          // Append new posts, moving the "More »" link to the end.
+          const $more = $gallery.find(".ex-text-post-preview").detach();
+          $gallery.find("div").append(html, $more);
+        });
 
         return false;
       });
