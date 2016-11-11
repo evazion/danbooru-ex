@@ -33,17 +33,21 @@
    (or anywhere else), you will still be in that mode. This is annoying.
 
 * Wiki:
-*** Collapsible headers:
-*** Uncollapses lower level headings if they're already collapsed.
-*** Interfere with existing table of contents.
-*** Have alignment issues.
-*** Are generally annoying.
+** Collapsible headers:
+** Uncollapses lower level headings if they're already collapsed.
+** Have alignment issues.
+** Are generally annoying.
+
+* /users/1234:
+** Blacklists may not work on posts loaded in expandable sections.
+
+* Note live preview:
+** Can be wonky when in the middle of typing html since the html is invalid and incomplete.
 
 * Tags on posts and comments don't get tooltips.
 * Tags in DText previews aren't colorized and don't get tooltips.
 
 * @mentions and user #1234 links aren't colorized or given data attributes.
-* Colorizing user links can't handle more than 1000 usernames being on one page.
 
 * Username tooltips are broken sometimes - use albert's info instead.
 
