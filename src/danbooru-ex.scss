@@ -237,11 +237,6 @@
     margin-top: -52px;
 }
 
-#wiki-page-body a.ui-icon.collapsible-header {
-    display: inline-block;
-    margin-left: -8px;
-}
-
 body.mode-tag-script {
     background-color: white;
 }
@@ -316,6 +311,11 @@ body.mode-tag-script article.post-preview.ui-selected {
   width: auto;
   height: auto;
   margin: 0;
+}
+
+a.ui-icon.collapsible-header {
+    display: inline-block;
+    margin-left: -8px;
 }
 
 .ex-short-relative-time {

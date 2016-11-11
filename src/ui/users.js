@@ -62,9 +62,19 @@ export default class Users {
     $("#c-users #a-show > .box").each((i, e) => {
       const $gallery = $(e).addClass("ex-post-gallery");
 
+      // Make gallery headers collapsible.
+      const $toggleCollapse = $(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header" href="#"></a>`);
+      $gallery.find("h2").prepend($toggleCollapse);
+
+      $toggleCollapse.click(event => {
+        $(event.target).closest("h2").next("div").slideToggle();
+        $(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+        return false;
+      });
+
       // Store the tag search corresponding to this gallery section in a data
       // attribute for the click handler.
-      const [match, tags] = $gallery.find("h2 a").attr("href").match(/\/posts\?tags=(.*)/);
+      const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
       $gallery.attr("data-tags", decodeURIComponent(tags));
 
       $gallery.find("div").append(`
