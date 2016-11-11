@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      1339
+// @version      2284
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -9,7 +9,6 @@
 // @match        *://localhost/*
 // @grant        none
 // @run-at       document-body
-// @updateURL    https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
@@ -22,8 +21,7 @@
  * What is a userscript? A miserable pile of hacks.
  */
 
-console.time("booted");
+console.log("Danbooru EX:", GM_info.script.version);
 console.time("loaded");
+console.time("preinit");
 console.time("initialized");
-
-console.log("Danbooru EX", GM_info.script.version);

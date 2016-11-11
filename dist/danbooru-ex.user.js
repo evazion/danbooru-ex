@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      1339
+// @version      2284
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -9,7 +9,6 @@
 // @match        *://localhost/*
 // @grant        none
 // @run-at       document-body
-// @updateURL    https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
 // @downloadURL  https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
@@ -22,28 +21,33 @@
  * What is a userscript? A miserable pile of hacks.
  */
 
-var danbooruEX = (function (_$1,jQuery,moment$1,filesize) {
+console.log("Danbooru EX:", GM_info.script.version);
+console.time("loaded");
+console.time("preinit");
+console.time("initialized");
+
+var danbooruEX = (function ($$1,moment$1,_$1,filesize) {
 'use strict';
 
-function __$styleInject(css, returnValue) {
-  if (typeof document === 'undefined') {
-    return returnValue;
+function ___$insertStyle(css) {
+  if (!css) {
+    return;
   }
-  css = css || '';
-  var head = document.head || document.getElementsByTagName('head')[0];
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   var style = document.createElement('style');
-  style.type = 'text/css';
-  if (style.styleSheet){
-    style.styleSheet.cssText = css;
-  } else {
-    style.appendChild(document.createTextNode(css));
-  }
-  head.appendChild(style);
-  return returnValue;
+
+  style.setAttribute('type', 'text/css');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+
+  return css;
 }
-_$1 = 'default' in _$1 ? _$1['default'] : _$1;
-jQuery = 'default' in jQuery ? jQuery['default'] : jQuery;
+$$1 = 'default' in $$1 ? $$1['default'] : $$1;
 moment$1 = 'default' in moment$1 ? moment$1['default'] : moment$1;
+_$1 = 'default' in _$1 ? _$1['default'] : _$1;
 filesize = 'default' in filesize ? filesize['default'] : filesize;
 
 class Config {
@@ -64,6 +68,11 @@ class Config {
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
         value: true,
       },
+      enableHotkeys: {
+        configurable: true,
+        help: "Enable additional keyboard shortcuts.",
+        value: true,
+      },
       showThumbnailPreviews: {
         configurable: true,
         help: "Show post preview tooltips when hovering over thumbnails.",
@@ -74,10 +83,15 @@ class Config {
         help: "Show post preview tooltips when hovering over post #1234 links.",
         value: true,
       },
+      enableNotesLivePreview: {
+        configurable: true,
+        help: "Automatically update note preview as you edit.",
+        value: true,
+      },
       usernameTooltips: {
         configurable: true,
         help: "Enable tooltips on usernames",
-        value: true,
+        value: false,
       },
       styleWikiLinks: {
         configurable: true,
@@ -93,6 +107,21 @@ class Config {
         configurable: true,
         help: "Make the tag sidebar resizeable (drag edge to resize).",
         value: true,
+      },
+      autoplayVideos: {
+        configurable: true,
+        help: "Enable autoplay for webm and mp4 posts (normally enabled by Danbooru).",
+        value: true,
+      },
+      loopVideos: {
+        configurable: true,
+        help: "Enable looping for video_with_sound posts (normally disabled by Danbooru).",
+        value: true,
+      },
+      muteVideos: {
+        configurable: true,
+        help: "Mute video_with_sound posts by default.",
+        value: false,
       },
 
       artistsRedesign: {
@@ -123,6 +152,11 @@ class Config {
       wikiRedesign: {
         configurable: true,
         help: "Make header sections in wiki entries collapsible and add table of contents to long wiki pages",
+        value: true,
+      },
+      usersRedesign: {
+        configurable: true,
+        help: "Add expandable saved searches to user account pages",
         value: true,
       },
       thumbnailPreviewDelay: {
@@ -168,13 +202,13 @@ class Config {
       JSON.stringify(Config.Defaults[key].value)
     ));
 
-    console.log("GET EX.config." + key, value);
+    console.log(`[CFG] READ EX.config.${key}:`, value);
     return value;
   }
 
   set(key, value) {
     this.storage["EX.config." + key] = JSON.stringify(value);
-    console.log("PUT EX.config." + key, JSON.stringify(value));
+    console.log(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
@@ -257,7 +291,8 @@ class Config {
 }
 
 // Define getters/setters for `Config.showHeaderBar` et al.
-for (const key of _$1.keys(Config.Defaults)) {
+for (let k of _$1.keys(Config.Defaults)) {
+  const key = k;
   Object.defineProperty(Config.prototype, key, {
     get: function ()  { return this.get(key) },
     set: function (v) { return this.set(key, v) },
@@ -295,54 +330,57 @@ class DText {
   }
 }
 
-class Tag {
-  static get Categories() {
-    return [
-      "General",    // 0
-      "Artist",     // 1
-      undefined,    // 2 (unused)
-      "Copyright",  // 3
-      "Character"   // 4
-    ];
+class Resource {
+  static get(params) {
+    const url = "/" + _$1.snakeCase(this.name.toLowerCase() + "s");
+    const query = `${url}.json?${decodeURIComponent($$1.param(params))}`;
+    const request = $$1.getJSON(url, params);
+
+    console.time(`GET ${query}`);
+    console.log(`[NET] GET ${query}`, request);
+
+    return request.always(() => {
+      console.timeEnd(`GET ${query}`);
+      console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request);
+    });
   }
 
-  // Collect tags in batches, with each batch having a max count of 1000
-  // tags or a max combined size of 6500 bytes for all tags. This is
-  // necessary because these are the API limits for the /tags.json call.
-  static batch(tags) {
-    let tag_batches = [[]];
-    tags = _$1(tags).sortBy().sortedUniq().value();
+  static search(values, otherParams) {
+    const key = this.primaryKey;
+    const requests = this.batch(values).map(batch => {
+      const params = _$1.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
+      return this.get(params);
+    });
 
-    for (const tag of tags) {
-      const current_batch = tag_batches[0];
-      const next_batch = current_batch.concat([tag]);
+    return Promise.all(requests).then(_$1.flatten);
+  }
+
+  // Collect items in batches, with each batch having a max count of 1000 items
+  // or a max combined size of 6500 bytes for all items. This is necessary
+  // because these are the parameter limits for requests to the API.
+  static batch(items, limit = 1000, maxLength = 6500) {
+    let item_batches = [[]];
+    items = _$1(items).sortBy().sortedUniq().value();
+
+    for (let item of items) {
+      const current_batch = item_batches[0];
+      const next_batch = current_batch.concat([item]);
 
       const batch_length = next_batch.map(encodeURIComponent).join(",").length;
       const batch_count = next_batch.length;
 
-      if (batch_count > 1000 || batch_length > 6500) {
-        tag_batches.unshift([tag]);
+      if (batch_count > limit || batch_length > maxLength) {
+        item_batches.unshift([item]);
       } else {
-        current_batch.push(tag);
+        current_batch.push(item);
       }
     }
 
-    return _$1.reverse(tag_batches);
+    return _$1(item_batches).reject(_$1.isEmpty).reverse().value();
   }
 
-  static search(tags) {
-    const requests = Tag.batch(tags).map(batch => {
-      if (batch.length === 0) {
-        return Promise.resolve([]);
-      } else {
-        const query = batch.map(encodeURIComponent).join(",");
-        return $.getJSON(`/tags.json?limit=1000&search[hide_empty]=no&search[name]=${query}`);
-      }
-    });
-
-    return Promise.all(requests).then(tags =>
-      _$1(tags).flatten().groupBy("name").mapValues(_$1.first).value()
-    );
+  static get searchParams() {
+    return { limit: 1000 };
   }
 }
 
@@ -353,9 +391,9 @@ class Posts {
     }
 
     Posts.initialize_patches();
-    Posts.initialize_artist_tags();
-    Posts.initialize_tag_type_counts();
+    Posts.initializeTagList();
     Posts.initialize_hotkeys();
+    Posts.initialize_video();
   }
 
   // Update Rating in sidebar when it changes.
@@ -373,19 +411,19 @@ class Posts {
     Danbooru.Post.update_data = _$1.wrap(Danbooru.Post.update_data, patched_update_data);
   }
 
-  // Move artist tags to the top of the tag list.
-  static initialize_artist_tags() {
-    let $artist_h2 = $('#tag-list h2').filter((i, e) => $(e).text().match(/Artist/));
-    let $artist_tags = $artist_h2.next('ul');
-    $("#tag-list").prepend($artist_tags).prepend($artist_h2);
-  }
+  static initializeTagList() {
+    _$1.forOwn({
+      "Artist": "artist",
+      "Copyrights": "copyright",
+      "Characters": "character",
+      "Tags": "general",
+    }, (category, heading) => {
+      let $header = $('#tag-list :header').filter((i, e) => $(e).text().match(heading));
+      let $tags = $header.next('ul');
 
-  // Add tag counts to the artist/copyright/characters headers.
-  static initialize_tag_type_counts() {
-    $("#tag-list h1, #tag-list h2").wrap('<span class="tag-list-header">');
-    $('#tag-list .tag-list-header').each((i, e) => {
-        const tag_count = $(e).next('ul').children().size();
-        $(e).append(`<span class="post-count">${tag_count}</span>`);
+      $tags.addClass(`ex-${category}-tag-list`);
+      $header.wrap(`<span class="ex-tag-list-header ex-${category}-tag-list-header">`);
+      $header.parent().append(`<span class="post-count">${$tags.children().size()}</span>`);
     });
   }
 
@@ -413,6 +451,15 @@ class Posts {
     $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
   }
 
+  static initialize_video() {
+    const $video = $("video#image").get(0);
+    if ($video) {
+      $video.autoplay = EX.config.autoplayVideos;
+      $video.muted = EX.config.muteVideos;
+      $video.loop = EX.config.loopVideos;
+    }
+  }
+
   // Convert the object returned by $(post).data() to an object with the same
   // properties that the JSON API returns.
   static normalize(data) {
@@ -435,12 +482,9 @@ class Posts {
   }
 
   // Generate the post thumbnail HTML.
-  static preview(post, src, klass = "") {
-    let preview_class = "post-preview";
-
-    src = src || post.preview_file_url;
-
-    preview_class += " " + klass;
+  static preview(post, { size="preview", classes=[] } = {}) {
+    let preview_class = "post-preview ex-post-preview";
+    preview_class += " " + classes.join(" ");
     preview_class += post.is_pending           ? " post-status-pending"      : "";
     preview_class += post.is_flagged           ? " post-status-flagged"      : "";
     preview_class += post.is_deleted           ? " post-status-deleted"      : "";
@@ -471,17 +515,26 @@ class Posts {
       data-preview-file-url="${post.preview_file_url}"
     `;
 
+    const src = (size === "preview") ? post.preview_file_url
+              : (size === "large")   ? post.large_file_url
+              : post.file_url;
+
+    // XXX only do this if <video>.
+    const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
+    const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
+    const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+
+    const media = (post.file_ext.match(/webm|mp4|zip/))
+                ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_$1.escape(post.tag_string)}">`
+                : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_$1.escape(post.tag_string)}">`;
+
     // XXX get the tag params from the URL if on /posts.
     const tag_params = "";
 
     return `
       <article itemscope itemtype="http://schema.org/ImageObject"
                id="post_${post.id}" class="${preview_class}" ${data_attributes}>
-        <a href="/posts/${post.id}${tag_params}">
-          <img itemprop="thumbnailUrl"
-               src="${src}"
-               title="${_$1.escape(post.tag_string)}">
-        </a>
+        <a href="/posts/${post.id}${tag_params}">${media}</a>
       </article>
     `;
   }
@@ -492,6 +545,9 @@ class PreviewPanel {
     // This is the main content panel that comes before the preview panel.
     let $content = $(`
       #c-posts #content,
+      #c-post-appeals #a-index,
+      #c-post-flags #a-index,
+      #c-post-versions #a-index,
       #c-notes #a-index,
       #c-pools #a-gallery,
       #c-pools #a-show,
@@ -507,9 +563,7 @@ class PreviewPanel {
     $content.parent().addClass("ex-preview-panel-container");
     $content.addClass("ex-content-panel");
     $content.after(`
-      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer">
-        <div class="ex-vertical-resizer-line"></div>
-      </section>
+      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer"></section>
       <section id="ex-preview-panel" class="ex-panel">
         <div>
           <article>
@@ -597,7 +651,7 @@ class PreviewPanel {
     }
 
     $("#ex-preview-panel > div").css({ height });
-    $("#ex-preview-panel > div > article.post-preview img").css({ "max-height": height });
+    $("#ex-preview-panel > div > article.post-preview .post-media").css({ "max-height": height });
   }
 }
 
@@ -643,6 +697,10 @@ class ModeMenu {
       div.post-preview .preview a,
       article.post-preview a
     `).click(ModeMenu.onThumbnailClick);
+
+    $(document).on("ex.post-preview:create", event => {
+      $(event.target).find("a").click(ModeMenu.onThumbnailClick);
+    });
   }
 
   static initializeHotkeys() {
@@ -722,7 +780,7 @@ class ModeMenu {
       case "preview":
         let post = Posts.normalize($(event.target).closest(".post-preview").data());
 
-        const html = Posts.preview(post, post.large_file_url);
+        const html = Posts.preview(post, { size: "large" });
         $("#ex-preview-panel article").replaceWith(html);
 
         PreviewPanel.setHeight();
@@ -808,7 +866,7 @@ class Header {
 
   static initializeHeader() {
     let $header = $(`
-      <header id="ex-header">
+      <header style="display: none;" id="ex-header" class="${EX.config.headerState}">
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
@@ -851,14 +909,13 @@ class Header {
 	</span>
       </header>
     `).insertBefore("#top");
+    _.defer(() => $header.show());
 
     // Initalize header search box.
     $("#ex-header #tags").val($("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
 
     $(".ex-header-close").click(Header.toggleClose);
-
-    $header.addClass(EX.config.headerState);
   }
 
   static initializeHotkeys() {
@@ -901,6 +958,52 @@ class Header {
   }
 }
 
+class Notes {
+  static initialize() {
+    $(Notes.initializeLivePreview);
+  }
+
+  static initializeLivePreview() {
+    Danbooru.Note.Edit.show = _.wrap(Danbooru.Note.Edit.show, (show, ...args) => {
+      show(...args);
+
+      $(".note-edit-dialog textarea").off("input").on("input", _.throttle(Notes.updatePreview, 32));
+    });
+  }
+
+  static updatePreview(event) {
+    const $textarea = $(event.target);
+    const note_id = $textarea.closest(".ui-dialog-content").data("id");
+    const $note_body = Danbooru.Note.Body.find(note_id);
+    const $note_box = Danbooru.Note.Box.find(note_id);
+
+    Danbooru.Note.Body.set_text($note_body, $note_box, $textarea.val());
+    Danbooru.Note.Body.show(note_id);
+  }
+}
+
+var Artist = Resource.Artist = class Artist extends Resource {
+  static get primaryKey() { return "id"; }
+};
+
+var Tag = Resource.Tag = class Tag extends Resource {
+  static get Categories() {
+    return [
+      "General",    // 0
+      "Artist",     // 1
+      undefined,    // 2 (unused)
+      "Copyright",  // 3
+      "Character"   // 4
+    ];
+  }
+
+  static get searchParams() {
+    return _$1.merge({}, super.searchParams, { search: { hide_empty: "no" }});
+  }
+
+  static get primaryKey() { return "name"; }
+};
+
 class Artists {
   static initialize() {
     if ($("#c-artists #a-show").length) {
@@ -925,11 +1028,11 @@ class Artists {
     }));
 
     let requests = [
-      EX$1.search("/artists.json", { id: artists.map("id").join(","), order: UI.query("search[order]") }),
-      EX$1.search("/tags.json",    { name: artists.map("name").join(","), hide_empty: "no" }),
-      EX$1.search("/artists.json", { order: "created_at" }, { limit:  8 }),
-      EX$1.search("/artists.json", { is_active: true, order: "updated_at" }, { limit: 8 }),
-      EX$1.search("/artists.json", { is_active: false, order: "updated_at" }, { limit: 8 }),
+      Artist.search(artists.map("id"), { order: UI.query("search[order]") }),
+      Tag.search(artists.map("name"), { hide_empty: "no" }),
+      Artist.get({ search: { is_active: true, order: "created_at" }, limit: 8 }),
+      Artist.get({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
+      Artist.get({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
     ];
 
     Promise.all(requests).then(([artists, tags, created, updated, deleted]) => {
@@ -1114,7 +1217,7 @@ class Comments {
       });
     }
 
-    if ($("#c-comments #a-index").length) {
+    if ($("#c-comments #a-index").length && window.location.search.match(/group_by=post/)) {
       Comments.initialize_tag_list();
     }
   }
@@ -1290,7 +1393,123 @@ class PostVersions {
   }
 }
 
+var Post = Resource.Post = class Post extends Resource { };
+
+var User = Resource.User = class User extends Resource {
+  static get primaryKey() { return "id"; }
+};
+
 class Users {
+  static initialize() {
+    this.initializeWordBreaks();
+
+    if ($$1("#c-users #a-show").length) {
+      this.initializeExpandableGalleries();
+    }
+  }
+
+  // Wordbreak long usernames (e.g. GiantCaveMushroom) by inserting
+  // zero-width spaces at lowercase -> non-lowercase transitions.
+  static initializeWordBreaks() {
+    this.userLinks().text((i, name) =>
+      name.replace(/([a-z])(?=[^a-z])/g, c => c + "\u200B")
+    );
+  }
+
+  // Add tooltips to usernames. Also add data attributes for custom CSS styling.
+  static initializeUserLinks() {
+    const $users = this.userLinks();
+    const ids = $users.map((i, e) => this.parseUserId($$1(e)));
+
+    User.search(ids).then(users => {
+      users = _$1.keyBy(users, "id");
+      $users.each((i, e) => {
+        const $user = $$1(e);
+        const id = this.parseUserId($user);
+        const user = users[id];
+
+        _$1(user).forOwn((value, key) =>
+          $user.attr(`data-${_$1(key).kebabCase()}`, value)
+        );
+
+        const privileges =
+          user.level_string +
+          (user.is_banned         ? " Banned"      : "") + 
+          (user.is_super_voter    ? " Supervoter"  : "") +
+          (user.can_approve_posts ? " Approver"    : "") +
+          (user.can_upload_free   ? " Contributor" : "");
+
+        const tooltip =
+          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
+
+        $user.attr("title", tooltip);
+      });
+    });
+  }
+
+  static initializeExpandableGalleries() {
+    // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
+    $$1(".box a[href^='/favorites?user_id=']").attr(
+      "href", `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`
+    );
+
+    $$1("#c-users #a-show > .box").each((i, e) => {
+      const $gallery = $$1(e).addClass("ex-post-gallery");
+
+      // Make gallery headers collapsible.
+      const $toggleCollapse = $$1(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header" href="#"></a>`);
+      $gallery.find("h2").prepend($toggleCollapse);
+
+      $toggleCollapse.click(event => {
+        $$1(event.target).closest("h2").next("div").slideToggle();
+        $$1(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+        return false;
+      });
+
+      // Store the tag search corresponding to this gallery section in a data
+      // attribute for the click handler.
+      const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
+      $gallery.attr("data-tags", decodeURIComponent(tags));
+
+      $gallery.find("div").append(`
+        <article class="ex-text-post-preview">
+          <a href="#">More »</a>
+        </article>
+      `);
+
+      $gallery.find(".ex-text-post-preview a").click(event => {
+        const $gallery = $$1(event.target).closest(".ex-post-gallery");
+
+        const limit = 30;
+        const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
+
+        Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
+          const html = posts.map(Posts.preview).join("");
+
+          // Hide the original posts to avoid appending duplicate posts.
+          $gallery.find("div .post-preview:not(.ex-post-preview)").hide();
+
+          // Append new posts, moving the "More »" link to the end.
+          const $more = $gallery.find(".ex-text-post-preview").detach();
+          $gallery.find("div").append(html, $more);
+
+          $gallery.find(".ex-post-preview").trigger("ex.post-preview:create");
+        });
+
+        return false;
+      });
+    });
+  }
+
+  static userLinks() {
+    return $$1('a[href^="/users/"]')
+      .filter((i, e) => !$$1(e).text().match(/My Account|Profile/))
+      .filter((i, e) => this.parseUserId($$1(e)));
+  }
+
+  static parseUserId($user) {
+    return _$1.nth($user.attr("href").match(/^\/users\/(\d+)$/), 1);
+  }
 }
 
 class WikiPages {
@@ -1385,16 +1604,16 @@ class WikiPages {
 
 class UI {
   static initialize() {
+    UI.initialize_footer();
     UI.initialize_moment();
     UI.initialize_patches();
 
     EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
     EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
-    EX.config.usernameTooltips && UI.initialize_user_links();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
-    UI.initialize_hotkeys();
+    EX.config.enableHotkeys && UI.initialize_hotkeys();
   }
 
   // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
@@ -1416,6 +1635,12 @@ class UI {
       const time_ago = moment($(e).attr('datetime')).fromNow();
       $(e).text(time_ago);
     });
+  }
+
+  static initialize_footer() {
+    $("footer").append(
+      `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`
+    );
   }
 
   static initialize_moment() {
@@ -1447,7 +1672,7 @@ class UI {
       .filter((i, e) => /post #\d+/.test($(e).text()))
       .addClass('ex-thumbnail-tooltip-link');
 
-    UI.install_tooltips();
+    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
   }
 
   // Show post previews when hovering over thumbnails.
@@ -1462,13 +1687,19 @@ class UI {
       $(".post-preview img").addClass('ex-thumbnail-tooltip-link');
     }
 
-    UI.install_tooltips();
+    $(document).on("ex.post-preview:create", event => {
+      const $post = $(event.target).find("img").addClass('ex-thumbnail-tooltip-link');
+      UI.install_tooltips($post);
+      return false;
+    });
+
+    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
   }
 
-  static install_tooltips(items) {
+  static install_tooltips($target) {
     const max_size = 450;
 
-    $(".ex-thumbnail-tooltip-link").tooltip({
+    $target.tooltip({
       items: "*",
       content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
       show: { delay: EX.config.thumbnailPreviewDelay },
@@ -1496,49 +1727,11 @@ class UI {
 
           // XXX avoid lookup on tooltip open.
           $.getJSON(`/posts/${id}.json`).then(post =>
-            $(ui.tooltip).html(Posts.preview(post, post.large_file_url, "ex-thumbnail-tooltip"))
+            $(ui.tooltip).html(Posts.preview(post, { size: "large", classes: [ "ex-thumbnail-tooltip" ]}))
           );
         } catch (e) {
           console.log(e);
         }
-      }
-    });
-  }
-
-  // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initialize_user_links() {
-    const user_ids =
-      _$1($('a[href^="/users"]').filter((i, e) => !$(e).text().match(/My Account/)))
-      .map(e => $(e).attr('href').replace("/users/", ""))
-      .map(Number)
-      .sortBy()
-      .sortedUniq()
-      .join(',');
-
-    if (user_ids.length === 0) {
-      return;
-    }
-
-    // XXX should do lookup in batches.
-    $.getJSON(`/users.json?limit=1000&search[id]=${user_ids}`).then(users => {
-      for (const user of users) {
-        let $user = $(`a[href^="/users/${user.id}"]`);
-
-        _$1(user).forOwn((value, key) =>
-          $user.attr(`data-${_$1(key).kebabCase()}`, value)
-        );
-
-        let privileges =
-          user.level_string +
-          (user.is_banned         ? " Banned"      : "") + 
-          (user.is_super_voter    ? " Supervoter"  : "") +
-          (user.can_approve_posts ? " Approver"    : "") +
-          (user.can_upload_free   ? " Contributor" : "");
-
-        let tooltip =
-          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
-
-        $user.attr("title", tooltip);
       }
     });
   }
@@ -1556,14 +1749,15 @@ class UI {
       $(`a[href^="/wiki_pages/show_or_new?title="]`)
       .filter((i, e) => $(e).text() != "?");
 
-    const tag_names =
+    const tags =
       _$1($wiki_links.toArray())
       .map(parse_tag_name)
       .reject(tag => tag.match(meta_wikis))
       .value();
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
-    Tag.search(tag_names).then(tags => {
+    Tag.search(tags).then(tags => {
+      tags = _$1.keyBy(tags, "name");
       $wiki_links.each((i, e) => {
         const $wiki_link = $(e);
         const name = parse_tag_name($wiki_link);
@@ -1615,9 +1809,7 @@ class UI {
     $sidebar.toggle(width > 0);
 
     $sidebar.addClass("ex-panel").width(width).after(`
-      <section id="ex-sidebar-resizer" class="ex-vertical-resizer">
-        <div class="ex-vertical-resizer-line"></div>
-      </section>
+      <section id="ex-sidebar-resizer" class="ex-vertical-resizer"></section>
     `);
 
     // XXX fix magic numbers (28 = 2em).
@@ -1640,13 +1832,11 @@ class UI {
     });
   }
 
-  /*
-   * Global keybindings.
-   * - Escape: Close notice popups.
-   * - W: Smooth scroll up.
-   * - S: Smooth scroll down.
-   * - Shift+Q: Focus top search bar.
-   */
+  // Global keybindings.
+  // - Escape: Close notice popups.
+  // - W: Smooth scroll up.
+  // - S: Smooth scroll down.
+  // - Ctrl+Enter: Submit form.
   static initialize_hotkeys() {
     // Escape: Close notice popups.
     $(document).keydown('esc', e => $('#close-notice-link').click());
@@ -1660,6 +1850,11 @@ class UI {
     if ($(".paginator").length) {
       UI.initialize_paginator_hotkeys();
     }
+
+    $(".dtext-previewable textarea").keydown("ctrl+return", e => {
+      $(e.target).closest("form").find('input[type="submit"][value="Submit"]').click();
+      e.preventDefault();
+    });
   }
 
   static initialize_scroll_hotkeys() {
@@ -1745,6 +1940,7 @@ class UI {
 
 UI.Header = Header;
 UI.ModeMenu = ModeMenu;
+UI.Notes = Notes;
 UI.PreviewPanel = PreviewPanel;
 
 UI.Artists = Artists;
@@ -1756,49 +1952,55 @@ UI.PostVersions = PostVersions;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-__$styleInject("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n\n.ex-vertical-resizer {\n  cursor: col-resize;\n  width: 1em;\n}\n\n.ex-vertical-resizer-line {\n  background-color: #ebebeb;\n  height: 100%;\n  width: 1px;\n  margin: 0 auto;\n}\n\n.ex-panel {\n  overflow: hidden;\n}\n\n.ex-preview-panel-container {\n  display: flex;\n  min-height: 100vh;\n}\n\n#ex-preview-panel {\n  width: 0;\n  overflow: hidden;\n}\n\n#ex-preview-panel > div {\n  display: flex;\n  overflow-y: scroll;\n}\n\n#ex-preview-panel > div > article {\n  width: auto;\n  height: auto;\n  margin: auto;\n}\n\n#ex-preview-panel > div > article.post-preview img {\n  max-width: 100%;\n  max-height: 100%;\n  box-sizing: border-box;\n}\n\n#ex-preview-panel .ex-fixed {\n  position: fixed;\n}\n\n.ex-content-panel {\n  flex: 1;\n  margin-left: 0px !important;\n}\n\n#ex-header {\n    display: flex;\n    position: absolute;\n    top: 0;\n    padding-top: 5px;\n    width: 100%;\n    z-index: 100;\n    background: white;\n    border-bottom: 1px solid #EEE;\n}\n\n#ex-header.ex-fixed {\n    position: fixed;\n}\n\n#ex-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px;\n}\n\n#ex-header .ex-search-box {\n    margin: auto;\n    display: flex;\n    flex: 0 1 30%;\n}\n\n#ex-header .ex-search-box input[name=\"tags\"] {\n    flex: 0 1 100%;\n}\n\n#ex-header .ex-search-box input[type=\"submit\"] {\n    flex: 1;\n    margin: auto 1em;\n}\n\n#ex-header .ex-mode-menu {\n    margin: auto;\n    flex: 1 2 70%;\n}\n\n#ex-header .ex-mode-menu .ex-tag-script-controls {\n    display: inline-block;\n    margin: auto;\n}\n\n#ex-header .ex-mode-menu label {\n    font-weight: bold;\n    cursor: auto;\n}\n\n#ex-header .ex-header-close {\n    margin: auto;\n    margin-right: 30px;\n    color: #0073ff;\n    cursor: pointer;\n}\n\n/* http://fontawesome.io/icon/times-circle/ */\n#ex-header.ex-fixed .ex-header-close .fa::before {\n    content: \"\\f057\";\n}\n\n/* http://fontawesome.io/icon/thumb-tack/ */\n#ex-header.ex-static .ex-header-close .fa::before {\n    content: \"\\f08d\";\n}\n\n@media (max-width: 1280px) {\n    #ex-header h1,\n    header#top h1 {\n        font-size: 1.5em;\n    }\n\n    #ex-header .ex-mode-menu label {\n        display: none;\n    }\n}\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n    body {\n        overflow-x: hidden;\n    }\n\n    #ex-header input {\n        font-size: 1em;\n    }\n\n    #ex-header {\n        text-align: initial;\n        line-height: initial;\n    }\n\n    #nav {\n        display: block;\n        float: none;\n        font-size: 1em;\n    }\n\n    header#top menu {\n        width: initial;\n    }\n\n    header#top menu li a {\n        padding: 6px 5px;\n    }\n\n    .ex-preview-panel-container {\n        display: block;\n        min-height: initial;\n    }\n\n    #sidebar,\n    #ex-sidebar-resizer,\n    #ex-preview-panel-resizer,\n    #ex-preview-panel {\n        display: none !important;\n    }\n}\n\n#notice {\n    top: 4.5em !important;\n}\n\n\n\n.ex-artists {\n  white-space: nowrap;\n}\n\n.ex-artist .ex-artist-id {\n  width: 10%;\n}\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal;\n}\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto;\n}\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important;\n}\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0;\n}\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0;\n}\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block;\n}\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n    /* display: flex; */\n    /* align-items: center; */\n    padding-top: 52px;\n    margin-top: -52px;\n}\n\n#wiki-page-body a.ui-icon.collapsible-header {\n    display: inline-block;\n    margin-left: -8px;\n}\n\nbody.mode-tag-script {\n    background-color: white;\n}\n\nbody.mode-tag-script #ex-header {\n    border-bottom: 2px solid #D6D;\n}\n\nbody.mode-preview #ex-header {\n    border-bottom: 2px solid #0073ff;\n}\n\n/* Highlight thumbnails in grey when hovering in preview or tag script mode. */\nbody.mode-preview article.post-preview:hover,\nbody.mode-preview #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-preview #c-comments .post-preview .preview:hover,\nbody.mode-tag-script article.post-preview:hover,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-tag-script #c-comments .post-preview .preview:hover {\n    background: #EEEEEE;\n}\n\nbody.mode-tag-script article.post-preview.ui-selected,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,\nbody.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n    background: lightblue;\n}\n\nbody.mode-tag-script article.post-preview.ui-selected {\n    padding: 0 10px 10px 0;\n    margin: 0;\n}\n\n.ui-selectable {\n    -ms-touch-action: none;\n    touch-action: none;\n}\n\n.ui-selectable-helper {\n    position: absolute;\n    z-index: 100;\n    border: 1px dotted black;\n}\n\n.ui-tooltip {\n    padding:   8px;\n    position:  absolute;\n    z-index:   9999;\n    max-width: 300px;\n    -webkit-box-shadow: 0 0 5px #aaa;\n    box-shadow: 0 0 5px #aaa;\n}\n\n.ui-tooltip,\n.ui-tooltip .ex-thumbnail-tooltip img {\n  max-width:  450px !important;\n  max-height: 450px !important;\n}\n\nbody .ui-tooltip {\n    border-width: 2px;\n}\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n}\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em;\n}\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted;\n}\n\n.tag-dne {\n  border-bottom: 1px dotted;\n}\n\n.tag-list-header h1, .tag-list-header h2 {\n    display: inline-block;\n}\n\n.tag-list-header .post-count {\n    margin-left: 0.5em;\n}\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n    color: #A00;\n}\n\n.spoiler:hover a.tag-type-3 {\n    color: #A0A;\n}\n\n.spoiler:hover a.tag-type-4 {\n    color: #0A0;\n}\n\n.spoiler:not(:hover) a {\n    color: black !important;\n}\n",undefined);
+___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n/* Fit posts to screen width. */\n#image {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-post-preview {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-post-preview a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-vertical-resizer {\n  cursor: col-resize;\n  width: 1px;\n  border: 0.5em solid white;\n  background: #f2f2f2;\n  transition: background 0.125s; }\n\n.ex-vertical-resizer:hover {\n  background: #cccccc;\n  transition: background 0.125s; }\n\n.ex-panel {\n  overflow: hidden; }\n\n.ex-preview-panel-container {\n  display: flex;\n  min-height: 100vh; }\n\n#ex-preview-panel {\n  width: 0;\n  overflow: hidden; }\n\n#ex-preview-panel > div {\n  display: flex;\n  overflow-y: auto; }\n\n#ex-preview-panel > div > article {\n  width: auto;\n  height: auto;\n  margin: auto; }\n\n#ex-preview-panel > div > article.post-preview .post-media {\n  max-width: 100%;\n  max-height: 100%;\n  box-sizing: border-box; }\n\n#ex-preview-panel .ex-fixed {\n  position: fixed; }\n\n.ex-content-panel {\n  flex: 1;\n  margin-left: 0px !important; }\n\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding-top: 5px;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid #EEE; }\n\n#ex-header.ex-fixed {\n  position: fixed; }\n\n#ex-header h1 {\n  display: inline-block;\n  font-size: 2.5em;\n  margin: 0 30px; }\n\n#ex-header .ex-search-box {\n  margin: auto;\n  display: flex;\n  flex: 0 1 30%; }\n\n#ex-header .ex-search-box input[name=\"tags\"] {\n  flex: 0 1 100%; }\n\n#ex-header .ex-search-box input[type=\"submit\"] {\n  flex: 1;\n  margin: auto 1em; }\n\n#ex-header .ex-mode-menu {\n  margin: auto;\n  flex: 1 2 70%; }\n\n#ex-header .ex-mode-menu .ex-tag-script-controls {\n  display: inline-block;\n  margin: auto; }\n\n#ex-header .ex-mode-menu label {\n  font-weight: bold;\n  cursor: auto; }\n\n#ex-header .ex-header-close {\n  margin: auto;\n  margin-right: 30px;\n  color: #0073ff;\n  cursor: pointer; }\n\n/* http://fontawesome.io/icon/times-circle/ */\n#ex-header.ex-fixed .ex-header-close .fa::before {\n  content: \"\\f057\"; }\n\n/* http://fontawesome.io/icon/thumb-tack/ */\n#ex-header.ex-static .ex-header-close .fa::before {\n  content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  #ex-header h1,\n  header#top h1 {\n    font-size: 1.5em; }\n  #ex-header .ex-mode-menu label {\n    display: none; } }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\n/* Highlight thumbnails in grey when hovering in preview or tag script mode. */\nbody.mode-preview article.post-preview:hover,\nbody.mode-preview #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-preview #c-comments .post-preview .preview:hover,\nbody.mode-tag-script article.post-preview:hover,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #EEEEEE; }\n\nbody.mode-tag-script article.post-preview.ui-selected,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,\nbody.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: lightblue; }\n\nbody.mode-tag-script article.post-preview.ui-selected {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-tooltip {\n  padding: 8px;\n  position: absolute;\n  z-index: 9999;\n  max-width: 300px;\n  -webkit-box-shadow: 0 0 5px #aaa;\n  box-shadow: 0 0 5px #aaa; }\n\n.ui-tooltip {\n  max-width: 450px !important;\n  max-height: 450px !important;\n  border-width: 2px; }\n\n.ui-tooltip .ex-thumbnail-tooltip .post-media {\n  max-width: 450px;\n  max-height: 450px;\n  height: auto;\n  box-sizing: border-box; }\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n  margin: 0; }\n\na.ui-icon.collapsible-header {\n  display: inline-block;\n  margin-left: -8px; }\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n");
 
-class EX$1 {
-  static get Config() { return Config; }
-  static get DText() { return DText; }
-  static get Tag() { return Tag; }
-  static get UI() { return UI; }
-
-  static search(url, search, { limit, page } = {}) {
-    return $.getJSON(url, { search, limit: limit || 1000, page: page || 1 });
-  }
-
-  static initialize() {
-    $("footer").append(
-      ` – Danbooru EX (<a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">settings</a>)`
-    );
-
-    EX$1.config.enableHeader && UI.Header.initialize();
-
-    EX$1.UI.initialize();
-    EX$1.config.artistsRedesign && EX$1.UI.Artists.initialize();
-    EX$1.config.commentsRedesign && EX$1.UI.Comments.initialize();
-    EX$1.config.forumRedesign && EX$1.UI.ForumPosts.initialize();
-    EX$1.config.poolsRedesign && EX$1.UI.Pools.initialize();
-    EX$1.config.postsRedesign && EX$1.UI.Posts.initialize();
-    EX$1.config.postVersionsRedesign && EX$1.UI.PostVersions.initialize();
-    EX$1.config.wikiRedesign && EX$1.UI.WikiPages.initialize();
-  }
-}
-
-window.EX = EX$1;
 window.moment = moment$1;
 
-jQuery(function () {
+var ex = window.EX = class EX {
+  static get Config() { return Config; }
+  static get DText() { return DText; }
+  static get Resource() { return Resource; }
+  static get UI() { return UI; }
+
+  static initialize() {
+    console.timeEnd("preinit");
+
+    console.groupCollapsed("settings");
+    EX.config = new EX.Config();
+
+    EX.config.enableHeader && UI.Header.initialize();
+    EX.UI.initialize();
+    EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
+    EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
+
+    EX.config.artistsRedesign && EX.UI.Artists.initialize();
+    EX.config.commentsRedesign && EX.UI.Comments.initialize();
+    EX.config.forumRedesign && EX.UI.ForumPosts.initialize();
+    EX.config.poolsRedesign && EX.UI.Pools.initialize();
+    EX.config.postsRedesign && EX.UI.Posts.initialize();
+    EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
+    EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
+    EX.config.usersRedesign && EX.UI.Users.initialize();
+
+    console.groupEnd("settings");
+    console.timeEnd("initialized");
+  }
+};
+
+console.log("Danbooru:", window.Danbooru);
+console.log("EX:", EX);
+
+console.timeEnd("loaded");
+$(function () {
   try {
-    EX$1.config = new EX$1.Config();
-    EX$1.initialize();
+    EX.initialize();
   } catch(e) {
+    console.trace(e);
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
     throw e;
   }
 });
 
-return EX$1;
+return ex;
 
-}(_,jQuery,moment,filesize));
+}(jQuery,moment,_,filesize));

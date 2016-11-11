@@ -1,3 +1,23 @@
+# Release 2284
+
+#### Features
+
+* On account pages, add button to load more posts in uploads / favorites / saved search sections (https://gfycat.com/ImpartialEverlastingIceblueredtopzebra).
+* Also make uploads / favorites / saved search sections hideable.
+* Add live, as-you-type preview when editing notes (https://gfycat.com/DeficientInconsequentialCottontail).
+* Add ctrl+enter shortcut for submitting wiki entries / comments / forum posts.
+* Add option to enabling looping for video_with_sound posts by default.
+* Add option to mute video_with_sound posts by default.
+* Wordbreak long usernames (e.g. GiantCaveMushroom) better in comments and forum posts.
+
+#### Fixes
+
+* Performance improvements.
+* Fix brokenness on Firefox.
+* Fix thumbnail hover previews to work for webm/mp4/ugoira posts.
+* Fix sidebar squashing issues by fitting images to screen width.
+* Make preview panel work on /post_versions, /post_flags, /post_appeals.
+
 # Release 1339
 
 * Fix broken Show button in Table of Contents expandables in the wiki.
