@@ -54,9 +54,12 @@ export default class Users {
   }
 
   static initializeExpandableGalleries() {
+    const user =
+      $("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
+
     // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
     $(".box a[href^='/favorites?user_id=']").attr(
-      "href", `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`
+      "href", `/posts?tags=ordfav:${encodeURIComponent(user)}`
     );
 
     $("#c-users #a-show > .box").each((i, e) => {
