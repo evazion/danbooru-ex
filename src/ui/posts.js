@@ -140,7 +140,7 @@ export default class Posts {
     const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
     const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
-    const media = (post.file_ext.match(/webm|mp4|zip/))
+    const media = (post.file_ext.match(/webm|mp4|zip/) && size != "preview")
                 ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
                 : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
 
