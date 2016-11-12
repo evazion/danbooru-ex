@@ -80,27 +80,28 @@ export default class Users {
       const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
       $gallery.attr("data-tags", decodeURIComponent(tags));
 
-      $gallery.find("div").append(`
-        <article class="ex-text-post-preview">
+      $gallery.find("> div").append(`
+        <article class="ex-text-thumbnail">
           <a href="#">More »</a>
         </article>
       `);
 
-      $gallery.find(".ex-text-post-preview a").click(event => {
+      $gallery.find(".ex-text-thumbnail a").click(event => {
         const $gallery = $(event.target).closest(".ex-post-gallery");
 
         const limit = 30;
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
         Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
+          console.log("inserting thumbnails");
           const html = posts.map(Posts.preview).join("");
 
           // Hide the original posts to avoid appending duplicate posts.
-          $gallery.find("div .post-preview:not(.ex-post-preview)").hide();
+          $gallery.find("> div .post-preview:not(.ex-post-preview)").hide();
 
           // Append new posts, moving the "More »" link to the end.
-          const $more = $gallery.find(".ex-text-post-preview").detach();
-          $gallery.find("div").append(html, $more);
+          const $more = $gallery.find(".ex-text-thumbnail").detach();
+          $gallery.find("> div").append(html, $more);
 
           $gallery.find(".ex-post-preview").trigger("ex.post-preview:create");
         });
