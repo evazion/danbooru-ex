@@ -6,10 +6,18 @@ export default class Posts {
       return;
     }
 
+    Posts.initializeResize();
     Posts.initialize_patches();
     Posts.initializeTagList();
     Posts.initialize_hotkeys();
     Posts.initialize_video();
+  }
+
+  // Resize notes/ugoira controls as window is resized.
+  static initializeResize() {
+    new ResizeSensor($('#image-container'), () => {
+      $("#image-resize-to-window-link").click();
+    });
   }
 
   // Update Rating in sidebar when it changes.
