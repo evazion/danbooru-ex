@@ -41,7 +41,6 @@
 * /users/1234 expandable post sections:
 ** Blacklists may not work on loaded posts.
 ** Additional posts aren't loaded properly for uncategorized saved searches (Danbooru bug).
-** Sometimes tag scripting doesn work on loaded posts.
 
 * Note live preview:
 ** Can be wonky when in the middle of typing html since the html is invalid and incomplete.

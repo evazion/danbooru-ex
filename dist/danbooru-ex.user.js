@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Danbooru EX
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      2284
+// @version      2317
 // @source       https://danbooru.donmai.us/users/52664
 // @description  Danbooru UI Enhancements
 // @author       evazion
@@ -15,6 +15,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
 // @require      https://unpkg.com/filesize@3.3.0
+// @require      https://unpkg.com/css-element-queries@0.3.2/src/ResizeSensor.js
 // ==/UserScript==
 
 /*
@@ -390,10 +391,18 @@ class Posts {
       return;
     }
 
+    Posts.initializeResize();
     Posts.initialize_patches();
     Posts.initializeTagList();
     Posts.initialize_hotkeys();
     Posts.initialize_video();
+  }
+
+  // Resize notes/ugoira controls as window is resized.
+  static initializeResize() {
+    new ResizeSensor($('#image-container'), () => {
+      $("#image-resize-to-window-link").click();
+    });
   }
 
   // Update Rating in sidebar when it changes.
@@ -524,7 +533,7 @@ class Posts {
     const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
     const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
-    const media = (post.file_ext.match(/webm|mp4|zip/))
+    const media = (post.file_ext.match(/webm|mp4|zip/) && size != "preview")
                 ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_$1.escape(post.tag_string)}">`
                 : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_$1.escape(post.tag_string)}">`;
 
@@ -1448,9 +1457,12 @@ class Users {
   }
 
   static initializeExpandableGalleries() {
+    const user =
+      $$1("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
+
     // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
     $$1(".box a[href^='/favorites?user_id=']").attr(
-      "href", `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`
+      "href", `/posts?tags=ordfav:${encodeURIComponent(user)}`
     );
 
     $$1("#c-users #a-show > .box").each((i, e) => {
@@ -1471,27 +1483,28 @@ class Users {
       const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
       $gallery.attr("data-tags", decodeURIComponent(tags));
 
-      $gallery.find("div").append(`
-        <article class="ex-text-post-preview">
+      $gallery.find("> div").append(`
+        <article class="ex-text-thumbnail">
           <a href="#">More »</a>
         </article>
       `);
 
-      $gallery.find(".ex-text-post-preview a").click(event => {
+      $gallery.find(".ex-text-thumbnail a").click(event => {
         const $gallery = $$1(event.target).closest(".ex-post-gallery");
 
         const limit = 30;
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
         Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
+          console.log("inserting thumbnails");
           const html = posts.map(Posts.preview).join("");
 
           // Hide the original posts to avoid appending duplicate posts.
-          $gallery.find("div .post-preview:not(.ex-post-preview)").hide();
+          $gallery.find("> div .post-preview:not(.ex-post-preview)").hide();
 
           // Append new posts, moving the "More »" link to the end.
-          const $more = $gallery.find(".ex-text-post-preview").detach();
-          $gallery.find("div").append(html, $more);
+          const $more = $gallery.find(".ex-text-thumbnail").detach();
+          $gallery.find("> div").append(html, $more);
 
           $gallery.find(".ex-post-preview").trigger("ex.post-preview:create");
         });
@@ -1952,7 +1965,7 @@ UI.PostVersions = PostVersions;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n/* Fit posts to screen width. */\n#image {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-post-preview {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-post-preview a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-vertical-resizer {\n  cursor: col-resize;\n  width: 1px;\n  border: 0.5em solid white;\n  background: #f2f2f2;\n  transition: background 0.125s; }\n\n.ex-vertical-resizer:hover {\n  background: #cccccc;\n  transition: background 0.125s; }\n\n.ex-panel {\n  overflow: hidden; }\n\n.ex-preview-panel-container {\n  display: flex;\n  min-height: 100vh; }\n\n#ex-preview-panel {\n  width: 0;\n  overflow: hidden; }\n\n#ex-preview-panel > div {\n  display: flex;\n  overflow-y: auto; }\n\n#ex-preview-panel > div > article {\n  width: auto;\n  height: auto;\n  margin: auto; }\n\n#ex-preview-panel > div > article.post-preview .post-media {\n  max-width: 100%;\n  max-height: 100%;\n  box-sizing: border-box; }\n\n#ex-preview-panel .ex-fixed {\n  position: fixed; }\n\n.ex-content-panel {\n  flex: 1;\n  margin-left: 0px !important; }\n\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding-top: 5px;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid #EEE; }\n\n#ex-header.ex-fixed {\n  position: fixed; }\n\n#ex-header h1 {\n  display: inline-block;\n  font-size: 2.5em;\n  margin: 0 30px; }\n\n#ex-header .ex-search-box {\n  margin: auto;\n  display: flex;\n  flex: 0 1 30%; }\n\n#ex-header .ex-search-box input[name=\"tags\"] {\n  flex: 0 1 100%; }\n\n#ex-header .ex-search-box input[type=\"submit\"] {\n  flex: 1;\n  margin: auto 1em; }\n\n#ex-header .ex-mode-menu {\n  margin: auto;\n  flex: 1 2 70%; }\n\n#ex-header .ex-mode-menu .ex-tag-script-controls {\n  display: inline-block;\n  margin: auto; }\n\n#ex-header .ex-mode-menu label {\n  font-weight: bold;\n  cursor: auto; }\n\n#ex-header .ex-header-close {\n  margin: auto;\n  margin-right: 30px;\n  color: #0073ff;\n  cursor: pointer; }\n\n/* http://fontawesome.io/icon/times-circle/ */\n#ex-header.ex-fixed .ex-header-close .fa::before {\n  content: \"\\f057\"; }\n\n/* http://fontawesome.io/icon/thumb-tack/ */\n#ex-header.ex-static .ex-header-close .fa::before {\n  content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  #ex-header h1,\n  header#top h1 {\n    font-size: 1.5em; }\n  #ex-header .ex-mode-menu label {\n    display: none; } }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\n/* Highlight thumbnails in grey when hovering in preview or tag script mode. */\nbody.mode-preview article.post-preview:hover,\nbody.mode-preview #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-preview #c-comments .post-preview .preview:hover,\nbody.mode-tag-script article.post-preview:hover,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #EEEEEE; }\n\nbody.mode-tag-script article.post-preview.ui-selected,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,\nbody.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: lightblue; }\n\nbody.mode-tag-script article.post-preview.ui-selected {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-tooltip {\n  padding: 8px;\n  position: absolute;\n  z-index: 9999;\n  max-width: 300px;\n  -webkit-box-shadow: 0 0 5px #aaa;\n  box-shadow: 0 0 5px #aaa; }\n\n.ui-tooltip {\n  max-width: 450px !important;\n  max-height: 450px !important;\n  border-width: 2px; }\n\n.ui-tooltip .ex-thumbnail-tooltip .post-media {\n  max-width: 450px;\n  max-height: 450px;\n  height: auto;\n  box-sizing: border-box; }\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n  margin: 0; }\n\na.ui-icon.collapsible-header {\n  display: inline-block;\n  margin-left: -8px; }\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n");
+___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n/* Fit posts to screen width. */\n#image {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-vertical-resizer {\n  cursor: col-resize;\n  width: 1px;\n  border: 0.5em solid white;\n  background: #f2f2f2;\n  transition: background 0.125s; }\n\n.ex-vertical-resizer:hover {\n  background: #cccccc;\n  transition: background 0.125s; }\n\n.ex-panel {\n  overflow: hidden; }\n\n.ex-preview-panel-container {\n  display: flex;\n  min-height: 100vh; }\n\n#ex-preview-panel {\n  width: 0;\n  overflow: hidden; }\n\n#ex-preview-panel > div {\n  display: flex;\n  overflow-y: auto; }\n\n#ex-preview-panel > div > article {\n  width: auto;\n  height: auto;\n  margin: auto; }\n\n#ex-preview-panel > div > article.post-preview .post-media {\n  max-width: 100%;\n  max-height: 100%;\n  box-sizing: border-box; }\n\n#ex-preview-panel .ex-fixed {\n  position: fixed; }\n\n.ex-content-panel {\n  flex: 1;\n  margin-left: 0px !important; }\n\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding-top: 5px;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid #EEE; }\n\n#ex-header.ex-fixed {\n  position: fixed; }\n\n#ex-header h1 {\n  display: inline-block;\n  font-size: 2.5em;\n  margin: 0 30px; }\n\n#ex-header .ex-search-box {\n  margin: auto;\n  display: flex;\n  flex: 0 1 30%; }\n\n#ex-header .ex-search-box input[name=\"tags\"] {\n  flex: 0 1 100%; }\n\n#ex-header .ex-search-box input[type=\"submit\"] {\n  flex: 1;\n  margin: auto 1em; }\n\n#ex-header .ex-mode-menu {\n  margin: auto;\n  flex: 1 2 70%; }\n\n#ex-header .ex-mode-menu .ex-tag-script-controls {\n  display: inline-block;\n  margin: auto; }\n\n#ex-header .ex-mode-menu label {\n  font-weight: bold;\n  cursor: auto; }\n\n#ex-header .ex-header-close {\n  margin: auto;\n  margin-right: 30px;\n  color: #0073ff;\n  cursor: pointer; }\n\n/* http://fontawesome.io/icon/times-circle/ */\n#ex-header.ex-fixed .ex-header-close .fa::before {\n  content: \"\\f057\"; }\n\n/* http://fontawesome.io/icon/thumb-tack/ */\n#ex-header.ex-static .ex-header-close .fa::before {\n  content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  #ex-header h1,\n  header#top h1 {\n    font-size: 1.5em; }\n  #ex-header .ex-mode-menu label {\n    display: none; } }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\n/* Highlight thumbnails in grey when hovering in preview or tag script mode. */\nbody.mode-preview article.post-preview:hover,\nbody.mode-preview #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-preview #c-comments .post-preview .preview:hover,\nbody.mode-tag-script article.post-preview:hover,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #EEEEEE; }\n\nbody.mode-tag-script article.post-preview.ui-selected,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,\nbody.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: lightblue; }\n\nbody.mode-tag-script article.post-preview.ui-selected {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-tooltip {\n  padding: 8px;\n  position: absolute;\n  z-index: 9999;\n  max-width: 300px;\n  -webkit-box-shadow: 0 0 5px #aaa;\n  box-shadow: 0 0 5px #aaa; }\n\n.ui-tooltip {\n  max-width: 450px !important;\n  max-height: 450px !important;\n  border-width: 2px; }\n\n.ui-tooltip .ex-thumbnail-tooltip .post-media {\n  max-width: 450px;\n  max-height: 450px;\n  height: auto;\n  box-sizing: border-box; }\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n  margin: 0; }\n\na.ui-icon.collapsible-header {\n  display: inline-block;\n  margin-left: -8px; }\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n");
 
 window.moment = moment$1;
 

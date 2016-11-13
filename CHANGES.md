@@ -1,3 +1,15 @@
+# Release 2317
+
+#### Fixes
+
+* Fix position of notes when resizing posts. Posts are forced to fit to screen
+  width on resizes.
+* Fix loading thumbnails in favorites section on user profile pages.
+* Fix incompatibility with Miscellaneous Tweaks' score/favcounts tweak on
+  thumbnails loaded in uploads/fav/saved search sections on profile pages.
+* Fix webm/mp4/ugoira thumbnails loaded in upload/fav/saved search sections on
+  user profile pages.
+
 # Release 2284
 
 #### Features
