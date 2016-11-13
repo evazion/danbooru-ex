@@ -1,140 +1,124 @@
 import _ from "lodash";
 
+export class Setting {
+  constructor({ value, help, configurable, storage } = {}) {
+    this.value = value;
+    this.help = help;
+    this.configurable = configurable;
+    this.storage = storage;
+  }
+
+  static Session({ value } = {}) {
+    return new Setting({ value, help: "none", configurable: false, storage: window.sessionStorage });
+  }
+
+  static Shared({ value = true, help } = {}) {
+    return new Setting({ value, help, configurable: true, storage: window.localStorage });
+  }
+}
+
 export default class Config {
   static get Defaults() {
     return {
-      enableHeader: {
-        configurable: true,
+      enableHeader: Setting.Shared({
         help: "Enable header bar containing search box and mode menu.",
-        value: true,
-      },
-      enableModeMenu: {
-        configurable: true,
+      }),
+      enableModeMenu: Setting.Shared({
         help: "Enable mode menu in header bar, disable mode menu in the sidebar. Required for preview panel.",
-        value: true,
-      },
-      enablePreviewPanel: {
-        configurable: true,
+      }),
+      enablePreviewPanel: Setting.Shared({
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
-        value: true,
-      },
-      enableHotkeys: {
-        configurable: true,
+      }),
+      enableHotkeys: Setting.Shared({
         help: "Enable additional keyboard shortcuts.",
-        value: true,
-      },
-      showThumbnailPreviews: {
-        configurable: true,
+      }),
+      showThumbnailPreviews: Setting.Shared({
         help: "Show post preview tooltips when hovering over thumbnails.",
-        value: true,
-      },
-      showPostLinkPreviews: {
-        configurable: true,
+      }),
+      showPostLinkPreviews: Setting.Shared({
         help: "Show post preview tooltips when hovering over post #1234 links.",
-        value: true,
-      },
-      enableNotesLivePreview: {
-        configurable: true,
+      }),
+      enableNotesLivePreview: Setting.Shared({
         help: "Automatically update note preview as you edit.",
-        value: true,
-      },
-      usernameTooltips: {
-        configurable: true,
+      }),
+      usernameTooltips: Setting.Shared({
         help: "Enable tooltips on usernames",
         value: false,
-      },
-      styleWikiLinks: {
-        configurable: true,
+      }),
+      styleWikiLinks: Setting.Shared({
         help: "Colorize tags in the wiki and forum, underline links to empty tags, and add tooltips to tags.",
-        value: true,
-      },
-      useRelativeTimestamps: {
-        configurable: true,
+      }),
+      useRelativeTimestamps: Setting.Shared({
         help: 'Replace fixed times ("2016-08-10 23:25") with relative times ("3 months ago").',
-        value: true,
-      },
-      resizeableSidebars: {
-        configurable: true,
+      }),
+      resizeableSidebars: Setting.Shared({
         help: "Make the tag sidebar resizeable (drag edge to resize).",
-        value: true,
-      },
-      autoplayVideos: {
-        configurable: true,
+      }),
+      autoplayVideos: Setting.Shared({
         help: "Enable autoplay for webm and mp4 posts (normally enabled by Danbooru).",
-        value: true,
-      },
-      loopVideos: {
-        configurable: true,
+      }),
+      loopVideos: Setting.Shared({
         help: "Enable looping for video_with_sound posts (normally disabled by Danbooru).",
-        value: true,
-      },
-      muteVideos: {
-        configurable: true,
+      }),
+      muteVideos: Setting.Shared({
         help: "Mute video_with_sound posts by default.",
         value: false,
-      },
+      }),
 
-      artistsRedesign: {
-        configurable: true,
+      artistsRedesign: Setting.Shared({
         help: "Enable the redesigned /artists index.",
-        value: true,
-      },
-      commentsRedesign: {
-        configurable: true,
+      }),
+      commentsRedesign: Setting.Shared({
         help: "Enable comment scores and extra info on posts in /comments",
-        value: true,
-      },
-      forumRedesign: {
-        configurable: true,
+      }),
+      forumRedesign: Setting.Shared({
         help: 'Replace Permalinks on forum posts with "forum #1234" links',
-        value: true,
-      },
-      postsRedesign: {
-        configurable: true,
+      }),
+      postsRedesign: Setting.Shared({
         help: 'Move artist tags to the top of the tag list, put tag counts next to tag list headers, and add hotkeys for rating / voting on posts.',
-        value: true,
-      },
-      postVersionsRedesign: {
-        configurable: true,
+      }),
+      postVersionsRedesign: Setting.Shared({
         help: "Add thumbnails on the /post_versions page",
-        value: true,
-      },
-      wikiRedesign: {
-        configurable: true,
+      }),
+      wikiRedesign: Setting.Shared({
         help: "Make header sections in wiki entries collapsible and add table of contents to long wiki pages",
-        value: true,
-      },
-      usersRedesign: {
-        configurable: true,
+      }),
+      usersRedesign: Setting.Shared({
         help: "Add expandable saved searches to user account pages",
-        value: true,
-      },
-      thumbnailPreviewDelay: {
+      }),
+      thumbnailPreviewDelay: Setting.Shared({
         configurable: false,
         help: "The delay in milliseconds when hovering over a thumbnail before the preview appears.",
         value: 650,
-      },
+      }),
 
-      schemaVersion: {
-        configurable: false, value: 1,
-      }, defaultSidebarWidth: {
-        configurable: false, value: 210,
-      }, defaultPreviewPanelWidth: {
-        configurable: false, value: 480,
-      }, sidebarState: {
-        configurable: false, value: {},
-      }, previewPanelState: {
-        configurable: false, value: {},
-      }, modeMenuState: {
-        configurable: false, value: {},
-      }, tagScriptNumber: {
-        configurable: false, value: 1,
-      }, tagScripts: {
-        configurable: false,
-        value: _.fill(Array(10), ""),
-      }, headerState: {
-        configurable: false, value: "ex-fixed",
-      },
+      schemaVersion: Setting.Session({
+        value: 1
+      }),
+      defaultSidebarWidth: Setting.Session({
+        value: 210
+      }),
+      defaultPreviewPanelWidth: Setting.Session({
+        value: 480
+      }),
+      sidebarState: Setting.Session({
+        value: {}
+      }),
+      previewPanelState: Setting.Session({
+        value: {}
+      }),
+      modeMenuState: Setting.Session({
+        value: {}
+      }),
+      tagScriptNumber: Setting.Session({
+        value: 1
+      }),
+      tagScripts: Setting.Session({
+        value: _.fill(Array(10), "")
+      }),
+      headerState: Setting.Session({
+        value: "ex-fixed"
+      }),
     };
   }
 
