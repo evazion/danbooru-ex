@@ -18,8 +18,13 @@ export class Setting {
 }
 
 export default class Config {
-  static get Defaults() {
+  static get Items() {
     return {
+      schemaVersion: Setting.Shared({
+        configurable: false,
+        value: 1
+      }),
+
       enableHeader: Setting.Shared({
         help: "Enable header bar containing search box and mode menu.",
       }),
@@ -86,15 +91,18 @@ export default class Config {
       usersRedesign: Setting.Shared({
         help: "Add expandable saved searches to user account pages",
       }),
+
       thumbnailPreviewDelay: Setting.Shared({
         configurable: false,
         help: "The delay in milliseconds when hovering over a thumbnail before the preview appears.",
         value: 650,
       }),
 
-      schemaVersion: Setting.Session({
-        value: 1
+      tagScripts: Setting.Shared({
+        configurable: false,
+        value: _.fill(Array(10), "")
       }),
+
       defaultSidebarWidth: Setting.Session({
         value: 210
       }),
@@ -113,9 +121,6 @@ export default class Config {
       tagScriptNumber: Setting.Session({
         value: 1
       }),
-      tagScripts: Setting.Session({
-        value: _.fill(Array(10), "")
-      }),
       headerState: Setting.Session({
         value: "ex-fixed"
       }),
@@ -123,17 +128,16 @@ export default class Config {
   }
 
   constructor() {
-    this.storage = window.localStorage;
-
     if ($("#c-users #a-edit").length) {
       this.initializeForm();
     }
   }
 
   get(key) {
+    const item = Config.Items[key];
     const value = JSON.parse(_.defaultTo(
-      this.storage["EX.config." + key],
-      JSON.stringify(Config.Defaults[key].value)
+      item.storage["EX.config." + key],
+      JSON.stringify(item.value)
     ));
 
     console.log(`[CFG] READ EX.config.${key}:`, value);
@@ -141,18 +145,19 @@ export default class Config {
   }
 
   set(key, value) {
-    this.storage["EX.config." + key] = JSON.stringify(value);
+    const item = Config.Items[key];
+    item.storage["EX.config." + key] = JSON.stringify(value);
     console.log(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
   get all() {
-    return _.mapValues(Config.Defaults, (v, k) => this.get(k));
+    return _.mapValues(Config.Items, (v, k) => this.get(k));
   }
 
   reset() {
-    _(Config.Defaults).keys().each(key => {
-      delete this.storage["EX.config." + key]
+    _(Config.Items).each((item, key) => {
+      delete item.storage["EX.config." + key]
     });
 
     return this;
@@ -166,7 +171,7 @@ export default class Config {
 
   initializeForm() {
     const settingsHtml =
-      _(Config.Defaults)
+      _(Config.Items)
       .map((props, name) => _.merge(props, { name }))
       .filter("configurable")
       .map(setting => this.renderOption(setting))
@@ -225,7 +230,7 @@ export default class Config {
 }
 
 // Define getters/setters for `Config.showHeaderBar` et al.
-for (let k of _.keys(Config.Defaults)) {
+for (let k of _.keys(Config.Items)) {
   const key = k;
   Object.defineProperty(Config.prototype, key, {
     get: function ()  { return this.get(key) },
