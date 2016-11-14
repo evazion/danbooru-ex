@@ -347,3 +347,8 @@ a.ui-icon.collapsible-header {
 .spoiler:not(:hover) a {
     color: black !important;
 }
+
+.paginator menu li {
+    line-height: 2.5em;
+    display: inline-block;
+}
