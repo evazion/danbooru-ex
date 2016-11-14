@@ -16,8 +16,9 @@ export default window.EX = class EX {
 
   static initialize() {
     console.timeEnd("preinit");
-
     console.groupCollapsed("settings");
+
+    EX.version = GM_info.script.version;
     EX.config = new EX.Config();
 
     EX.config.enableHeader && UI.Header.initialize();
