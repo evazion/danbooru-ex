@@ -14,17 +14,19 @@ export default class PreviewPanel {
       #c-pools #a-show,
       #c-comments #a-index,
       #c-moderator-post-queues #a-show,
-      #c-users #a-show
+      #c-users #a-show,
+      #c-wiki-pages > div > #content,
+      #c-wiki-page-versions > div > #content
     `);
 
     if ($content.length === 0) {
       return;
     }
 
-    $content.parent().addClass("ex-preview-panel-container");
-    $content.addClass("ex-content-panel");
+    $content.parent().addClass("ex-panel-container");
+    $content.addClass("ex-content-panel ex-panel");
     $content.after(`
-      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer"></section>
+      <div id="ex-preview-panel-resizer" class="ex-vertical-resizer"></div>
       <section id="ex-preview-panel" class="ex-panel">
         <div>
           <article>
