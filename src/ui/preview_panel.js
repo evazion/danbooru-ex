@@ -44,7 +44,7 @@ export default class PreviewPanel {
     PreviewPanel.save();
 
     if (ModeMenu.getMode() === "view") {
-      $("#ex-preview-panel").hide();
+      PreviewPanel.$panel.hide();
     }
 
     $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
@@ -57,6 +57,10 @@ export default class PreviewPanel {
     });
   }
 
+  static get $panel() {
+    return $("#ex-preview-panel");
+  }
+
   static resize(e, ui) {
     // XXX magic number
     PreviewPanel.setWidth($("body").innerWidth() - ui.position.left - 28);
@@ -64,18 +68,22 @@ export default class PreviewPanel {
 
   static save() {
     let state = EX.config.previewPanelState;
-    state[EX.config.pageKey()] = $("#ex-preview-panel").width();
+    state[EX.config.pageKey()] = PreviewPanel.$panel.width();
     EX.config.previewPanelState = state;
   };
 
   static open() {
-    $("#ex-preview-panel").show({ effect: "slide", direction: "left" }).promise().then((e) => {
+    if (PreviewPanel.$panel.width() === 0) {
+      PreviewPanel.setWidth(EX.config.defaultPreviewPanelWidth);
+    }
+
+    PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then((e) => {
       PreviewPanel.save();
     });
   }
 
   static close() {
-    $("#ex-preview-panel").hide({ effect: "slide", direction: "right" }).promise().then((e) => {
+    PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then((e) => {
       PreviewPanel.save();
     });
   }
@@ -89,7 +97,7 @@ export default class PreviewPanel {
   }
 
   static setWidth(width) {
-    $("#ex-preview-panel").width(width);
+    PreviewPanel.$panel.css({ flex: `0 0 ${width}px` });
     $("#ex-preview-panel > div").width(width);
   }
 
