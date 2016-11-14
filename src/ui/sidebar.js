@@ -1,39 +1,69 @@
+import _ from "lodash";
+import $ from "jquery";
+
 export default class Sidebar {
   static initialize() {
-    let $sidebar = $("#sidebar");
+    let $sidebar = Sidebar.$panel;
 
     if ($sidebar.length === 0) {
       return;
     }
     
     $sidebar.parent().addClass("ex-panel-container");
+    $sidebar.addClass("ex-panel")
 
     const width = _.defaultTo(EX.config.sidebarState[EX.config.pageKey()], EX.config.defaultSidebarWidth);
-    $sidebar.toggle(width > 0);
+    Sidebar.width = width;
 
-    $sidebar.addClass("ex-panel").css({ flex: `0 0 ${width}px` });
     $sidebar.after(`
       <div id="ex-sidebar-resizer" class="ex-vertical-resizer"></div>
     `);
 
-    // XXX fix magic numbers (28 = 2em).
-    const drag = function (e, ui) {
-      const width = Math.max(0, ui.position.left - 28);
-      $sidebar.css({ flex: `0 0 ${width}px` });
-      $sidebar.toggle($sidebar.width() > 0);
-    }
-
-    const stop = function (e, ui) {
-      let state = EX.config.sidebarState;
-      state[EX.config.pageKey()] = Math.max(0, ui.position.left - 28);
-      EX.config.sidebarState = state;
-    };
-
     $("#ex-sidebar-resizer").draggable({
       axis: "x",
       helper: "clone",
-      drag: _.throttle(drag, 16),
-      stop: _.debounce(stop, 100),
+      drag: _.throttle(Sidebar.resize, 16),
+      stop: _.debounce(Sidebar.save, 100),
     });
+  }
+
+  static resize(event, ui) {
+    const width = Math.max(0, ui.position.left - Sidebar.$panel.position().left);
+    Sidebar.width = width;
+  }
+
+  static open() {
+    if (Sidebar.width === 0) {
+      Sidebar.width = EX.config.defaultSidebarWidth;
+    }
+
+    Sidebar.$panel.show({ effect: "slide", direction: "right" }).promise().then((e) => {
+      Sidebar.save();
+    });
+  }
+
+  static close() {
+    Sidebar.$panel.hide({ effect: "slide", direction: "left" }).promise().then((e) => {
+      Sidebar.save();
+    });
+  }
+
+  static save() {
+    let state = EX.config.sidebarState;
+    state[EX.config.pageKey()] = Math.max(0, Sidebar.width);
+    EX.config.sidebarState = state;
+  }
+
+  static get $panel() {
+    return $("#sidebar");
+  }
+
+  static get width() {
+    return Sidebar.$panel.width();
+  }
+
+  static set width(width) {
+    Sidebar.$panel.width(width);
+    Sidebar.$panel.toggle(Sidebar.$panel.width() > 0);
   }
 }
