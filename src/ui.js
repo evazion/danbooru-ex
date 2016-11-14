@@ -2,6 +2,7 @@ import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
 import Notes        from "./ui/notes.js";
 import PreviewPanel from "./ui/preview_panel.js";
+import Sidebar      from "./ui/sidebar.js";
 
 import Artists      from "./ui/artists.js";
 import Comments     from "./ui/comments.js";
@@ -27,7 +28,6 @@ export default class UI {
     EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
-    EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
     EX.config.enableHotkeys && UI.initialize_hotkeys();
   }
 
@@ -213,40 +213,6 @@ export default class UI {
     });
   }
 
-  static initialize_resizeable_sidebar() {
-    let $sidebar = $("#sidebar");
-
-    if ($sidebar.length === 0) {
-      return;
-    }
-
-    const width = _.defaultTo(EX.config.sidebarState[EX.config.pageKey()], EX.config.defaultSidebarWidth);
-    $sidebar.toggle(width > 0);
-
-    $sidebar.addClass("ex-panel").width(width).after(`
-      <section id="ex-sidebar-resizer" class="ex-vertical-resizer"></section>
-    `);
-
-    // XXX fix magic numbers (28 = 2em).
-    const drag = function (e, ui) {
-      $sidebar.width(Math.max(0, ui.position.left - 28));
-      $sidebar.toggle($sidebar.width() > 0);
-    }
-
-    const stop = function (e, ui) {
-      let state = EX.config.sidebarState;
-      state[EX.config.pageKey()] = Math.max(0, ui.position.left - 28);
-      EX.config.sidebarState = state;
-    };
-
-    $("#ex-sidebar-resizer").draggable({
-      axis: "x",
-      helper: "clone",
-      drag: _.throttle(drag, 16),
-      stop: _.debounce(stop, 100),
-    });
-  }
-
   // Global keybindings.
   // - Escape: Close notice popups.
   // - W: Smooth scroll up.
@@ -357,6 +323,7 @@ UI.Header = Header;
 UI.ModeMenu = ModeMenu;
 UI.Notes = Notes;
 UI.PreviewPanel = PreviewPanel;
+UI.Sidebar = Sidebar;
 
 UI.Artists = Artists;
 UI.Comments = Comments;

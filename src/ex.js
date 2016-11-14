@@ -21,6 +21,7 @@ export default window.EX = class EX {
     EX.config = new EX.Config();
 
     EX.config.enableHeader && UI.Header.initialize();
+    EX.config.resizeableSidebars && UI.Sidebar.initialize();
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
