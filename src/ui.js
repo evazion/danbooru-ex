@@ -1,6 +1,7 @@
 import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
 import Notes        from "./ui/notes.js";
+import PostPreviews from "./ui/post_previews.js";
 import PreviewPanel from "./ui/preview_panel.js";
 import Sidebar      from "./ui/sidebar.js";
 
@@ -24,8 +25,6 @@ export default class UI {
     UI.initialize_moment();
     UI.initialize_patches();
 
-    EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
-    EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
     EX.config.enableHotkeys && UI.initialize_hotkeys();
@@ -79,76 +78,6 @@ export default class UI {
 
     moment.locale("en");
     moment.defaultFormat = "MMMM Do YYYY, h:mm a";
-  }
-
-  // Show post previews when hovering over post #1234 links.
-  static initialize_post_link_previews() {
-    $('a[href^="/posts/"]')
-      .filter((i, e) => /post #\d+/.test($(e).text()))
-      .addClass('ex-thumbnail-tooltip-link');
-
-    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
-  }
-
-  // Show post previews when hovering over thumbnails.
-  static initialize_post_thumbnail_previews() {
-    // The thumbnail container is .post-preview on every page but comments and
-    // the mod queue. Handle those specially.
-    if ($("#c-comments").length) {
-      $("#c-comments .post-preview .preview img").addClass('ex-thumbnail-tooltip-link');
-    } else if ($("#c-post-moderator-queues").length) {
-      $("#c-post-moderator-queues .mod-queue-preview aside img").addClass('ex-thumbnail-tooltip-link');
-    } else {
-      $(".post-preview img").addClass('ex-thumbnail-tooltip-link');
-    }
-
-    $(document).on("ex.post-preview:create", event => {
-      const $post = $(event.target).find("img").addClass('ex-thumbnail-tooltip-link');
-      UI.install_tooltips($post);
-      return false;
-    });
-
-    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
-  }
-
-  static install_tooltips($target) {
-    const max_size = 450;
-
-    $target.tooltip({
-      items: "*",
-      content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: EX.config.thumbnailPreviewDelay },
-      position: {
-        my: "left+10 top",
-        at: "right top",
-      },
-      open: (e, ui) => {
-        try {
-          // XXX should instead disable thumbnails when preview panel is open.
-          if (ModeMenu.getMode() === "preview" || ModeMenu.getMode() === "tag-script") {
-            $(ui.tooltip).css({ visibility: "hidden" });
-            return;
-          }
-
-          let $e = $(e.target);
-          let $link = $e;
-
-          // XXX hack
-          if ($e.prop("nodeName") === "IMG") {
-            $link = $e.closest("a");
-          }
-
-          const id = $link.attr('href').match(/\/posts\/(\d+)/)[1];
-
-          // XXX avoid lookup on tooltip open.
-          $.getJSON(`/posts/${id}.json`).then(post =>
-            $(ui.tooltip).html(Posts.preview(post, { size: "large", classes: [ "ex-thumbnail-tooltip" ]}))
-          );
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    });
   }
 
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
@@ -322,6 +251,7 @@ export default class UI {
 UI.Header = Header;
 UI.ModeMenu = ModeMenu;
 UI.Notes = Notes;
+UI.PostPreviews = PostPreviews;
 UI.PreviewPanel = PreviewPanel;
 UI.Sidebar = Sidebar;
 
