@@ -7,6 +7,7 @@ export default class Posts {
       return;
     }
 
+    $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
     Posts.initialize_patches();
     Posts.initializeTagList();
