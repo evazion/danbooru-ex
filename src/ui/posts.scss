@@ -33,8 +33,36 @@
     white-space: initial;
 }
 
-/* Fit posts to screen width. */
-#image {
+#c-posts #a-show {
+/*
+    #image-container {
+        position: relative;
+        display: inline-block;
+
+        .desc {
+            display: none;
+        }
+    }
+
+    #note-container {
+        position: initial;
+
+        .note-box {
+            background: hsla(60,100%,97%,0.5);
+            outline: 1px solid white;
+            border: 1px solid black;
+            box-sizing: border-box;
+
+            .note-box-inner-border {
+                display: none;
+            }
+        }
+    }
+*/
+}
+
+// Fit posts to screen width.
+.ex-fit-width {
     max-width: 100%;
     height: auto !important;
 }
