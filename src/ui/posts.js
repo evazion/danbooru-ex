@@ -141,18 +141,40 @@ export default class Posts {
       data-preview-file-url="${post.preview_file_url}"
     `;
 
-    const src = (size === "preview") ? post.preview_file_url
-              : (size === "large")   ? post.large_file_url
-              : post.file_url;
+    let src, scale;
+    if (size === "preview") {
+      src = post.preview_file_url;
 
-    // XXX only do this if <video>.
-    const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
-    const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
-    const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+      scale = Math.min(150 / post.image_width, 150 / post.image_height);
+      scale = Math.min(1, scale);
+    } else if (size === "large") {
+      src = post.large_file_url;
 
-    const media = (post.file_ext.match(/webm|mp4|zip/) && size != "preview")
-                ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_.escape(post.tag_string)}">`
-                : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_.escape(post.tag_string)}">`;
+      scale = Math.min(1, 850 / post.image_width);
+    } else {
+      src = post.file_url;
+
+      scale = 1;
+    }
+
+    const [width, height] = [Math.round(post.image_width * scale), Math.round(post.image_height * scale)];
+
+    let media;
+    if (post.file_ext.match(/webm|mp4|zip/) && size != "preview") {
+      const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
+      const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
+      const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+
+      media = `
+        <video class="post-media" ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
+               src="${src}" title="${_.escape(post.tag_string)}">
+      `;
+    } else {
+      media = `
+        <img class="post-media" itemprop="thumbnailUrl" width="${width}" height="${height}"
+             src="${src}" title="${_.escape(post.tag_string)}">
+      `;
+    }
 
     // XXX get the tag params from the URL if on /posts.
     const tag_params = "";
