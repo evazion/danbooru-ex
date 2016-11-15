@@ -92,7 +92,7 @@ export default class Users {
         const limit = 30;
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
-        Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
+        Post.index({ tags: $gallery.data("tags"), page, limit }).then(posts => {
           console.log("inserting thumbnails");
           const html = posts.map(Posts.preview).join("");
 

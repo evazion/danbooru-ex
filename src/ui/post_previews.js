@@ -2,69 +2,67 @@ import _ from "lodash";
 import $ from "jquery";
 import ModeMenu from "./mode_menu.js";
 import Posts from "./posts.js";
+import Post from "../post.js";
 
 export default class PostPreviews {
   // Show post previews when hovering over post #1234 links.
   static initializePostLinkPreviews() {
-    const posts = $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text()));
-    PostPreviews.initialize(posts);
+    // const posts = $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text()));
+    // PostPreviews.initialize('a[href^="/posts/"]');
   }
 
   // Show post previews when hovering over thumbnails.
   static initializeThumbnailPreviews() {
     // The thumbnail container is .post-preview on every page but comments and
     // the mod queue. Handle those specially.
-    const posts = $(`
-      .post-preview > a > img,
+    const posts = `
+      .post-preview:not(.ex-no-tooltip) > a > img,
       #c-comments .post-preview > .preview > a > img,
       #c-post-moderator-queues .mod-queue-preview aside img
-    `);
+    `;
 
     PostPreviews.initialize(posts);
-
-    $(document).on("ex.post-preview:create", event => {
-      const $post = $(event.target).find("img");
-      PostPreviews.initialize($post);
-    });
   }
 
-  static initialize($target) {
-    const max_size = 450;
+  static initialize(selector) {
+    $(document).on('mouseover', selector, event => {
+      const delay = EX.config.thumbnailPreviewDelay;
+      const [match, postID] = $(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
 
-    $target.tooltip({
-      items: "*",
-      content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: EX.config.thumbnailPreviewDelay },
-      position: {
-        my: "left+10 top",
-        at: "right top",
-      },
-      open: (e, ui) => {
-        try {
-          // XXX should instead disable thumbnails when preview panel is open.
-          if (ModeMenu.getMode() === "preview" || ModeMenu.getMode() === "tag-script") {
-            $(ui.tooltip).css({ visibility: "hidden" });
-            return;
+      $(event.target).qtip({
+        content: {
+          text: (event, api) => {
+            Post.get(postID).then(post => {
+              debugger;
+              api.set("content.text", Posts.renderExcerpt(post));
+              api.reposition(event);
+            });
+
+            return "Loading...";
           }
-
-          let $e = $(e.target);
-          let $link = $e;
-
-          // XXX hack
-          if ($e.prop("nodeName") === "IMG") {
-            $link = $e.closest("a");
+        },
+        overwrite: false,
+        style: {
+          classes: "qtip-bootstrap",
+        },
+        show: {
+          delay: delay,
+          solo: true,
+          event: event.type,
+          ready: true
+        },
+        hide: {
+          delay: 100,
+          fixed: true,
+        },
+        position: {
+          my: "left center",
+          at: "right center",
+          adjust: {
+            method: "flip shift"
           }
-
-          const id = $link.attr('href').match(/\/posts\/(\d+)/)[1];
-
-          // XXX avoid lookup on tooltip open.
-          $.getJSON(`/posts/${id}.json`).then(post =>
-            $(ui.tooltip).html(Posts.preview(post, { size: "large", classes: [ "ex-thumbnail-tooltip" ]}))
-          );
-        } catch (e) {
-          console.log(e);
         }
-      }
+      }, event);
     });
   }
 }

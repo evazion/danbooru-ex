@@ -72,7 +72,7 @@ export default class PreviewPanel {
     let state = EX.config.previewPanelState;
     state[EX.config.pageKey()] = PreviewPanel.$panel.width();
     EX.config.previewPanelState = state;
-  };
+  }
 
   static open() {
     if (PreviewPanel.$panel.width() === 0) {

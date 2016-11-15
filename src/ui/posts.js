@@ -162,4 +162,18 @@ export default class Posts {
       </article>
     `;
   }
+
+  static renderExcerpt(post) {
+    return `
+      <section class="ex-post-excerpt">
+        <h1 class="ex-post-excerpt-title">Post #${post.id}</h1>
+        <div class="ex-post-excerpt-body">
+          ${Posts.preview(post, { size: "large", classes: [ "ex-post-excerpt-preview", "ex-no-tooltip" ] })}
+          <div class="ex-post-excerpt-metadata">
+            ${post.tag_string}
+          </div>
+        </div>
+      </section>
+    `;
+  }
 }

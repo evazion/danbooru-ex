@@ -30,9 +30,9 @@ export default class Artists {
     let requests = [
       Artist.search(artists.map("id"), { order: UI.query("search[order]") }),
       Tag.search(artists.map("name"), { hide_empty: "no" }),
-      Artist.get({ search: { is_active: true, order: "created_at" }, limit: 8 }),
-      Artist.get({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
-      Artist.get({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: true, order: "created_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
     ]
 
     Promise.all(requests).then(([artists, tags, created, updated, deleted]) => {

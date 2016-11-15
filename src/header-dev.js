@@ -16,6 +16,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
 // @require      https://unpkg.com/filesize@3.3.0
 // @require      https://unpkg.com/css-element-queries@0.3.2/src/ResizeSensor.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.js
 // ==/UserScript==
 
 /*

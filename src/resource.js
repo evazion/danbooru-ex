@@ -2,12 +2,11 @@ import _ from "lodash";
 import $ from "jquery";
 
 export default class Resource {
-  static get(params) {
-    const url = "/" + _.snakeCase(this.name.toLowerCase() + "s");
-    const query = `${url}.json?${decodeURIComponent($.param(params))}`;
-    const request = $.getJSON(url, params);
-
+  static request(url, params = {}) {
+    const query = `${url}?${decodeURIComponent($.param(params))}`;
     console.time(`GET ${query}`);
+
+    const request = $.getJSON(url, params);
     console.log(`[NET] GET ${query}`, request);
 
     return request.always(() => {
@@ -16,11 +15,19 @@ export default class Resource {
     });
   }
 
+  static get(id, params = {}) {
+    return this.request(`${this.controller}/${id}.json`, params);
+  }
+
+  static index(params = {}) {
+    return this.request(`${this.controller}.json`, params);
+  }
+
   static search(values, otherParams) {
     const key = this.primaryKey;
     const requests = this.batch(values).map(batch => {
       const params = _.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
-      return this.get(params);
+      return this.index(params);
     });
 
     return Promise.all(requests).then(_.flatten);
@@ -52,5 +59,9 @@ export default class Resource {
 
   static get searchParams() {
     return { limit: 1000 };
+  }
+
+  static get controller() {
+    return "/" + _.snakeCase(this.name.toLowerCase() + "s");
   }
 }
