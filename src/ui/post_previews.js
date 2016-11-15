@@ -33,9 +33,8 @@ export default class PostPreviews {
         content: {
           text: (event, api) => {
             Post.get(postID).then(post => {
-              debugger;
               api.set("content.text", Posts.renderExcerpt(post));
-              api.reposition(event);
+              api.reposition(event, false);
             });
 
             return "Loading...";
@@ -44,6 +43,9 @@ export default class PostPreviews {
         overwrite: false,
         style: {
           classes: "qtip-bootstrap",
+          tip: {
+            corner: false,
+          }
         },
         show: {
           delay: delay,
@@ -56,10 +58,14 @@ export default class PostPreviews {
           fixed: true,
         },
         position: {
-          my: "left center",
-          at: "right center",
+          my: "center left",
+          at: "center right",
+          viewport: $(window),
           adjust: {
-            method: "flip shift"
+            method: "flipinvert shift",
+            resize: false,
+            scroll: false,
+            x: 10,
           }
         }
       }, event);

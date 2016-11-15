@@ -1,4 +1,5 @@
 import _ from "lodash";
+import Tag from "../tag.js";
 
 export default class Posts {
   static initialize() {
@@ -170,7 +171,7 @@ export default class Posts {
         <div class="ex-post-excerpt-body">
           ${Posts.preview(post, { size: "large", classes: [ "ex-post-excerpt-preview", "ex-no-tooltip" ] })}
           <div class="ex-post-excerpt-metadata">
-            ${post.tag_string}
+            ${Tag.renderTagList(post, "ex-tag-list-inline")}
           </div>
         </div>
       </section>

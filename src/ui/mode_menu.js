@@ -128,7 +128,7 @@ export default class ModeMenu {
       case "preview":
         let post = Posts.normalize($(event.target).closest(".post-preview").data());
 
-        const html = Posts.preview(post, { size: "large" });
+        const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
         $("#ex-preview-panel article").replaceWith(html);
 
         PreviewPanel.setHeight();

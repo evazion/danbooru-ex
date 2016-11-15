@@ -1,5 +1,6 @@
 import _ from "lodash";
 import Resource from "./resource.js";
+import Post from "./post.js";
 
 export default Resource.Tag = class Tag extends Resource {
   static get Categories() {
@@ -17,4 +18,23 @@ export default Resource.Tag = class Tag extends Resource {
   }
 
   static get primaryKey() { return "name"; }
+
+  static renderTag(tag) {
+    const href = `/posts?tags=${encodeURIComponent(tag.name)}`;
+    return `<a class="search-tag tag-type-${tag.category}" href="${href}">${_.escape(tag.name)}</a>`;
+  }
+
+  static renderTagListItem(tag) {
+    return `<li class="category-${tag.category}">${Tag.renderTag(tag)}</li>`;
+  }
+
+  static renderTagList(post, classes) {
+    const tags = Post.tags(post);
+    return `
+      <div class="ex-tag-list ${classes}">
+        <h1>Tags</h1>
+        <ul>${tags.map(Tag.renderTagListItem).join("")}</ul>
+      </div>
+    `;
+  }
 }
