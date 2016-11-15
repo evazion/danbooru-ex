@@ -1,6 +1,6 @@
 import _ from "lodash";
 import $ from "jquery";
-import ModeMenu from "./mode_menu.js";
+import PreviewPanel from "./preview_panel.js";
 import Posts from "./posts.js";
 import Post from "../post.js";
 
@@ -38,6 +38,13 @@ export default class PostPreviews {
             });
 
             return "Loading...";
+          }
+        },
+        events: {
+          show: (event, api) => {
+            if (PreviewPanel.opened()) {
+              event.preventDefault();
+            }
           }
         },
         overwrite: false,

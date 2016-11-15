@@ -74,6 +74,10 @@ export default class PreviewPanel {
     EX.config.previewPanelState = state;
   }
 
+  static opened() {
+    return PreviewPanel.$panel.is(":visible") && PreviewPanel.$panel.width() > 0;
+  }
+
   static open() {
     if (PreviewPanel.$panel.width() === 0) {
       PreviewPanel.setWidth(EX.config.defaultPreviewPanelWidth);
