@@ -1,0 +1,15 @@
+.ex-tag-list.ex-tag-list-inline {
+    h1 {
+        display: inline;
+        font-size: 1em;
+    }
+
+    ul {
+        display: inline;
+
+        li {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+    }
+}
