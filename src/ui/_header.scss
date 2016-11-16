@@ -1,0 +1,63 @@
+#ex-header {
+    display: flex;
+    position: absolute;
+    top: 0;
+    padding-top: 5px;
+    width: 100%;
+    z-index: 100;
+    background: white;
+    border-bottom: 1px solid #EEE;
+
+    h1 {
+        display: inline-block;
+        font-size: 2.5em;
+        margin: 0 30px;
+    }
+
+    .ex-search-box {
+        margin: auto;
+        display: flex;
+        flex: 0 1 30%;
+
+        input[name="tags"] {
+            flex: 0 1 100%;
+        }
+
+        input[type="submit"] {
+            flex: 1;
+            margin: auto 1em;
+        }
+    }
+
+    .ex-mode-menu {
+        margin: auto;
+        flex: 1 2 70%;
+
+        .ex-tag-script-controls {
+            display: inline-block;
+            margin: auto;
+        }
+
+        label {
+            font-weight: bold;
+            cursor: auto;
+        }
+    }
+
+    .ex-header-close {
+        margin: auto;
+        margin-right: 30px;
+        color: #0073ff;
+        cursor: pointer;
+    }
+
+    /* http://fontawesome.io/icon/times-circle/ */
+    &.ex-fixed .ex-header-close .fa::before {
+        content: "\f057";
+    }
+
+    /* http://fontawesome.io/icon/thumb-tack/ */
+    &.ex-static .ex-header-close .fa::before {
+        content: "\f08d";
+    }
+}

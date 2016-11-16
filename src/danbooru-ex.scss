@@ -1,78 +1,15 @@
 @import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
 @import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);
 
+@import "ui/header.scss";
 @import "ui/posts.scss";
 @import "ui/users.scss";
 @import "ui/panel.scss";
 @import "ui/post_previews.scss";
 @import "tag.scss";
 
-#ex-header {
-    display: flex;
-    position: absolute;
-    top: 0;
-    padding-top: 5px;
-    width: 100%;
-    z-index: 100;
-    background: white;
-    border-bottom: 1px solid #EEE;
-}
-
-#ex-header.ex-fixed {
-    position: fixed;
-}
-
-#ex-header h1 {
-    display: inline-block;
-    font-size: 2.5em;
-    margin: 0 30px;
-}
-
-#ex-header .ex-search-box {
-    margin: auto;
-    display: flex;
-    flex: 0 1 30%;
-}
-
-#ex-header .ex-search-box input[name="tags"] {
-    flex: 0 1 100%;
-}
-
-#ex-header .ex-search-box input[type="submit"] {
-    flex: 1;
-    margin: auto 1em;
-}
-
-#ex-header .ex-mode-menu {
-    margin: auto;
-    flex: 1 2 70%;
-}
-
-#ex-header .ex-mode-menu .ex-tag-script-controls {
-    display: inline-block;
-    margin: auto;
-}
-
-#ex-header .ex-mode-menu label {
-    font-weight: bold;
-    cursor: auto;
-}
-
-#ex-header .ex-header-close {
-    margin: auto;
-    margin-right: 30px;
-    color: #0073ff;
-    cursor: pointer;
-}
-
-/* http://fontawesome.io/icon/times-circle/ */
-#ex-header.ex-fixed .ex-header-close .fa::before {
-    content: "\f057";
-}
-
-/* http://fontawesome.io/icon/thumb-tack/ */
-#ex-header.ex-static .ex-header-close .fa::before {
-    content: "\f08d";
+.ex-fixed {
+    position: fixed !important;
 }
 
 @media (max-width: 1280px) {
