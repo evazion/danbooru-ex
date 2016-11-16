@@ -1,5 +1,15 @@
 $media-size: 400px;
 
+#ex-viewport {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    visibility: hidden;
+    margin: 4em;
+}
+
 .post-media {
     max-width: 100%;
     max-height: 100%;
