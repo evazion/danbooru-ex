@@ -24,17 +24,17 @@ export default Resource.Tag = class Tag extends Resource {
     return `<a class="search-tag tag-type-${tag.category}" href="${href}">${_.escape(tag.name)}</a>`;
   }
 
-  static renderTagListItem(tag) {
-    return `<li class="category-${tag.category}">${Tag.renderTag(tag)}</li>`;
-  }
-
   static renderTagList(post, classes) {
     const tags = Post.tags(post);
     return `
-      <div class="ex-tag-list ${classes}">
+      <section class="ex-tag-list ${classes}">
         <h1>Tags</h1>
         <ul>${tags.map(Tag.renderTagListItem).join("")}</ul>
-      </div>
+      </section>
     `;
+  }
+
+  static renderTagListItem(tag) {
+    return `<li class="category-${tag.category}">${Tag.renderTag(tag)}</li>`;
   }
 }
