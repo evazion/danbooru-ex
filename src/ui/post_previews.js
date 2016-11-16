@@ -71,8 +71,8 @@ export default class PostPreviews {
           fixed: true,
         },
         position: {
-          my: "center left",
-          at: "center right",
+          my: "top left",
+          at: "top right",
           viewport: $viewport,
           adjust: {
             method: "flipinvert shift",
