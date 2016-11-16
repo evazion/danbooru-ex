@@ -55,10 +55,10 @@ $media-size: 400px;
         border-radius: 0px;
     }
     ::-webkit-scrollbar-thumb:hover {
-        background: #ffffff;
+        background: #AAAAAA;
     }
     ::-webkit-scrollbar-thumb:active {
-        background: #ffffff;
+        background: #AAAAAA;
     }
     ::-webkit-scrollbar-track {
         background: #eeeeee;
@@ -69,7 +69,7 @@ $media-size: 400px;
         background: #eeeeee;
     }
     ::-webkit-scrollbar-track:active {
-        background: #333333;
+        background: #eeeeee;
     }
     ::-webkit-scrollbar-corner {
         background: transparent;
