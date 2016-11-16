@@ -1,19 +1,33 @@
 .ONESHELL:
-.PHONY: all bump serve watch clean
+.PHONY: all bump serve watch clean release changelog
 
-HEADER := src/header-dev.js
+VERSION := $(shell cat VERSION)
 
-all: dist/danbooru-ex.user.js rollup.config.js
-dist/danbooru-ex.user.js: $(shell find src) | bump dist
-	rollup --environment HEADER:$(HEADER) -c
+ifeq ($(MAKECMDGOALS),release)
+NAME := Danbooru EX
+URL  := https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
+else
+NAME := Danbooru EX (Beta)
+URL  := http://localhost:8000/danbooru-ex.user.js
+# URL  := https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
+endif
+
+all: dist/danbooru-ex.user.js | bump
+dist/danbooru-ex.user.js: $(shell find src) rollup.config.js VERSION Makefile | dist
+	NAME="$(NAME)" VERSION="$(VERSION)" URL="$(URL)" rollup -c
+
+release: all
+	git tag -a -m "Release $(VERSION)" "v$(VERSION)" 
+	git push --tags
+
+changelog:
+	bin/changelog.sh CHANGES.md | sponge CHANGES.md
 
 dist:
 	mkdir -p dist
 
 bump:
-	@V=$$(awk '/\/\/ @version      [[:digit:]]+/ { print $$3 + 1 }' $(HEADER))
-	@sed -i -r -e "s!(// @version      )[[:digit:]]+!\\1$$V!g" $(HEADER)
-	echo VERSION=$$V
+	@gawk -i inplace '/[[:digit:]]+/ { print $$1 + 1 }' VERSION
 
 serve:
 	@cd dist
