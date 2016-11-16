@@ -1,5 +1,6 @@
 import _ from "lodash";
 import Tag from "../tag.js";
+import User from "../user.js";
 
 export default class Posts {
   static initialize() {
@@ -187,10 +188,47 @@ export default class Posts {
     `;
   }
 
-  static renderExcerpt(post) {
+  static renderExcerpt(post, uploader) {
     return `
       <section class="ex-post-excerpt">
-        <h1 class="ex-post-excerpt-title">Post #${post.id}</h1>
+        <div class="ex-post-excerpt-title">
+          <span class="post-info id">
+            Post #${post.id}
+          </span>
+
+          <span class="separator">·</span>
+          <span class="post-info uploader">${User.render(uploader)}</span>
+
+          <span class="separator">·</span>
+          <time class="post-info created-at ex-short-relative-time"
+                datetime="${post.created_at}"
+                title="${moment(post.created_at).format()}">
+            ${moment(post.created_at).locale("en-short").fromNow()} ago
+          </time>
+
+          <span class="separator">·</span>
+          <span class="post-info up-score">
+            ${post.up_score}
+            <a href="#">
+              <i class="fa fa-lg fa-thumbs-o-up" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="post-info down-score">
+            ${post.down_score}
+            <a href="#">
+              <i class="fa fa-lg fa-thumbs-o-down" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="separator">·</span>
+          <span class="post-info fav-count">
+            <a href="#">${post.fav_count}</a>
+            <a href="#">
+              <i class="fa fa-lg fa-star-o" aria-hidden="true"></i>
+            </a>
+          </span>
+        </div>
         <div class="ex-post-excerpt-body">
           ${Posts.preview(post, { size: "large", classes: [ "ex-post-excerpt-preview", "ex-no-tooltip" ] })}
           <div class="ex-post-excerpt-metadata">

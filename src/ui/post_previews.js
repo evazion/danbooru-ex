@@ -3,6 +3,7 @@ import $ from "jquery";
 import PreviewPanel from "./preview_panel.js";
 import Posts from "./posts.js";
 import Post from "../post.js";
+import User from "../user.js";
 
 export default class PostPreviews {
   // Show post previews when hovering over post #1234 links.
@@ -36,8 +37,10 @@ export default class PostPreviews {
         content: {
           text: (event, api) => {
             Post.get(postID).then(post => {
-              api.set("content.text", Posts.renderExcerpt(post));
-              api.reposition(event, false);
+              User.get(post.uploader_id).then(uploader => {
+                api.set("content.text", Posts.renderExcerpt(post, uploader));
+                api.reposition(event, false);
+              });
             });
 
             return "Loading...";
