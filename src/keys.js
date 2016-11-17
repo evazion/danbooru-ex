@@ -118,6 +118,9 @@ export default class Keys {
       // XXX only do if no notice and not already in view mode.
       ModeMenu.setMode("view");
     }
+
+    // Allow event to bubble up so that escape still closes jquery UI dialogs.
+    return true;
   }
 
   static submitForm(event) {
