@@ -67,6 +67,14 @@ export default class Header {
     Danbooru.Autocomplete.initialize_all();
 
     $(".ex-header-close").click(Header.toggleClose);
+
+    $(document).scroll(_.throttle(Header.onScroll, 16));
+  }
+
+  static onScroll() {
+    $("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
+    // XXX Shrink header after scrolling past navbar.
+    // $("header h1").toggleClass("ex-small-header", window.scrollY > 0, { duration: 100 });
   }
 
   static initializeHotkeys() {
