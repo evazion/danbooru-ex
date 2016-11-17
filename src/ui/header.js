@@ -107,7 +107,7 @@ export default class Header {
               <option value="9">9</option>
             </select>
 
-            <input name="tag-script" type="text" placeholder="Enter tag script">
+            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" placeholder="Enter tag script">
             <button name="apply" type="button">Apply</button>
 
             <label>Select</label>
