@@ -24,12 +24,14 @@ export default {
         lodash: '_',
         jquery: 'jQuery',
         moment: 'moment',
+        mousetrap: "Mousetrap",
     },
     external: [
         'filesize',
         'jquery',
         'lodash',
         'moment',
+        'mousetrap',
     ],
     plugins: [
         sass({

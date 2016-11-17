@@ -7,7 +7,6 @@ import PreviewPanel from "./preview_panel.js";
 export default class Header {
   static initialize() {
     Header.initializeHeader();
-    Header.initializeActions();
 
     if (EX.config.enableModeMenu) {
       Header.initializeModeMenu();
@@ -35,14 +34,6 @@ export default class Header {
     ModeMenu.initialize();
   }
 
-  static initializeActions() {
-    $(Header.$el).on("ex.header-open", Header.open);
-    $(Header.$el).on("ex.header-close", Header.close);
-    $(Header.$el).on("ex.header-toggle", Header.toggle);
-    $(Header.$el).on("ex.header-focus-search", Header.focusSearch);
-    $(Header.$el).on("ex.header-execute-search-in-new-tab", Header.executeSearchInNewTab);
-  }
-
   static onScroll() {
     $("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
     // XXX Shrink header after scrolling past navbar.
@@ -61,6 +52,7 @@ export default class Header {
     // Add a space to end if box is non-empty and doesn't already have trailing space.
     Header.$tags.val().length && Header.$tags.val((i, v) => v.replace(/\s*$/, ' '));
     Header.$tags.focus();
+    return false;
   }
 
   static close() {

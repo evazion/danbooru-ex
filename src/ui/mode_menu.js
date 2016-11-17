@@ -9,7 +9,6 @@ export default class ModeMenu {
     ModeMenu.initializeModeMenu();
     ModeMenu.initializeTagScriptControls();
     ModeMenu.initializeThumbnails();
-    ModeMenu.initializeHotkeys();
   }
 
   static uninitializeDanbooruModeMenu() {
@@ -49,18 +48,6 @@ export default class ModeMenu {
     $(document).on("ex.post-preview:create", event => {
       $(event.target).find("a").click(ModeMenu.onThumbnailClick);
     });
-  }
-
-  static initializeHotkeys() {
-    $(document).keydown("1 2 3 4 5 6 7 8 9", ModeMenu.switchToTagScript);
-
-    $(document).keydown("shift+a", ModeMenu.applyTagScript);
-    $(document).keydown("ctrl+a",  ModeMenu.selectAll);
-    $(document).keydown("ctrl+i",  ModeMenu.invertSelection);
-
-    $(document).keydown("esc", e => ModeMenu.setMode("view"));
-    $(document).keydown("`", e => ModeMenu.toggleMode("preview"));
-    $(document).keydown("shift+`", e => ModeMenu.toggleMode("preview"));
   }
 
   static switchToTagScript(event) {

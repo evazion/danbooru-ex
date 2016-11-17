@@ -27,7 +27,6 @@ export default class UI {
 
     EX.config.styleWikiLinks && UI.initialize_wiki_links();
     EX.config.useRelativeTimestamps && UI.initialize_relative_times();
-    EX.config.enableHotkeys && UI.initialize_hotkeys();
   }
 
   // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
@@ -142,78 +141,6 @@ export default class UI {
     });
   }
 
-  // Global keybindings.
-  // - Escape: Close notice popups.
-  // - W: Smooth scroll up.
-  // - S: Smooth scroll down.
-  // - Ctrl+Enter: Submit form.
-  static initialize_hotkeys() {
-    // Escape: Close notice popups.
-    $(document).keydown('esc', e => $('#close-notice-link').click());
-
-    // Escape: Unfocus text entry field.
-    $('#tag-script-field').attr('type', 'text');
-    $('input[type=text],textarea').keydown('esc', e => $(e.target).blur());
-
-    UI.initialize_scroll_hotkeys();
-
-    if ($(".paginator").length) {
-      UI.initialize_paginator_hotkeys();
-    }
-
-    $(".dtext-previewable textarea").keydown("ctrl+return", e => {
-      $(e.target).closest("form").find('input[type="submit"][value="Submit"]').click();
-      e.preventDefault();
-    });
-  }
-
-  static initialize_scroll_hotkeys() {
-    let scroll = (direction, duration, distance) =>
-      _.throttle(() => {
-        const top = $(window).scrollTop() + direction * $(window).height() * distance;
-        $('html, body').animate({scrollTop: top}, duration, "linear");
-      }, duration);
-    /*
-    Danbooru.Shortcuts.nav_scroll_down =
-        () => Danbooru.scroll_to($(window).scrollTop() + $(window).height() * 0.15);
-    Danbooru.Shortcuts.nav_scroll_up =
-        () => Danbooru.scroll_to($(window).scrollTop() - $(window).height() * 0.15);
-    */
-
-    // Enable smooth scrolling with W/S keys.
-    Danbooru.Shortcuts.nav_scroll_down = scroll(+1, 50, 0.06);
-    Danbooru.Shortcuts.nav_scroll_up   = scroll(-1, 50, 0.06);
-  }
-
-  /*
-   * Shift+1..9: Jump to page N.
-   * Shift+0: Jump to last page.
-   */
-  static initialize_paginator_hotkeys() {
-    // Add paginator above results.
-    // $('.paginator').clone().insertBefore('#post-sections');
-
-    /* Shift+1..9: Jump to page N. */
-    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(n =>
-      $(document).keydown(`shift+${n}`, e => {
-        UI.gotoPage(n);
-        e.preventDefault();
-      })
-    );
-
-    // Shift+0: Switch to last page if there is one.
-    $(document).keydown(`shift+0`, e => {
-      e.preventDefault();
-
-      // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
-      const last_page = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
-
-      if (last_page) {
-        UI.gotoPage(last_page);
-      }
-    });
-  }
-
   static linkTo(name, path = "/", params = {}, ...classes) {
     const query = $.param(params);
     const href = (query === "")
@@ -236,15 +163,6 @@ export default class UI {
     const id = $show_link.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
 
     window.location.href = `/${controller}/${id}/edit`;
-  }
-
-  // Go to page N.
-  static gotoPage(n) {
-    if (location.search.match(/page=(\d+)/)) {
-      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
-    } else {
-      location.search += `&page=${n}`;
-    }
   }
 }
 
