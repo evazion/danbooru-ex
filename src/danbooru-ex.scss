@@ -12,17 +12,6 @@
     position: fixed !important;
 }
 
-@media (max-width: 1280px) {
-    #ex-header h1,
-    header#top h1 {
-        font-size: 1.5em;
-    }
-
-    #ex-header .ex-mode-menu label {
-        display: none;
-    }
-}
-
 /* Overrides for Danbooru's responsive layout */
 @media screen and (max-width: 660px) {
     body {

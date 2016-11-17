@@ -41,6 +41,10 @@
         label {
             font-weight: bold;
             cursor: auto;
+
+            @media (max-width: 1280px) {
+                display: none;
+            }
         }
     }
 
