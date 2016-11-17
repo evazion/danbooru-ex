@@ -1,9 +1,6 @@
 $media-size: 350px;
 $line-height: 21px;
 
-$border-color: #EEEEEE;
-$dim-text: #CCCCCC;
-
 #ex-viewport {
     position: fixed;
     top: 0;
@@ -35,7 +32,7 @@ $dim-text: #CCCCCC;
             font-size: 1em;
             margin-bottom: 1em;
             padding-bottom: 1em;
-            border-bottom: 1px solid $border-color;
+            border-bottom: 1px solid $dim-border-color;
 
             // Baseline align the title so the bottom margin/padding is correct.
             // https://blogs.adobe.com/webplatform/2014/08/13/one-weird-trick-to-baseline-align-text/
@@ -103,15 +100,15 @@ $dim-text: #CCCCCC;
         background: #AAAAAA;
     }
     ::-webkit-scrollbar-track {
-        background: #eeeeee;
+        background: $dim-border-color;
         border: 0px none #ffffff;
         border-radius: 0px;
     }
     ::-webkit-scrollbar-track:hover {
-        background: #eeeeee;
+        background: $dim-border-color;
     }
     ::-webkit-scrollbar-track:active {
-        background: #eeeeee;
+        background: $dim-border-color;
     }
     ::-webkit-scrollbar-corner {
         background: transparent;
