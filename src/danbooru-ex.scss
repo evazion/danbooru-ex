@@ -1,6 +1,9 @@
 @import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);
 @import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);
 
+$dim-border-color: #EEEEEE;
+$dim-text: #CCCCCC;
+
 @import "ui/header.scss";
 @import "ui/posts.scss";
 @import "ui/users.scss";
@@ -140,7 +143,7 @@ body.mode-preview #c-comments .post-preview .preview:hover,
 body.mode-tag-script article.post-preview:hover,
 body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,
 body.mode-tag-script #c-comments .post-preview .preview:hover {
-    background: #EEEEEE;
+    background: $dim-border-color;
 }
 
 body.mode-tag-script article.post-preview.ui-selected,
@@ -171,7 +174,7 @@ a.ui-icon.collapsible-header {
 }
 
 .ex-short-relative-time {
-  color: #CCC;
+  color: $dim-text;
   margin-left: 0.2em;
 }
 
