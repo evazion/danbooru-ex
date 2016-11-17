@@ -7,7 +7,7 @@ import PreviewPanel from "./preview_panel.js";
 export default class Header {
   static initialize() {
     Header.initializeHeader();
-    Header.initializeHotkeys();
+    Header.initializeActions();
 
     if (EX.config.enableModeMenu) {
       Header.initializeModeMenu();
@@ -23,11 +23,10 @@ export default class Header {
     _.defer(() => $header.show());
 
     // Initalize header search box.
-    $("#ex-header #tags").val($("#sidebar #tags").val());
+    Header.$tags.val($("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
 
-    $(".ex-header-close").click(Header.toggleClose);
-
+    Header.$close.click(Header.toggle);
     $(document).scroll(_.throttle(Header.onScroll, 16));
   }
 
@@ -36,22 +35,12 @@ export default class Header {
     ModeMenu.initialize();
   }
 
-  static initializeHotkeys() {
-    let $search = $("#ex-header #tags");
-
-    $search.keydown("ctrl+return", e => {
-      const tags = $(e.target).val().trim();
-      window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
-    });
-
-    // Shift+Q: Focus and search box.
-    $(document).keydown('shift+q', e => {
-      // Add a space to end if box is non-empty and doesn't already have trailing space.
-      $search.val().length && $search.val((i, v) => v.replace(/\s*$/, ' '));
-      $search.focus();
-
-      e.preventDefault();
-    });
+  static initializeActions() {
+    $(Header.$el).on("ex.header-open", Header.open);
+    $(Header.$el).on("ex.header-close", Header.close);
+    $(Header.$el).on("ex.header-toggle", Header.toggle);
+    $(Header.$el).on("ex.header-focus-search", Header.focusSearch);
+    $(Header.$el).on("ex.header-execute-search-in-new-tab", Header.executeSearchInNewTab);
   }
 
   static onScroll() {
@@ -60,21 +49,37 @@ export default class Header {
     // $("header h1").toggleClass("ex-small-header", window.scrollY > 0, { duration: 100 });
   }
 
-  static toggleClose(event) {
-    let $header = $("#ex-header");
-
-    if ($header.hasClass("ex-fixed")) {
-      $header.slideUp().promise().then(e => {
-        $header.toggleClass("ex-fixed ex-static").show();
-        EX.config.headerState = $header.attr("class");
-      });
-    } else {
-      $header.toggleClass("ex-fixed ex-static");
-      EX.config.headerState = $header.attr("class");
+  static executeSearchInNewTab() {
+    // XXX
+    if ($("#ex-header #tags:focus").length) {
+      const tags = Header.$tags.val().trim();
+      window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
     }
-
-    event.preventDefault();
   }
+
+  static focusSearch() {
+    // Add a space to end if box is non-empty and doesn't already have trailing space.
+    Header.$tags.val().length && Header.$tags.val((i, v) => v.replace(/\s*$/, ' '));
+    Header.$tags.focus();
+  }
+
+  static close() {
+    Header.$el.addClass("ex-static").removeClass("ex-fixed");
+    EX.config.headerState = Header.$el.attr("class");
+  }
+
+  static open() {
+    Header.$el.addClass("ex-fixed").removeClass("ex-static");
+    EX.config.headerState = Header.$el.attr("class");
+  }
+
+  static toggle() {
+    return Header.$el.hasClass("ex-fixed") ? Header.close() : Header.open();
+  }
+
+  static get $el()    { return $("#ex-header"); }
+  static get $close() { return $("#ex-header .ex-header-close"); }
+  static get $tags()  { return $("#ex-header #tags"); }
 
   static render() {
     return `

@@ -1,9 +1,9 @@
 import jQuery from "jquery";
 import moment from "moment";
-window.moment = moment;
 
 import Config from "./config.js";
 import DText from "./dtext.js";
+import Keys from "./keys.js";
 import Resource from "./resource.js";
 import UI from "./ui.js";
 import "./danbooru-ex.scss";
@@ -11,6 +11,7 @@ import "./danbooru-ex.scss";
 export default window.EX = class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
+  static get Keys() { return Keys; }
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
@@ -26,6 +27,7 @@ export default window.EX = class EX {
     EX.config.showThumbnailPreviews && UI.PostPreviews.initializeThumbnailPreviews();
     EX.config.showPostLinkPreviews && UI.PostPreviews.initializePostLinkPreviews();
     EX.UI.initialize();
+    EX.config.enableHotkeys && EX.Keys.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
 

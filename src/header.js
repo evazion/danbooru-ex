@@ -17,6 +17,7 @@
 // @require      https://unpkg.com/filesize@3.3.0
 // @require      https://unpkg.com/css-element-queries@0.3.2/src/ResizeSensor.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.js
+// @require      https://raw.githubusercontent.com/dmauro/Keypress/development/keypress-2.1.4.min.js
 // ==/UserScript==
 
 /*
@@ -27,3 +28,6 @@ console.log("Danbooru EX:", GM_info.script.version);
 console.time("loaded");
 console.time("preinit");
 console.time("initialized");
+
+window.moment = moment;
+window.Keypress = window.keypress.Listener;
