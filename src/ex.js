@@ -3,6 +3,7 @@ import $ from "jquery";
 import Config from "./config.js";
 import DText from "./dtext.js";
 import Keys from "./keys.js";
+import PseudoTagTypes from "./pseudo_tag_types.js";
 import Resource from "./resource.js";
 import UI from "./ui.js";
 import "./danbooru-ex.scss";
@@ -11,6 +12,7 @@ export default window.EX = class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
   static get Keys() { return Keys; }
+  static get PseudoTagTypes() { return PseudoTagTypes; }
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
@@ -31,6 +33,8 @@ export default window.EX = class EX {
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
+    // XXX
+    EX.PseudoTagTypes.initialize();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();

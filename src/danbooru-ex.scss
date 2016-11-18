@@ -10,6 +10,7 @@ $dim-text: #CCCCCC;
 @import "ui/panel.scss";
 @import "ui/post_previews.scss";
 @import "tag.scss";
+@import "pseudo_tag_types.scss";
 
 .ex-fixed {
     position: fixed !important;

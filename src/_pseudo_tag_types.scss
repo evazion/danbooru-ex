@@ -1,0 +1,49 @@
+
+/*
+red
+orange
+green
+purple
+#6633FF (light purple)
+gray
+#0000FF (blue)
+
+0 - hsl(213, 100%, 50%);
+1 - #A00
+3 - #A0A
+4 - #0A0
+
+#CCC
+*/
+
+@mixin def-tag-type($type, $color, $order) {
+    .ex-general-tag-list, .row.list-of-tags {
+        .ex-tag-type-#{$type} {
+            order: $order;
+        }
+    }
+
+    a.ex-tag-type-#{$type} {
+        color: $color !important;
+    }
+}
+
+@include def-tag-type(meme,              purple,     -200);
+@include def-tag-type(image-composition, #0000FF,    -190);
+@include def-tag-type(text,              blue,       -180);
+@include def-tag-type(artistic-license,  red,        -170);
+@include def-tag-type(posture,           green,      -160);
+@include def-tag-type(face-tags,         lightgreen, -150);
+@include def-tag-type(hair-color,        brown,      -140);
+@include def-tag-type(hair-styles,       brown,      -130);
+@include def-tag-type(hair,              brown,      -120);
+@include def-tag-type(body-parts,        red,        -110);
+@include def-tag-type(nudity,            #6633FF,    -100);
+@include def-tag-type(sex-acts,          orange,     -90);
+@include def-tag-type(sexual-positions,  red,        -80);
+@include def-tag-type(attire,            teal,       -70);
+
+.ex-general-tag-list {
+    display: flex;
+    flex-direction: column;
+}
