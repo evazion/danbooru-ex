@@ -1,4 +1,6 @@
-import EX from "../ex.js";
+/* global Danbooru */
+
+import _ from "lodash";
 
 export default class Notes {
   static initialize() {

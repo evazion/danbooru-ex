@@ -1,4 +1,10 @@
+/* global Danbooru */
+
 import _ from "lodash";
+import moment from "moment";
+import ResizeSensor from "resizesensor";
+
+import EX from "../ex.js";
 import Tag from "../tag.js";
 import User from "../user.js";
 
@@ -74,8 +80,8 @@ export default class Posts {
     $(document).keydown("alt+q", rate(post_id, 'q'));
     $(document).keydown("alt+e", rate(post_id, 'e'));
 
-    $(document).keydown("u",     e => Danbooru.Post.vote('up',   post_id));
-    $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
+    $(document).keydown("u",     () => Danbooru.Post.vote('up',   post_id));
+    $(document).keydown("alt+u", () => Danbooru.Post.vote('down', post_id));
   }
 
   static initialize_video() {

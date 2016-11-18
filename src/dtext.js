@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 export default class DText {
   static create_expandable(name, content) {
     const $expandable = $(`

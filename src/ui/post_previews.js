@@ -1,5 +1,6 @@
-import _ from "lodash";
 import $ from "jquery";
+
+import EX from "../ex.js";
 import PreviewPanel from "./preview_panel.js";
 import Posts from "./posts.js";
 import Post from "../post.js";
@@ -31,7 +32,7 @@ export default class PostPreviews {
 
     $(document).on('mouseover', selector, event => {
       const delay = EX.config.thumbnailPreviewDelay;
-      const [match, postID] = $(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
+      const [, postID] = $(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
 
       $(event.target).qtip({
         content: {
@@ -47,7 +48,7 @@ export default class PostPreviews {
           }
         },
         events: {
-          show: (event, api) => {
+          show: (event) => {
             if (PreviewPanel.opened()) {
               event.preventDefault();
             }

@@ -1,3 +1,5 @@
+/* global Danbooru */
+
 import _ from "lodash";
 import Mousetrap from "mousetrap";
 

@@ -1,5 +1,6 @@
 import $ from "jquery";
 import _ from "lodash";
+import moment from "moment";
 
 import Posts from "./posts.js";
 import Post from "../post.js";
@@ -77,7 +78,7 @@ export default class Users {
 
       // Store the tag search corresponding to this gallery section in a data
       // attribute for the click handler.
-      const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
+      const [, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
       $gallery.attr("data-tags", decodeURIComponent(tags));
 
       $gallery.find("> div").append(`

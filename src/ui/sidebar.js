@@ -1,6 +1,8 @@
 import _ from "lodash";
 import $ from "jquery";
 
+import EX from "../ex.js";
+
 export default class Sidebar {
   static initialize() {
     let $sidebar = Sidebar.$panel;
@@ -37,15 +39,11 @@ export default class Sidebar {
       Sidebar.width = EX.config.defaultSidebarWidth;
     }
 
-    Sidebar.$panel.show({ effect: "slide", direction: "right" }).promise().then((e) => {
-      Sidebar.save();
-    });
+    Sidebar.$panel.show({ effect: "slide", direction: "right" }).promise().then(Sidebar.save);
   }
 
   static close() {
-    Sidebar.$panel.hide({ effect: "slide", direction: "left" }).promise().then((e) => {
-      Sidebar.save();
-    });
+    Sidebar.$panel.hide({ effect: "slide", direction: "left" }).promise().then(Sidebar.save);
   }
 
   static save() {

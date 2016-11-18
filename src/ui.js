@@ -1,3 +1,5 @@
+/* global Danbooru */
+
 import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
 import Notes        from "./ui/notes.js";
@@ -14,10 +16,11 @@ import PostVersions from "./ui/post_versions.js";
 import Users        from "./ui/users.js";
 import WikiPages    from "./ui/wiki_pages.js";
 
+import EX from "./ex.js";
 import Tag from "./tag.js";
-import User from "./user.js";
 
 import _ from "lodash";
+import moment from "moment";
 
 export default class UI {
   static initialize() {

@@ -1,5 +1,4 @@
-import jQuery from "jquery";
-import moment from "moment";
+import $ from "jquery";
 
 import Config from "./config.js";
 import DText from "./dtext.js";
@@ -48,12 +47,12 @@ export default window.EX = class EX {
 }
 
 console.log("Danbooru:", window.Danbooru);
-console.log("EX:", EX);
+console.log("EX:", window.EX);
 
 console.timeEnd("loaded");
 $(function () {
   try {
-    EX.initialize();
+    window.EX.initialize();
   } catch(e) {
     console.trace(e);
     $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);

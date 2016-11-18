@@ -1,4 +1,8 @@
+/* global Danbooru */
+
 import Resource from "./resource.js";
+
+import _ from "lodash";
 
 export default Resource.User = class User extends Resource {
   static get primaryKey() { return "id"; }

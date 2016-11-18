@@ -9,7 +9,6 @@ export default class ForumPosts {
   static initialize_permalinks() {
     $(".forum-post menu").each((i, e) => {
       let $forum_id  = $(e).find("li:nth-child(1)");
-      let $quote     = $(e).find("li:nth-child(2)");
       let $permalink = $(e).find("li:last-child");
 
       $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);

@@ -1,4 +1,6 @@
+import EX from "../ex.js";
 import ModeMenu from "./mode_menu.js";
+
 import _ from "lodash";
 
 export default class PreviewPanel {
@@ -83,15 +85,11 @@ export default class PreviewPanel {
       PreviewPanel.setWidth(EX.config.defaultPreviewPanelWidth);
     }
 
-    PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then((e) => {
-      PreviewPanel.save();
-    });
+    PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then(PreviewPanel.save);
   }
 
   static close() {
-    PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then((e) => {
-      PreviewPanel.save();
-    });
+    PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then(PreviewPanel.save);
   }
 
   static switchMode() {

@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 import Posts from "./posts.js";
 import UI from "../ui.js";
 
@@ -18,11 +20,11 @@ export default class PostVersions {
       let search = 'id:' + ids.join(',');
 
       return $.get(`/posts.json?tags=${search}`).then(data => {
-        data.forEach((post, i) => post_data[post.id] = post);
+        data.forEach(post => post_data[post.id] = post);
       });
     });
 
-    Promise.all(requests).then(_ => {
+    Promise.all(requests).then(() => {
       $post_column.each((i, e) => {
         let post_id = $(e).text().match(/(\d+).\d+/)[1];
         $(e).html(Posts.preview(post_data[post_id]));

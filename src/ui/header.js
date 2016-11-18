@@ -1,6 +1,9 @@
+/* global Danbooru */
+
 import $ from "jquery";
 import _ from "lodash";
 
+import EX from "../ex.js";
 import ModeMenu from "./mode_menu.js";
 import PreviewPanel from "./preview_panel.js";
 

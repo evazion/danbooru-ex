@@ -1,5 +1,8 @@
+/* global Danbooru */
+
 import _ from "lodash";
 
+import EX from "../ex.js";
 import Posts from "./posts.js";
 import PreviewPanel from "./preview_panel.js";
 
@@ -112,7 +115,7 @@ export default class ModeMenu {
         $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
         /* fallthrough */
 
-      case "preview":
+      case "preview": {
         let post = Posts.normalize($(event.target).closest(".post-preview").data());
 
         const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
@@ -121,6 +124,7 @@ export default class ModeMenu {
         PreviewPanel.setHeight();
         event.preventDefault();
         break;
+      }
     }
   }
 

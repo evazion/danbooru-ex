@@ -3,6 +3,7 @@ import Artist from "../artist.js";
 import Tag from "../tag.js";
 
 import moment from "moment";
+import _ from "lodash";
 
 export default class Artists {
   static initialize() {
@@ -16,7 +17,7 @@ export default class Artists {
   }
 
   static initialize_hotkeys() {
-    $(document).keydown("e", e => UI.openEditPage('artists'));
+    $(document).keydown("e", () => UI.openEditPage('artists'));
   }
 
   static replace_index() {

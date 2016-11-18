@@ -1,4 +1,7 @@
+/* global Danbooru */
+
 import filesize from "filesize";
+import _ from "lodash";
 
 export default class Comments {
   static initialize() {
@@ -39,9 +42,6 @@ export default class Comments {
       const post_id = $(e).data('post-id');
       const comment_id = $(e).data('comment-id');
       const comment_score = $(e).data('score');
-
-      const $upvote_link = $menu.find(`#comment-vote-up-link-for-${comment_id}`);
-      const $downvote_link = $menu.find(`#comment-vote-down-link-for-${comment_id}`);
 
       if ($menu.children().length > 0) {
         $menu.append($('<li> | </li>'));

@@ -3,6 +3,7 @@ import fs from 'fs';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import sass from 'rollup-plugin-sass';
+import eslint from 'rollup-plugin-eslint';
 
 const HEADER  = fs.readFileSync("src/header.js").toString();
 const NAME    = process.env.NAME    || "Danbooru EX";
@@ -25,6 +26,7 @@ export default {
         jquery: 'jQuery',
         moment: 'moment',
         mousetrap: "Mousetrap",
+        resizesensor: "ResizeSensor",
     },
     external: [
         'filesize',
@@ -32,6 +34,7 @@ export default {
         'lodash',
         'moment',
         'mousetrap',
+        'resizesensor',
     ],
     plugins: [
         sass({
@@ -44,5 +47,6 @@ export default {
             browser: true,
         }),
         commonjs(),
+        eslint({}),
     ],
 };
