@@ -42,15 +42,13 @@ export default class ModeMenu {
   }
 
   static initializeThumbnails() {
-    $(`
+    const selector = `
       .mod-queue-preview aside a,
       div.post-preview .preview a,
       article.post-preview a
-    `).click(ModeMenu.onThumbnailClick);
+    `;
 
-    $(document).on("ex.post-preview:create", event => {
-      $(event.target).find("a").click(ModeMenu.onThumbnailClick);
-    });
+    $(document).on("click", selector, ModeMenu.onThumbnailClick);
   }
 
   static switchToTagScript(event) {
