@@ -46,6 +46,12 @@ export default class Keys {
 
       "goto-page": Keys.gotoPage,
       "goto-last-page": Keys.gotoLastPage,
+      "goto-page-dialog": Keys.gotoPageDialog,
+
+      "go-top": Keys.goTop,
+      "go-bottom": Keys.goBottom,
+      "go-forward": Keys.goForward,
+      "go-back": Keys.goBack,
 
       "header-open": Header.open,
       "header-close": Header.close,
@@ -68,6 +74,7 @@ export default class Keys {
       { "h t": "header-toggle" },
       { "h h": "header-focus-search" },
 
+      { "g :": "goto-page-dialog" },
       { "g 0": "goto-last-page" },
       { "g 1": "goto-page" },
       { "g 2": "goto-page" },
@@ -78,6 +85,11 @@ export default class Keys {
       { "g 7": "goto-page" },
       { "g 8": "goto-page" },
       { "g 9": "goto-page" },
+
+      { "g g": "go-top" },
+      { "G":   "go-bottom" },
+      { "g f": "go-forward" },
+      { "g b": "go-back" },
 
       { "1": "switch-to-tag-script" },
       { "2": "switch-to-tag-script" },
@@ -155,6 +167,34 @@ export default class Keys {
       location.search += `&page=${n}`;
     }
   }
+
+  static gotoPageDialog() {
+    const $dialog = $(`
+      <form>
+        <input id="ex-dialog-input" type="text" placeholder="Enter page number">
+        <input type="submit" value="Go">
+      </form>
+    `).dialog({
+      title: "Go To Page",
+      minHeight: 0,
+      minWidth: 0,
+      resizable: false,
+      modal: true,
+    });
+
+    $dialog.submit(() => {
+      const page = $dialog.find('input[type="text"]').val();
+      Keys.gotoPageN(page);
+      return false;
+    });
+
+    return false;
+  }
+
+  static goTop()    { window.scrollTo(0, 0); }
+  static goBottom() { window.scrollTo(0, $(document).height()); }
+  static goForward() { window.history.forward(); }
+  static goBack()    { window.history.back(); }
 
   static scroll(direction, duration, distance) {
     return _.throttle(() => {
