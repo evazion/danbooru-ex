@@ -30,9 +30,10 @@ export default class Keys {
         return this;
       }
 
-      Mousetrap.bind(keys, (...args) => {
+      Mousetrap.bind(keys, event => {
         console.log(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
-        return callback(...args);
+        event.preventDefault();
+        return callback(event);
       });
 
       console.log(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
