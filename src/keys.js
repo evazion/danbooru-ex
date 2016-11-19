@@ -5,6 +5,7 @@ import Mousetrap from "mousetrap";
 
 import Header from "./ui/header.js";
 import ModeMenu from "./ui/mode_menu.js";
+import Navigation from "./navigation.js";
 
 export default class Keys {
   constructor() {
@@ -44,14 +45,14 @@ export default class Keys {
     this.register({
       "escape": Keys.escape,
 
-      "goto-page": Keys.gotoPage,
-      "goto-last-page": Keys.gotoLastPage,
-      "goto-page-dialog": Keys.gotoPageDialog,
+      "goto-page": Navigation.gotoPage,
+      "goto-last-page": Navigation.gotoLastPage,
+      "goto-page-dialog": Navigation.gotoPageDialog,
 
-      "go-top": Keys.goTop,
-      "go-bottom": Keys.goBottom,
-      "go-forward": Keys.goForward,
-      "go-back": Keys.goBack,
+      "go-top": Navigation.goTop,
+      "go-bottom": Navigation.goBottom,
+      "go-forward": Navigation.goForward,
+      "go-back": Navigation.goBack,
 
       "header-open": Header.open,
       "header-close": Header.close,
@@ -116,8 +117,8 @@ export default class Keys {
     //$(document).unbind("keydown", "w s");
     //Mousetrap.bind("w", Keys.scroll(+1, 50, 0.06));
     //Mousetrap.bind("s", Keys.scroll(-1, 50, 0.06));
-    Danbooru.Shortcuts.nav_scroll_down = Keys.scroll(+1, 50, 0.06);
-    Danbooru.Shortcuts.nav_scroll_up   = Keys.scroll(-1, 50, 0.06);
+    Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
+    Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
   }
 
   /* Actions */
@@ -145,61 +146,5 @@ export default class Keys {
     }
 
     return false;
-  }
-
-  static gotoPage(event) {
-    Keys.gotoPageN(Number(event.key));
-  }
-
-  static gotoLastPage(event) {
-    // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
-    const n = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
-
-    if (n) {
-      Keys.gotoPageN(n);
-    }
-  }
-
-  static gotoPageN(n) {
-    if (location.search.match(/page=(\d+)/)) {
-      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
-    } else {
-      location.search += `&page=${n}`;
-    }
-  }
-
-  static gotoPageDialog() {
-    const $dialog = $(`
-      <form>
-        <input id="ex-dialog-input" type="text" placeholder="Enter page number">
-        <input type="submit" value="Go">
-      </form>
-    `).dialog({
-      title: "Go To Page",
-      minHeight: 0,
-      minWidth: 0,
-      resizable: false,
-      modal: true,
-    });
-
-    $dialog.submit(() => {
-      const page = $dialog.find('input[type="text"]').val();
-      Keys.gotoPageN(page);
-      return false;
-    });
-
-    return false;
-  }
-
-  static goTop()    { window.scrollTo(0, 0); }
-  static goBottom() { window.scrollTo(0, $(document).height()); }
-  static goForward() { window.history.forward(); }
-  static goBack()    { window.history.back(); }
-
-  static scroll(direction, duration, distance) {
-    return _.throttle(() => {
-      const top = $(window).scrollTop() + direction * $(window).height() * distance;
-      $('html, body').animate({scrollTop: top}, duration, "linear");
-    }, duration);
   }
 }
