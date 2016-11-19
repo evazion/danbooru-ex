@@ -102,16 +102,35 @@ export default class ModeMenu {
   static onThumbnailClick(event) {
     // Only apply on left click, not middle click and not ctrl+left click.
     if (event.ctrlKey || event.which !== 1) {
-      return;
+      return true;
     }
 
     switch (ModeMenu.getMode()) {
       case "view":
-        return;
+        return true;
 
-      case "tag-script":
-        $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
-        /* fallthrough */
+      case "tag-script": {
+        const $newCursor = $(event.target).closest(".ui-selectee");
+        const $oldCursor = $(".ex-cursor").length
+                         ? $(".ex-cursor")
+                         : $newCursor;
+
+        const $newMark = $newCursor;
+        const $oldMark = $(".ex-mark").length
+                       ? $(".ex-mark")
+                       : $(Selection.post).first().addClass("ex-mark");
+
+        $oldCursor.removeClass("ex-cursor");
+        $newCursor.addClass("ex-cursor").toggleClass("ui-selected");
+
+        if (event.shiftKey) {
+          Selection.deselectBetween($oldMark, $oldCursor);
+          Selection.selectBetween($oldMark, $newCursor);
+        } else {
+          $oldMark.removeClass("ex-mark");
+          $newMark.addClass("ex-mark");
+        }
+      } /* fallthrough */
 
       case "preview": {
         let post = Posts.normalize($(event.target).closest(".post-preview").data());
@@ -120,8 +139,7 @@ export default class ModeMenu {
         $("#ex-preview-panel article").replaceWith(html);
 
         PreviewPanel.setHeight();
-        event.preventDefault();
-        break;
+        return false;
       }
     }
   }
@@ -184,5 +202,35 @@ export default class ModeMenu {
 
   static setTagScriptNumber(n) {
     $('.ex-mode-menu select[name="tag-script-number"]').val(n).change();
+  }
+}
+
+export class Selection {
+  static get post() {
+    return "article.post-preview, div.post-preview .preview, .mod-queue-preview aside";
+  }
+
+  static get $cursor() { return $(".ex-cursor"); }
+  static set $cursor($newCursor) {
+    Selection.$cursor.removeClass("ex-cursor");
+    return $newCursor.addClass("ex-cursor");
+  }
+
+  static between($from, $to) {
+    if ($from.nextAll().is($to)) {
+      return $from.nextUntil($to, Selection.post).add($to).andSelf();
+    } else if ($from.prevAll().is($to)) {
+      return $from.prevUntil($to, Selection.post).add($to).andSelf();
+    } else {
+      return $();
+    }
+  }
+
+  static selectBetween($from, $to) {
+    return Selection.between($from, $to).addClass("ui-selected");
+  }
+
+  static deselectBetween($from, $to) {
+    return Selection.between($from, $to).removeClass("ui-selected");
   }
 }

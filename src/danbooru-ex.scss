@@ -4,6 +4,8 @@
 $dim-border-color: #EEEEEE;
 $dim-text: #CCCCCC;
 
+$post-preview: "article.post-preview, #c-moderator-post-queues .post-preview aside, #c-comments .post-preview .preview";
+
 @import "ui/header.scss";
 @import "ui/posts.scss";
 @import "ui/users.scss";
@@ -137,36 +139,40 @@ body.mode-view #ex-preview-panel-resizer {
     display: none;
 }
 
-/* Highlight thumbnails in grey when hovering in preview or tag script mode. */
-body.mode-preview article.post-preview:hover,
-body.mode-preview #c-moderator-post-queues .post-preview aside:hover,
-body.mode-preview #c-comments .post-preview .preview:hover,
-body.mode-tag-script article.post-preview:hover,
-body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,
-body.mode-tag-script #c-comments .post-preview .preview:hover {
-    background: $dim-border-color;
+// Highlight thumbnails when hovering in preview or tag script mode.
+body.mode-preview, body.mode-tag-script {
+    #{$post-preview} { &:hover { background: hsla(195, 50%, 95%, 1); } }
 }
 
-body.mode-tag-script article.post-preview.ui-selected,
-body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,
-body.mode-tag-script #c-comments .post-preview .preview.ui-selected {
-    background: lightblue;
-}
+// Highlight selected thumbnails in light blue.
+body.mode-tag-script { #{$post-preview} { &.ui-selected {
+    background: hsla(195, 50%, 80%, 1);
+} } }
 
-body.mode-tag-script article.post-preview.ui-selected {
+// Switch gutters from margin to padding so thumbnails are fully highlighted.
+article.post-preview {
     padding: 0 10px 10px 0;
     margin: 0;
+}
+
+// Outline the currently selected post with 2px border. Add 2px padding to
+// prevent outline from being hidden by overflow: hidden in container.
+#posts > div { padding: 2px; }
+body.mode-tag-script { #{$post-preview} { &.ex-cursor {
+    z-index: 1000;
+    outline: 2px solid hsla(195, 50%, 50%, 1);
+} } }
+
+// Use dotted line for selection drag outline.
+.ui-selectable-helper {
+    position: absolute;
+    z-index: 100;
+    border: 1px dotted black;
 }
 
 .ui-selectable {
     -ms-touch-action: none;
     touch-action: none;
-}
-
-.ui-selectable-helper {
-    position: absolute;
-    z-index: 100;
-    border: 1px dotted black;
 }
 
 a.ui-icon.collapsible-header {
