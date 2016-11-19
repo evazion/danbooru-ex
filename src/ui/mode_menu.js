@@ -187,7 +187,12 @@ export class Selection {
     return "article.post-preview, div.post-preview .preview, .mod-queue-preview aside";
   }
 
-  static get $cursor() { return $(".ex-cursor"); }
+  static get $cursor() {
+    return $(".ex-cursor").length
+         ? $(".ex-cursor")
+         : $(Selection.post).first().addClass("ex-cursor");
+  }
+
   static set $cursor($newCursor) {
     Selection.$cursor.removeClass("ex-cursor");
     return $newCursor.addClass("ex-cursor");
@@ -262,11 +267,23 @@ export class Selection {
   static swapCursor($oldCursor, $newCursor) {
     $oldCursor.removeClass("ex-cursor");
     $newCursor.addClass("ex-cursor");
+    Selection.scrollWindowTo($newCursor);
 
     const post = Posts.normalize($newCursor.closest(".post-preview").data());
     const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
 
     $("#ex-preview-panel article").replaceWith(html);
     PreviewPanel.setHeight();
+  }
+
+  static scrollWindowTo($target) {
+    const targetTop = $target.position().top;
+    const targetHeight = $target.height();
+
+    if (targetTop + targetHeight > window.scrollY + window.innerHeight) {
+      window.scrollTo(0, targetTop + 2*targetHeight - window.innerHeight);
+    } else if (targetTop < window.scrollY) {
+      window.scrollTo(0, targetTop - targetHeight);
+    }
   }
 }
