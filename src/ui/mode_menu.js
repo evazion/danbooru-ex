@@ -108,6 +108,9 @@ export default class ModeMenu {
       return true;
     }
 
+    // XXX prevent focused text fields from staying focused when clicking on thumbnails.
+    $(":focus").blur();
+
     switch (ModeMenu.getMode()) {
       case "view":
         return true;
