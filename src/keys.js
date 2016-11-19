@@ -48,6 +48,19 @@ export default class Keys {
       "goto-page": Navigation.gotoPage,
       "goto-last-page": Navigation.gotoLastPage,
       "goto-page-dialog": Navigation.gotoPageDialog,
+      
+      "go-my-account": () => window.location = `/users/${Danbooru.meta("current-user-id")}`,
+      "go-my-dmails": () => window.location = "/dmails",
+      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`,
+      "go-my-settings": () => window.location = `/users/${Danbooru.meta("current-user-id")}/edit`,
+
+      "go-artists-index": () => window.location = "/artists",
+      "go-bur-new": () => window.location = "/bulk_update_requests/new",
+      "go-comments-index": () => window.location = "/comments",
+      "go-forum-index": () => window.location = "/forum_topics",
+      "go-pools-index": () => window.location = "/pools",
+      "go-post-index": () => window.location = "/posts",
+      "go-wiki-index": () => window.location = "/wiki_pages",
 
       "go-top": Navigation.goTop,
       "go-bottom": Navigation.goBottom,
@@ -91,6 +104,19 @@ export default class Keys {
       { "G":   "go-bottom" },
       { "g f": "go-forward" },
       { "g b": "go-back" },
+
+      { "g h": "go-my-account" },
+      { "g d": "go-my-dmails" },
+      { "g F": "go-my-favorites" },
+      { "g s": "go-my-settings" },
+
+      { "g a": "go-artists-index" },
+      { "g B": "go-bur-new" },
+      { "g c": "go-comments-index" },
+      { "g f": "go-forum-index" },
+      { "g P": "go-pools-index" },
+      { "g p": "go-post-index" },
+      { "g w": "go-wiki-index" },
 
       { "1": "switch-to-tag-script" },
       { "2": "switch-to-tag-script" },
