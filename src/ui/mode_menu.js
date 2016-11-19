@@ -49,6 +49,9 @@ export default class ModeMenu {
     `;
 
     $(document).on("click", selector, ModeMenu.onThumbnailClick);
+
+    // Hide cursor when clicking outside of thumbnails.
+    $(document).on("click", () => $(".ex-cursor").removeClass("ex-cursor"));
   }
 
   static switchToTagScript(event) {
