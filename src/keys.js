@@ -54,6 +54,7 @@ export default class Keys {
       "go-my-account": () => window.location = `/users/${Danbooru.meta("current-user-id")}`,
       "go-my-dmails": () => window.location = "/dmails",
       "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`,
+      "go-my-saved-searches": () => window.location = `/saved_searches`,
       "go-my-settings": () => window.location = `/users/${Danbooru.meta("current-user-id")}/edit`,
 
       "go-artists-index": () => window.location = "/artists",
@@ -85,6 +86,8 @@ export default class Keys {
       "move-cursor-right": () => Selection.moveCursor("right"),
       "move-cursor-down": () => Selection.moveCursor("down"),
       "move-cursor-left": () => Selection.moveCursor("left"),
+
+      "save-search": () => $("#save-search").click(),
     });
 
     this.bind([
@@ -94,6 +97,8 @@ export default class Keys {
       { "h c": "header-close" },
       { "h t": "header-toggle" },
       { "h h": "header-focus-search" },
+
+      { "S": "save-search" },
 
       { "g :": "goto-page-dialog" },
       { "g 0": "goto-last-page" },
@@ -116,6 +121,7 @@ export default class Keys {
       { "g d": "go-my-dmails" },
       { "g F": "go-my-favorites" },
       { "g s": "go-my-settings" },
+      { "g S": "go-my-saved-searches" },
 
       { "g a": "go-artists-index" },
       { "g B": "go-bur-new" },
