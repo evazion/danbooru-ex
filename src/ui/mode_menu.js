@@ -116,15 +116,8 @@ export default class ModeMenu {
         Selection.moveCursorTo($(event.target), { selectTarget: true, selectInterval: event.shiftKey });
         /* fallthrough */
 
-      case "preview": {
-        let post = Posts.normalize($(event.target).closest(".post-preview").data());
-
-        const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
-        $("#ex-preview-panel article").replaceWith(html);
-
-        PreviewPanel.setHeight();
+      case "preview":
         return false;
-      }
     }
   }
 
@@ -251,8 +244,7 @@ export class Selection {
                    ? $(".ex-mark")
                    : $(Selection.post).first().addClass("ex-mark");
 
-    $oldCursor.removeClass("ex-cursor");
-    $newCursor.addClass("ex-cursor");
+    Selection.swapCursor($oldCursor, $newCursor);
     
     if (selectTarget) {
         $newCursor.toggleClass("ui-selected");
@@ -265,5 +257,16 @@ export class Selection {
         $oldMark.removeClass("ex-mark");
         $newMark.addClass("ex-mark");
     }
+  }
+
+  static swapCursor($oldCursor, $newCursor) {
+    $oldCursor.removeClass("ex-cursor");
+    $newCursor.addClass("ex-cursor");
+
+    const post = Posts.normalize($newCursor.closest(".post-preview").data());
+    const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
+
+    $("#ex-preview-panel article").replaceWith(html);
+    PreviewPanel.setHeight();
   }
 }
