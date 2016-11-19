@@ -236,4 +236,19 @@ export class Selection {
   static deselectBetween($from, $to) {
     return Selection.between($from, $to).removeClass("ui-selected");
   }
+
+  static moveCursor(direction) {
+    const post = Selection.post;
+    const $cursor = Selection.$cursor;
+    const firstInColumn = $posts =>
+      $posts.filter((i, e) => $(e).position().left === $cursor.position().left).first();
+
+    const $new = direction === "left"  ? $cursor.prev(post)
+               : direction === "right" ? $cursor.next(post)
+               : direction === "up"    ? firstInColumn($cursor.prevAll(post))
+               : direction === "down"  ? firstInColumn($cursor.nextAll(post))
+               : $();
+
+    return $new.length ? Selection.$cursor = $new : Selection.$cursor;
+  }
 }

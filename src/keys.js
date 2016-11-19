@@ -5,6 +5,7 @@ import Mousetrap from "mousetrap";
 
 import Header from "./ui/header.js";
 import ModeMenu from "./ui/mode_menu.js";
+import { Selection } from "./ui/mode_menu.js";
 import Navigation from "./navigation.js";
 
 export default class Keys {
@@ -78,6 +79,11 @@ export default class Keys {
       "apply-tag-script": ModeMenu.applyTagScript,
       "switch-to-tag-script": ModeMenu.switchToTagScript,
       "set-preview-mode": () => ModeMenu.setMode("preview"),
+
+      "move-cursor-up": () => Selection.moveCursor("up"),
+      "move-cursor-right": () => Selection.moveCursor("right"),
+      "move-cursor-down": () => Selection.moveCursor("down"),
+      "move-cursor-left": () => Selection.moveCursor("left"),
     });
 
     this.bind([
@@ -133,6 +139,11 @@ export default class Keys {
       { "ctrl+i": "invert-selection" },
       { "`": "set-preview-mode" },
       { "~": "set-preview-mode" },
+ 
+      { "up": "move-cursor-up" },
+      { "right": "move-cursor-right" },
+      { "down": "move-cursor-down" },
+      { "left": "move-cursor-left" },
     ]);
 
     // XXX don't hardcode these
