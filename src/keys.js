@@ -82,10 +82,10 @@ export default class Keys {
       "switch-to-tag-script": ModeMenu.switchToTagScript,
       "set-preview-mode": () => ModeMenu.setMode("preview"),
 
-      "move-cursor-up": () => Selection.moveCursor("up"),
-      "move-cursor-right": () => Selection.moveCursor("right"),
-      "move-cursor-down": () => Selection.moveCursor("down"),
-      "move-cursor-left": () => Selection.moveCursor("left"),
+      "move-cursor-up": e => Selection.moveCursor("up", { selectInterval: e.shiftKey }),
+      "move-cursor-right": e => Selection.moveCursor("right", { selectInterval: e.shiftKey }),
+      "move-cursor-down": e => Selection.moveCursor("down", { selectInterval: e.shiftKey }),
+      "move-cursor-left": e => Selection.moveCursor("left", { selectInterval: e.shiftKey }),
 
       "save-search": () => $("#save-search").click(),
     });
@@ -151,6 +151,11 @@ export default class Keys {
       { "right": "move-cursor-right" },
       { "down": "move-cursor-down" },
       { "left": "move-cursor-left" },
+
+      { "shift+up": "move-cursor-up" },
+      { "shift+right": "move-cursor-right" },
+      { "shift+down": "move-cursor-down" },
+      { "shift+left": "move-cursor-left" },
     ]);
 
     // XXX don't hardcode these

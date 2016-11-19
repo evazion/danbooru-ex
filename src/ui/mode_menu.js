@@ -112,28 +112,9 @@ export default class ModeMenu {
       case "view":
         return true;
 
-      case "tag-script": {
-        const $newCursor = $(event.target).closest(".ui-selectee");
-        const $oldCursor = $(".ex-cursor").length
-                         ? $(".ex-cursor")
-                         : $newCursor;
-
-        const $newMark = $newCursor;
-        const $oldMark = $(".ex-mark").length
-                       ? $(".ex-mark")
-                       : $(Selection.post).first().addClass("ex-mark");
-
-        $oldCursor.removeClass("ex-cursor");
-        $newCursor.addClass("ex-cursor").toggleClass("ui-selected");
-
-        if (event.shiftKey) {
-          Selection.deselectBetween($oldMark, $oldCursor);
-          Selection.selectBetween($oldMark, $newCursor);
-        } else {
-          $oldMark.removeClass("ex-mark");
-          $newMark.addClass("ex-mark");
-        }
-      } /* fallthrough */
+      case "tag-script":
+        Selection.moveCursorTo($(event.target), { selectTarget: true, selectInterval: event.shiftKey });
+        /* fallthrough */
 
       case "preview": {
         let post = Posts.normalize($(event.target).closest(".post-preview").data());
@@ -237,18 +218,52 @@ export class Selection {
     return Selection.between($from, $to).removeClass("ui-selected");
   }
 
-  static moveCursor(direction) {
+  static moveCursor(direction, { selectInterval = false } = {}) {
     const post = Selection.post;
     const $cursor = Selection.$cursor;
     const firstInColumn = $posts =>
       $posts.filter((i, e) => $(e).position().left === $cursor.position().left).first();
 
-    const $new = direction === "left"  ? $cursor.prev(post)
-               : direction === "right" ? $cursor.next(post)
-               : direction === "up"    ? firstInColumn($cursor.prevAll(post))
-               : direction === "down"  ? firstInColumn($cursor.nextAll(post))
-               : $();
+    const $target = direction === "left"  ? $cursor.prev(post)
+                  : direction === "right" ? $cursor.next(post)
+                  : direction === "up"    ? firstInColumn($cursor.prevAll(post))
+                  : direction === "down"  ? firstInColumn($cursor.nextAll(post))
+                  : $();
 
-    return $new.length ? Selection.$cursor = $new : Selection.$cursor;
+    // XXX cleanup
+    if ($target.length) {
+      if (selectInterval) { 
+        $cursor.closest(".ui-selectee").toggleClass("ui-selected");
+      }
+
+      Selection.moveCursorTo($target, { selectInterval });
+    }
+  }
+
+  static moveCursorTo($target, { selectTarget = false, selectInterval = false } = {}) {
+    const $newCursor = $target.closest(".ui-selectee");
+    const $oldCursor = $(".ex-cursor").length
+                     ? $(".ex-cursor")
+                     : $newCursor;
+
+    const $newMark = $newCursor;
+    const $oldMark = $(".ex-mark").length
+                   ? $(".ex-mark")
+                   : $(Selection.post).first().addClass("ex-mark");
+
+    $oldCursor.removeClass("ex-cursor");
+    $newCursor.addClass("ex-cursor");
+    
+    if (selectTarget) {
+        $newCursor.toggleClass("ui-selected");
+    }
+
+    if (selectInterval) {
+        Selection.deselectBetween($oldMark, $oldCursor);
+        Selection.selectBetween($oldMark, $newCursor);
+    } else {
+        $oldMark.removeClass("ex-mark");
+        $newMark.addClass("ex-mark");
+    }
   }
 }
