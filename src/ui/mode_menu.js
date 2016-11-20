@@ -220,6 +220,11 @@ export class Selection {
   }
 
   static moveCursor(direction, { selectInterval = false } = {}) {
+    // XXX if ($(Selection.post).length === 0) {
+    if (ModeMenu.getMode() === "view") {
+      return true;
+    }
+
     const post = Selection.post;
     const $cursor = Selection.$cursor;
     const firstInColumn = $posts =>
