@@ -191,7 +191,7 @@ export class Selection {
   }
 
   static get $cursor() {
-    return $(".ex-cursor").length
+    return Selection.active()
          ? $(".ex-cursor")
          : $(Selection.post).first().addClass("ex-cursor");
   }
@@ -199,6 +199,10 @@ export class Selection {
   static set $cursor($newCursor) {
     Selection.$cursor.removeClass("ex-cursor");
     return $newCursor.addClass("ex-cursor");
+  }
+
+  static active() {
+    return $(".ex-cursor").length > 0;
   }
 
   static between($from, $to) {
@@ -293,5 +297,20 @@ export class Selection {
     } else if (targetTop < window.scrollY) {
       window.scrollTo(0, targetTop - targetHeight);
     }
+  }
+
+  static toggleSelected() {
+    if (!Selection.active()) { return true; }
+    Selection.$cursor.toggleClass("ui-selected");
+  }
+
+  static open() {
+    if (!Selection.active()) { return true; }
+    window.location = Selection.$cursor.find("a").attr("href");
+  }
+
+  static openInNewTab() {
+    if (!Selection.active()) { return true; }
+    window.open(Selection.$cursor.find("a").attr("href"));
   }
 }

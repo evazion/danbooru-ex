@@ -87,6 +87,10 @@ export default class Keys {
       "move-cursor-down": e => Selection.moveCursor("down", { selectInterval: e.shiftKey }),
       "move-cursor-left": e => Selection.moveCursor("left", { selectInterval: e.shiftKey }),
 
+      "cursor-open": Selection.open,
+      "cursor-open-in-new-tab": Selection.openInNewTab,
+      "cursor-toggle-selected": Selection.toggleSelected,
+
       "save-search": () => $("#save-search").click(),
     });
 
@@ -156,6 +160,10 @@ export default class Keys {
       { "shift+right": "move-cursor-right" },
       { "shift+down": "move-cursor-down" },
       { "shift+left": "move-cursor-left" },
+
+      { "return": "cursor-open" },
+      { "ctrl+return": "cursor-open-in-new-tab" },
+      { "space": "cursor-toggle-selected" },
     ]);
 
     // XXX don't hardcode these
