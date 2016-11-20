@@ -91,6 +91,8 @@ export default class Keys {
       "cursor-open-in-new-tab": Selection.openInNewTab,
       "cursor-toggle-selected": Selection.toggleSelected,
 
+      "cursor-favorite": Selection.favorite,
+
       "save-search": () => $("#save-search").click(),
     });
 
@@ -164,6 +166,8 @@ export default class Keys {
       { "return": "cursor-open" },
       { "ctrl+return": "cursor-open-in-new-tab" },
       { "space": "cursor-toggle-selected" },
+
+      { "f": "cursor-favorite" },
     ]);
 
     // XXX don't hardcode these

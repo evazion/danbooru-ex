@@ -313,4 +313,14 @@ export class Selection {
     if (!Selection.active()) { return true; }
     window.open(Selection.$cursor.find("a").attr("href"));
   }
+
+  static favorite() {
+    if (!Selection.active()) { return true; }
+
+    const post = Posts.normalize(Selection.$cursor.closest(".post-preview").data());
+
+    $.post("/favorites.json", { post_id: post.id }).then(() =>
+      Danbooru.notice(`You have favorited post #${post.id}.`)
+    );
+  }
 }
