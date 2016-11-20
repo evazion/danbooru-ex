@@ -234,7 +234,7 @@ export class Selection {
     // XXX cleanup
     if ($target.length) {
       if (selectInterval) { 
-        $cursor.closest(".ui-selectee").toggleClass("ui-selected");
+        $cursor.closest(Selection.post).toggleClass("ui-selected");
       }
 
       Selection.moveCursorTo($target, { selectInterval });
@@ -242,7 +242,7 @@ export class Selection {
   }
 
   static moveCursorTo($target, { selectTarget = false, selectInterval = false } = {}) {
-    const $newCursor = $target.closest(".ui-selectee");
+    const $newCursor = $target.closest(Selection.post);
     const $oldCursor = $(".ex-cursor").length
                      ? $(".ex-cursor")
                      : $newCursor;

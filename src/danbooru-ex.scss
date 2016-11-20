@@ -158,10 +158,10 @@ article.post-preview {
 // Outline the currently selected post with 2px border. Add 2px padding to
 // prevent outline from being hidden by overflow: hidden in container.
 #posts > div { padding: 2px; }
-body.mode-tag-script { #{$post-preview} { &.ex-cursor {
-    z-index: 1000;
+#{$post-preview} { &.ex-cursor {
+    z-index: 50;
     outline: 2px solid hsla(195, 50%, 50%, 1);
-} } }
+} }
 
 // Use dotted line for selection drag outline.
 .ui-selectable-helper {
