@@ -11,6 +11,7 @@ export default class PreviewPanel {
       #c-post-appeals #a-index,
       #c-post-flags #a-index,
       #c-post-versions #a-index,
+      #c-explore-posts > div,
       #c-notes #a-index,
       #c-pools #a-gallery,
       #c-pools #a-show,
