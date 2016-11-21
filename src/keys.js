@@ -44,6 +44,9 @@ export default class Keys {
   }
 
   initialize() {
+    // Numpad 5
+    Mousetrap.addKeycodes({ 12: "clear" });
+
     this.register({
       "escape": Keys.escape,
 
@@ -166,6 +169,10 @@ export default class Keys {
       { "return": "cursor-open" },
       { "ctrl+return": "cursor-open-in-new-tab" },
       { "space": "cursor-toggle-selected" },
+
+      { "clear": "cursor-toggle-selected" }, // Numpad 5
+      { "del": "apply-tag-script" }, // Numpad Period
+      { "*": "select-all" }, // Numpad Multiply
 
       { "f": "cursor-favorite" },
     ]);
