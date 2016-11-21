@@ -274,7 +274,9 @@ export class Selection {
   static swapCursor($oldCursor, $newCursor) {
     $oldCursor.removeClass("ex-cursor");
     $newCursor.addClass("ex-cursor");
+
     Selection.scrollWindowTo($newCursor);
+    $newCursor.find("a").focus();
 
     const post = Posts.normalize($newCursor.closest(".post-preview").data());
     const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });

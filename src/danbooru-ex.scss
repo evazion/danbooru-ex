@@ -139,6 +139,13 @@ body.mode-view #ex-preview-panel-resizer {
     display: none;
 }
 
+#{$post-preview} {
+  > a {
+    // Hide dotted outline in favor of our own cursor outline.
+    &:focus { outline: none; }
+  }
+}
+
 // Highlight thumbnails when hovering in preview or tag script mode.
 body.mode-preview, body.mode-tag-script {
     #{$post-preview} { &:hover { background: hsla(195, 50%, 95%, 1); } }
