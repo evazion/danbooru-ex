@@ -111,16 +111,11 @@ export default class ModeMenu {
     // XXX prevent focused text fields from staying focused when clicking on thumbnails.
     $(":focus").blur();
 
-    switch (ModeMenu.getMode()) {
-      case "view":
-        return true;
-
-      case "tag-script":
-        Selection.moveCursorTo($(event.target), { selectTarget: true, selectInterval: event.shiftKey });
-        /* fallthrough */
-
-      case "preview":
-        return false;
+    if (ModeMenu.getMode() === "view") {
+      return true;
+    } else {
+      Selection.moveCursorTo($(event.target), { selectTarget: true, selectInterval: event.shiftKey });
+      return false;
     }
   }
 
