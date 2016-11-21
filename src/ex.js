@@ -34,7 +34,7 @@ export default window.EX = class EX {
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
     // XXX
-    EX.PseudoTagTypes.initialize();
+    // EX.PseudoTagTypes.initialize();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
