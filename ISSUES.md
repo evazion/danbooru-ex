@@ -2,11 +2,9 @@
 ** Layout breaks at <960px or so.
 
 * Sidebar
-** Resizeable sidebar doesn't work on /artists or /wiki_pages.
+** Resizeable sidebar doesn't work on /artists page.
 
 * Preview panel
-** Doesn't work on popular pages and /post_versions.
-** Can't resize wide enough on posts with too many children in parent/child bar.
 ** Should include metadata: tags, pools, notes, comments, parent/children, etc.
 ** Should include tag edit box.
 ** Left click image should toggle between fit vertical, fit horizontal, and full size
@@ -16,21 +14,16 @@
 
 * Thumbnails previews
 ** Placement can be very wonky.
-** Currently disabled in preview/tag script mode - need a smarter way to
+** Currently disabled in when preview panel is open - need a smarter way to
    trigger popups so they don't get in the way.
 
 * Tag scripts
-** Sometimes Ctrl+A selects all text on page.
+** Sometimes Ctrl+A selects all text on page. Caused when an <input> (i.e. mode select box) has focus.
 ** Dragging unselects currently selected posts. Holding shift while dragging
    should add posts to selection.
-** Should be able to shift+click to select everything between two points.
 ** Ctrl+T should invert script (foo -bar becomes -foo bar).
 ** Should support ctrl+z to undo.
-** Don't play nicely with thumbnails on /post_versions (conflicting click handlers).
-
-* Mode menu
-** If you're in preview mode or tag script mode on /posts and you visit a post
-   (or anywhere else), you will still be in that mode. This is annoying.
+** Middle click removes cursor highlight.
 
 * Wiki:
 ** Collapsible headers:
