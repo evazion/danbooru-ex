@@ -24,7 +24,7 @@ export default class Config {
     return {
       schemaVersion: Setting.Shared({
         configurable: false,
-        value: 1
+        value: 2
       }),
 
       enableHeader: Setting.Shared({
@@ -123,16 +123,26 @@ export default class Config {
       tagScriptNumber: Setting.Session({
         value: 1
       }),
-      headerState: Setting.Session({
-        value: "ex-fixed"
+      headerFixed: Setting.Session({
+        value: true
       }),
     };
   }
 
   constructor() {
+    this.migrate();
+
     if ($("#c-users #a-edit").length) {
       this.initializeForm();
     }
+  }
+
+  migrate() {
+    if (Config.Items.schemaVersion.storage["EX.config.schemaVersion"] === undefined) {
+      this.reset();
+    }
+
+    this.schemaVersion = Config.Items.schemaVersion.value;
   }
 
   get(key) {
@@ -159,6 +169,7 @@ export default class Config {
 
   reset() {
     _(Config.Items).each((item, key) => {
+      console.log(`[CFG] DELETE EX.config.${key}`);
       delete item.storage["EX.config." + key]
     });
 

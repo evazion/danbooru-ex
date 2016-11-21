@@ -60,16 +60,16 @@ export default class Header {
 
   static close() {
     Header.$el.addClass("ex-static").removeClass("ex-fixed");
-    EX.config.headerState = Header.$el.attr("class");
+    EX.config.headerFixed = false;
   }
 
   static open() {
     Header.$el.addClass("ex-fixed").removeClass("ex-static");
-    EX.config.headerState = Header.$el.attr("class");
+    EX.config.headerFixed = true;
   }
 
   static toggle() {
-    return Header.$el.hasClass("ex-fixed") ? Header.close() : Header.open();
+    return EX.config.headerFixed ? Header.close() : Header.open();
   }
 
   static get $el()    { return $("#ex-header"); }
@@ -78,7 +78,7 @@ export default class Header {
 
   static render() {
     return `
-      <header style="display: none;" id="ex-header" class="${EX.config.headerState}">
+      <header style="display: none;" id="ex-header" class="${EX.config.headerFixed ? "ex-fixed" : "ex-static"}">
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
