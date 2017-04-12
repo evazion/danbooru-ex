@@ -7,17 +7,9 @@ import _ from "lodash";
 
 export default class Artists {
   static initialize() {
-    if ($("#c-artists #a-show").length) {
-      Artists.initialize_hotkeys();
-    }
-
     if ($("#c-artists #a-index").length) {
       Artists.replace_index();
     }
-  }
-
-  static initialize_hotkeys() {
-    $(document).keydown("e", () => UI.openEditPage('artists'));
   }
 
   static replace_index() {
