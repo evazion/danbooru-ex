@@ -83,7 +83,7 @@ export default class Header {
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
           <input type="text" name="tags" id="tags" class="ui-autocomplete-input" autocomplete="off">
-          <input type="submit" value="Go">
+          <input type="submit" value="Go" class="ui-button ui-widget ui-corner-all tiny gradient">
         </form>
 
         <section class="ex-mode-menu" style="display: none">
@@ -108,11 +108,11 @@ export default class Header {
             </select>
 
             <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" placeholder="Enter tag script">
-            <button name="apply" type="button">Apply</button>
+            <button name="apply" type="button" class="ui-button ui-widget ui-corner-all tiny gradient">Apply</button>
 
             <label>Select</label>
-            <button name="select-all" type="button">All/None</button>
-            <button name="select-invert" type="button">Invert</button>
+            <button name="select-all" type="button" class="ui-button ui-widget ui-corner-all tiny gradient">All/None</button>
+            <button name="select-invert" type="button" class="ui-button ui-widget ui-corner-all tiny gradient">Invert</button>
           </fieldset>
         </section>
 
