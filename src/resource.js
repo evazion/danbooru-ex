@@ -62,6 +62,6 @@ export default class Resource {
   }
 
   static get controller() {
-    return "/" + _.snakeCase(this.name.toLowerCase() + "s");
+    return "/" + _.snakeCase(this.name + "s");
   }
 }
