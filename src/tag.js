@@ -37,4 +37,14 @@ export default Resource.Tag = class Tag extends Resource {
   static renderTagListItem(tag) {
     return `<li class="category-${tag.category}">${Tag.renderTag(tag)}</li>`;
   }
+
+  static renderSearchTagListItem(tag) {
+    return `
+      <li class="category-${tag.category}">
+        <a class="wiki-link" href="/wiki_pages/show_or_new?title=${encodeURIComponent(tag.name)}">?</a>
+        ${Tag.renderTag(tag)}
+        <span class="post-count">${tag.post_count}</span>
+      </li>
+    `;
+  }
 }

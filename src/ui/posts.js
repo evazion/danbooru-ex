@@ -6,6 +6,7 @@ import ResizeSensor from "resizesensor";
 
 import EX from "../ex.js";
 import Tag from "../tag.js";
+import TagImplication from "../tag_implication.js";
 import User from "../user.js";
 
 export default class Posts {
@@ -17,6 +18,7 @@ export default class Posts {
     $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
     Posts.initialize_patches();
+    Posts.initializeImplications();
     Posts.initializeTagList();
     Posts.initialize_hotkeys();
     Posts.initialize_video();
@@ -57,6 +59,33 @@ export default class Posts {
       $tags.addClass(`ex-${category}-tag-list`);
       $header.wrap(`<span class="ex-tag-list-header ex-${category}-tag-list-header">`);
       $header.parent().append(`<span class="post-count">${$tags.children().size()}</span>`);
+    });
+  }
+
+  static initializeImplications() {
+    let $tags = $('#tag-list');
+    let tag_string = $("#image").data("tags");
+
+    TagImplication.index({ search: { antecedent_name: tag_string }}).then(implications => {
+      let implied_tag_names = _(implications).map('descendant_names').flatMap(str => str.split(" ")).sort().uniq().value();
+
+      Tag.search(implied_tag_names).then(implied_tags => {
+        let sortCategory = (category) =>
+            category === 1 ? 1  // artist
+          : category === 2 ? 2  // copyright
+          : category === 4 ? 3  // character
+          : category === 0 ? 4  // general
+          :                  0; // other
+
+        implied_tags = _.sortBy(implied_tags, [(tag) => sortCategory(tag.category), "name"]);
+
+        $tags.append(`
+          <h2>Implied Tags</h2>
+          <ul>
+            ${implied_tags.map(Tag.renderSearchTagListItem).join("")}
+          </ul>
+        `);
+      });
     });
   }
 
