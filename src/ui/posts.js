@@ -64,7 +64,7 @@ export default class Posts {
 
   static initializeImplications() {
     let $tags = $('#tag-list');
-    let tag_string = $("#image").data("tags");
+    let tag_string = $("#image-container").data("tags");
 
     TagImplication.index({ search: { antecedent_name: tag_string }}).then(implications => {
       let implied_tag_names = _(implications).map('descendant_names').flatMap(str => str.split(" ")).sort().uniq().value();
