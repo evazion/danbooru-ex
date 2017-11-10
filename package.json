@@ -14,10 +14,10 @@
   "license": "MIT",
   "devDependencies": {
     "rollup": "^0.51.0",
-    "rollup-plugin-commonjs": "^5.0.5",
-    "rollup-plugin-eslint": "^3.0.0",
-    "rollup-plugin-node-resolve": "^2.0.0",
-    "rollup-plugin-sass": "^0.4.7"
+    "rollup-plugin-commonjs": "^8.2.4",
+    "rollup-plugin-eslint": "^4.0.0",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-sass": "^0.5.3"
   },
   "dependencies": {
     "jquery": "^1.11.1",
