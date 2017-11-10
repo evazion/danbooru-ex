@@ -12,6 +12,7 @@ import Comments     from "./ui/comments.js";
 import ForumPosts   from "./ui/forum_posts.js";
 import Posts        from "./ui/posts.js";
 import PostVersions from "./ui/post_versions.js";
+import SavedSearches from "./ui/saved_searches.js";
 import Users        from "./ui/users.js";
 import WikiPages    from "./ui/wiki_pages.js";
 
@@ -180,5 +181,6 @@ UI.Comments = Comments;
 UI.ForumPosts = ForumPosts;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;
+UI.SavedSearches = SavedSearches;
 UI.Users = Users;
 UI.WikiPages = WikiPages;

@@ -44,6 +44,7 @@ export default window.EX = class EX {
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
     EX.config.usersRedesign && EX.UI.Users.initialize();
+    // EX.UI.SavedSearches.initialize();
 
     console.groupEnd("settings");
     console.timeEnd("initialized");
