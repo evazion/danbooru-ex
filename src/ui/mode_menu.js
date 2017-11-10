@@ -9,6 +9,7 @@ import PreviewPanel from "./preview_panel.js";
 export default class ModeMenu {
   static initialize() {
     ModeMenu.uninitializeDanbooruModeMenu();
+    ModeMenu.overrideDanbooruArrowKeys();
     ModeMenu.initializeModeMenu();
     ModeMenu.initializeTagScriptControls();
     ModeMenu.initializeThumbnails();
@@ -20,6 +21,19 @@ export default class ModeMenu {
     $(".post-preview a").unbind("click", Danbooru.PostModeMenu.click);
     $(document).unbind("keydown", "1 2 3 4 5 6 7 8 9 0", Danbooru.PostModeMenu.change_tag_script);
     $("#sidebar #mode-box").hide();
+  }
+
+  // Danbooru's default left / right arrow key bindings conflict with our use
+  // of the arrow keys in tag script / preview mode. Ignore these bindings
+  // during these modes.
+  static overrideDanbooruArrowKeys() {
+    Danbooru.Paginator.next_page = _.wrap(Danbooru.Paginator.next_page, function(next_page) {
+      if (ModeMenu.getMode() == "view") { next_page(); }
+    });
+
+    Danbooru.Paginator.prev_page = _.wrap(Danbooru.Paginator.prev_page, function(prev_page) {
+      if (ModeMenu.getMode() == "view") { prev_page(); }
+    });
   }
 
   static initializeModeMenu() {

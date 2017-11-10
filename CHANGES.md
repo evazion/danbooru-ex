@@ -3,6 +3,9 @@
 #### Fixes
 
 * Fix tag autocomplete in the header search box and in the tag script box.
+* Fix conflict between Danbooru's left/right arrow keybindings and Danbooru EX's
+  left/right keybindings in tag script mode.
+
 
 # Release 2317
 
