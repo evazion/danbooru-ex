@@ -139,8 +139,13 @@ body.mode-view #ex-preview-panel-resizer {
     display: none;
 }
 
-#{$post-preview} {
+body.mode-tag-script #{$post-preview},
+body.mode-preview #{$post-preview} {
   > a {
+    // Make thumbnail hitboxes bigger.
+    width: 100%;
+    height: 100%;
+
     // Hide dotted outline in favor of our own cursor outline.
     &:focus { outline: none; }
   }
