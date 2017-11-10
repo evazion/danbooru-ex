@@ -12,7 +12,7 @@
 // @downloadURL  <@URL@>
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js
 // @require      https://unpkg.com/filesize@3.3.0
 // @require      https://unpkg.com/css-element-queries@0.3.2/src/ResizeSensor.js
