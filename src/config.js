@@ -14,8 +14,8 @@ export class Setting {
     return new Setting({ value, help: "none", configurable: false, storage: window.sessionStorage });
   }
 
-  static Shared({ value = true, help } = {}) {
-    return new Setting({ value, help, configurable: true, storage: window.localStorage });
+  static Shared({ value = true, help, configurable = true } = {}) {
+    return new Setting({ value, help, configurable, storage: window.localStorage });
   }
 }
 
