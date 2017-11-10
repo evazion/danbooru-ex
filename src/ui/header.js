@@ -39,8 +39,8 @@ export default class Header {
 
   static onScroll() {
     $("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
-    // XXX Shrink header after scrolling past navbar.
-    // $("header h1").toggleClass("ex-small-header", window.scrollY > 0, { duration: 100 });
+    // Shrink header after scrolling down.
+    window.scrollY > 0 && $("header h1").addClass("ex-small-header");
   }
 
   static executeSearchInNewTab() {
