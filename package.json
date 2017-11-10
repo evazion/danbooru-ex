@@ -20,12 +20,8 @@
     "rollup-plugin-sass": "^0.4.7"
   },
   "dependencies": {
-    "dexie": "^1.5.0",
-    "filesize": "^3.3.0",
     "jquery": "^1.11.1",
-    "jquery-ui": "github:jquery/jquery-ui#1.11.2",
-    "lodash": "^4.16.2",
-    "moment": "^2.15.1"
+    "jquery-ui": "github:jquery/jquery-ui#1.11.2"
   },
   "scripts": {
     "exec": "exec"
