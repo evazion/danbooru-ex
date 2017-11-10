@@ -14,7 +14,7 @@ endif
 
 all: dist/danbooru-ex.user.js | bump
 dist/danbooru-ex.user.js: $(shell find src) rollup.config.js VERSION Makefile | dist
-	NAME="$(NAME)" VERSION="$(VERSION)" URL="$(URL)" rollup -c
+	NAME="$(NAME)" VERSION="$(VERSION)" URL="$(URL)" npm run exec -- rollup -c
 
 release: all
 	git tag -a -m "Release $(VERSION)" "v$(VERSION)" 
