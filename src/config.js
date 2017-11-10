@@ -39,6 +39,16 @@ export default class Config {
       enableHotkeys: Setting.Shared({
         help: "Enable additional keyboard shortcuts.",
       }),
+      enableLargeThumbnails: Setting.Shared({
+        configurable: false,
+        help: "Enable extra large thumbnails (experimental; bandwidth intensive).",
+        value: false,
+      }),
+      largeThumbnailSize: Setting.Shared({
+        configurable: false,
+        help: "The size (in pixels) of large thumbnails.",
+        value: 229,
+      }),
       showThumbnailPreviews: Setting.Shared({
         help: "Show post preview tooltips when hovering over thumbnails.",
       }),

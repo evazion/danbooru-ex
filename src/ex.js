@@ -33,6 +33,7 @@ export default window.EX = class EX {
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
+    EX.config.enableLargeThumbnails && EX.UI.Posts.initializeLargeThumbnails();
     // XXX
     // EX.PseudoTagTypes.initialize();
 

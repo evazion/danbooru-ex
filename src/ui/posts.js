@@ -31,6 +31,22 @@ export default class Posts {
     });
   }
 
+  static initializeLargeThumbnails() {
+    $("article.post-preview").each((i, e) => {
+      const $post = $(e);
+      const $img = $post.find("img");
+
+      const data = Posts.normalize($post.data());
+      const src = `${data.large_file_url}`;
+      // const src = `//danbooru.s3.amazonaws.com/${data.md5}.${data.file_ext}`;
+
+      const size = `${EX.config.largeThumbnailSize}px`;
+      $post.css({ "width": size, "height": size });
+      $img.css({ "width": size, "height": size, "object-fit": "contain" });
+      $img.attr("src", src);
+    });
+  }
+
   // Update Rating in sidebar when it changes.
   static initialize_patches() {
     function patched_update_data(update_data, data) {
@@ -139,6 +155,7 @@ export default class Posts {
     post.status_flags = post.flags;
     post.image_width = post.width;
     post.image_height = post.height;
+    post.large_file_url = post.large_file_url.replace(/https?:\/\/.*\.donmai\.us\//, "");
 
     return post;
   }
