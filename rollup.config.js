@@ -11,15 +11,17 @@ const VERSION = process.env.VERSION || Number(fs.readFileSync("VERSION").toStrin
 const URL     = process.env.URL     || "https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js";
 
 export default {
-    moduleName: 'danbooruEX',
     banner: () => {
         return HEADER.replace(/<@NAME@>/g,    NAME)
                      .replace(/<@VERSION@>/g, VERSION)
                      .replace(/<@URL@>/g,      URL);
     },
-    entry: 'src/ex.js',
-    dest: 'dist/danbooru-ex.user.js',
-    format: 'iife',
+    input: 'src/ex.js',
+    output: {
+        name: 'danbooruEX',
+        format: 'iife',
+        file: 'dist/danbooru-ex.user.js',
+    },
     globals: {
         filesize: 'filesize',
         lodash: '_',
