@@ -102,6 +102,7 @@ export default class PreviewPanel {
   }
 
   static setWidth(width) {
+    PreviewPanel.$panel.width(width);
     PreviewPanel.$panel.css({ flex: `0 0 ${width}px` });
     $("#ex-preview-panel > div").width(width);
   }
