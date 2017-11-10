@@ -45,7 +45,7 @@ export default class Header {
 
   static executeSearchInNewTab() {
     // XXX
-    if ($("#ex-header #tags:focus").length) {
+    if ($("#ex-header #ex-tags:focus").length) {
       const tags = Header.$tags.val().trim();
       window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
     }
@@ -74,7 +74,7 @@ export default class Header {
 
   static get $el()    { return $("#ex-header"); }
   static get $close() { return $("#ex-header .ex-header-close"); }
-  static get $tags()  { return $("#ex-header #tags"); }
+  static get $tags()  { return $("#ex-header #ex-tags"); }
 
   static render() {
     return `
@@ -82,7 +82,7 @@ export default class Header {
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" name="tags" id="tags" class="ui-autocomplete-input" autocomplete="off">
+          <input type="text" data-autocomplete="tag-query" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
           <input type="submit" value="Go">
         </form>
 
@@ -107,7 +107,7 @@ export default class Header {
               <option value="9">9</option>
             </select>
 
-            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" placeholder="Enter tag script">
+            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
             <button name="apply" type="button">Apply</button>
 
             <label>Select</label>

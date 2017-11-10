@@ -1,3 +1,9 @@
+# Release XXX
+
+#### Fixes
+
+* Fix tag autocomplete in the header search box and in the tag script box.
+
 # Release 2317
 
 #### Fixes
