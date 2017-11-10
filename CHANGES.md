@@ -6,6 +6,10 @@
 * Fix conflict between Danbooru's left/right arrow keybindings and Danbooru EX's
   left/right keybindings in tag script mode.
 
+#### Changes
+
+* /artists: Remove 'e' to edit shortcut.
+* /pools: Remove 'e' to edit shortcut.
 
 # Release 2317
 
