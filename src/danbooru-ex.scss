@@ -187,9 +187,11 @@ article.post-preview {
     touch-action: none;
 }
 
+/* The icon beside wiki page collapsible headers. */
 a.ui-icon.collapsible-header {
     display: inline-block;
     margin-left: -8px;
+    cursor: pointer;
 }
 
 .ex-short-relative-time {
