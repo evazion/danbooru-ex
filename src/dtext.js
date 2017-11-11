@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 export default class DText {
-  static create_expandable(name, content) {
+  static createExpandable(name, content) {
     const $expandable = $(`
       <div class="expandable">
         <div class="expandable-header">

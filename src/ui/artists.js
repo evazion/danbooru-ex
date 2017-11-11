@@ -8,11 +8,11 @@ import _ from "lodash";
 export default class Artists {
   static initialize() {
     if ($("#c-artists #a-index").length) {
-      Artists.replace_index();
+      Artists.replaceIndex();
     }
   }
 
-  static replace_index() {
+  static replaceIndex() {
     let $table = $("#c-artists #a-index > table:nth-child(2)");
 
     let artists = _($table.find("> tbody > tr")).map(e => ({
@@ -37,38 +37,38 @@ export default class Artists {
 
       let $paginator = $(".paginator");
 
-      const index = Artists.render_index(artists, created, updated, deleted);
+      const index = Artists.renderIndex(artists, created, updated, deleted);
       $("#c-artists #a-index").addClass("ex-index").html(index);
 
       $paginator.appendTo("#content");
     });
   }
 
-  static render_index(artists, created, updated, deleted) {
+  static renderIndex(artists, created, updated, deleted) {
     return `
     <aside id="sidebar">
-      ${Artists.render_sidebar(created, updated, deleted)}
+      ${Artists.renderSidebar(created, updated, deleted)}
     </aside>
 
     <section id="content">
-      ${Artists.render_table(artists)}
+      ${Artists.renderTable(artists)}
     </section>
     `;
   }
 
-  static render_sidebar(created, updated, deleted) {
+  static renderSidebar(created, updated, deleted) {
     return `
     <section class="ex-artists-search">
-      ${Artists.render_search_form()}
+      ${Artists.renderSearchForm()}
     </section>
 
     <section class="ex-artists-recent-changes">
-      ${Artists.render_recent_changes(created, updated, deleted)}
+      ${Artists.renderRecentChanges(created, updated, deleted)}
     </section>
     `;
   }
 
-  static render_search_form() {
+  static renderSearchForm() {
     return `
     <h1>Search</h1>
 
@@ -92,8 +92,8 @@ export default class Artists {
     `;
   }
 
-  static render_recent_changes(created, updated, deleted) {
-    function render_artists_list(artists, heading, params) {
+  static renderRecentChanges(created, updated, deleted) {
+    function renderArtistsList(artists, heading, params) {
       return `
       <section class="ex-artists-list">
         <div class="ex-artists-list-heading">
@@ -103,13 +103,13 @@ export default class Artists {
           </span>
         </div>
         <ul>
-          ${render_ul(artists)}
+          ${renderUl(artists)}
         </ul>
       </section>
       `;
     }
 
-    function render_ul(artists) {
+    function renderUl(artists) {
       return _(artists).map(artist => `
         <li class="category-1">
           ${UI.linkTo(artist.name, `/artists/${artist.id}`)}
@@ -126,13 +126,13 @@ export default class Artists {
     return `
     <h1>Recent Changes</h1>
 
-    ${render_artists_list(created, "New Artists",     { is_active: true,  order: "created_at" })}
-    ${render_artists_list(updated, "Updated Artists", { is_active: true,  order: "updated_at" })}
-    ${render_artists_list(deleted, "Deleted Artists", { is_active: false, order: "updated_at" })}
+    ${renderArtistsList(created, "New Artists",     { is_active: true,  order: "created_at" })}
+    ${renderArtistsList(updated, "Updated Artists", { is_active: true,  order: "updated_at" })}
+    ${renderArtistsList(deleted, "Deleted Artists", { is_active: false, order: "updated_at" })}
     `;
   }
 
-  static render_table(artists) {
+  static renderTable(artists) {
     return `
     <table class="ex-artists striped" width="100%">
       <thead>
@@ -148,14 +148,14 @@ export default class Artists {
         </tr>
       </thead>
       <tbody>
-        ${artists.map(Artists.render_row).join("")}
+        ${artists.map(Artists.renderRow).join("")}
       </tbody>
     </table>
     `;
   }
 
-  static render_row(artist) {
-    const other_names =
+  static renderRow(artist) {
+    const otherNames =
       (artist.other_names || "")
       .split(/\s+/)
       .sort()
@@ -164,7 +164,7 @@ export default class Artists {
       )
       .join(", ");
 
-    const group_link = UI.linkTo(
+    const groupLink = UI.linkTo(
       artist.group_name, "/artists", { search: { name: `group:${artist.group_name}` }}, "ex-artist-group-name"
     );
 
@@ -181,10 +181,10 @@ export default class Artists {
 	${UI.linkTo(artist.tag.post_count, "/posts", { tags: artist.name }, "search-tag")}
       </td>
       <td class="ex-artist-other-names">
-	${other_names}
+	${otherNames}
       </td>
       <td class="ex-artist-group-name">
-	${artist.group_name ? group_link : ""}
+	${artist.group_name ? groupLink : ""}
       </td>
       <td class="ex-artist-status">
 	${artist.is_banned ? "Banned" : ""}

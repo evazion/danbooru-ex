@@ -17,11 +17,11 @@ export default class Posts {
 
     $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
-    Posts.initialize_patches();
+    Posts.initializePatches();
     Posts.initializeImplications();
     Posts.initializeTagList();
-    Posts.initialize_hotkeys();
-    Posts.initialize_video();
+    Posts.initializeHotkeys();
+    Posts.initializeVideo();
   }
 
   // Resize notes/ugoira controls as window is resized.
@@ -48,7 +48,7 @@ export default class Posts {
   }
 
   // Update Rating in sidebar when it changes.
-  static initialize_patches() {
+  static initializePatches() {
     function patched_update_data(update_data, data) {
       const rating = data.rating === 's' ? "Safe"
                     : data.rating === 'q' ? "Questionable"
@@ -111,7 +111,7 @@ export default class Posts {
    * Alt+E: Rate Explicit.
    * U / Alt+U: Vote up / vote down.
    */
-  static initialize_hotkeys() {
+  static initializeHotkeys() {
     const post_id = Danbooru.meta("post-id");
 
     const rate = function (post_id, rating) {
@@ -129,7 +129,7 @@ export default class Posts {
     $(document).keydown("alt+u", () => Danbooru.Post.vote('down', post_id));
   }
 
-  static initialize_video() {
+  static initializeVideo() {
     const $video = $("video#image").get(0);
     if ($video) {
       $video.autoplay = EX.config.autoplayVideos;

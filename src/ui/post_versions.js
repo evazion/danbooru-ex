@@ -6,12 +6,12 @@ import UI from "../ui.js";
 export default class PostVersions {
   static initialize() {
     if ($("#c-post-versions #a-index").length && !UI.query("search[post_id]")) {
-      PostVersions.initialize_thumbnails();
+      PostVersions.initializeThumbnails();
     }
   }
 
   // Show thumbnails instead of post IDs.
-  static initialize_thumbnails() {
+  static initializeThumbnails() {
     let $post_column = $('tr td:nth-child(1)');
     let post_ids = $.map($post_column, e => $(e).text().match(/(\d+).\d+/)[1] );
 

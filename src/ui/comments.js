@@ -7,25 +7,25 @@ export default class Comments {
   static initialize() {
     if ($("#c-comments").length || $("#c-posts #a-show").length) {
       $(function () {
-        Comments.initialize_patches();
-        Comments.initialize_metadata();
+        Comments.initializePatches();
+        Comments.initializeMetadata();
       });
     }
 
     if ($("#c-comments #a-index").length && window.location.search.match(/group_by=post/)) {
-      Comments.initialize_tag_list();
+      Comments.initializeTagList();
     }
   }
 
-  static initialize_patches() {
+  static initializePatches() {
     // HACK: "Show all comments" replaces the comment list's HTML then
     // initializes all the reply/edit/vote links. We hook into that
     // initialization here so we can add in our own metadata at the same time.
-    Danbooru.Comment.initialize_vote_links = function ($parent) {
+    Danbooru.Comment.initializeVoteLinks = function ($parent) {
       $parent = $parent || $(document);
       $parent.find(".unvote-comment-link").hide();
 
-      Comments.initialize_metadata($parent);
+      Comments.initializeMetadata($parent);
     };
   }
 
@@ -33,7 +33,7 @@ export default class Comments {
    * Add 'comment #1234' permalink.
    * Add comment scores.
    */
-  static initialize_metadata($parent) {
+  static initializeMetadata($parent) {
     $parent = $parent || $(document);
 
     $parent.find('.comment').each((i, e) => {
@@ -63,7 +63,7 @@ export default class Comments {
   }
 
   // Sort tags by type, and put artist tags first.
-  static initialize_tag_list() {
+  static initializeTagList() {
     const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
     $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {

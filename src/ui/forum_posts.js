@@ -1,12 +1,12 @@
 export default class ForumPosts {
   static initialize() {
     if ($("#c-forum-topics #a-show").length) {
-        ForumPosts.initialize_permalinks();
+        ForumPosts.initializePermalinks();
     }
   }
 
   // On forum posts, change "Permalink" to "Forum #1234". */
-  static initialize_permalinks() {
+  static initializePermalinks() {
     $(".forum-post menu").each((i, e) => {
       let $forum_id  = $(e).find("li:nth-child(1)");
       let $permalink = $(e).find("li:last-child");
