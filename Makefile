@@ -27,7 +27,7 @@ dist:
 	mkdir -p dist
 
 bump:
-	@gawk -i inplace '/[[:digit:]]+/ { print $$1 + 1 }' VERSION
+	@date -u "+%Y.%m.%d@%H:%M:%S" > VERSION
 
 serve:
 	@cd dist

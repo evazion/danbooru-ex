@@ -10,6 +10,7 @@
 
 * /artists: Remove 'e' to edit shortcut.
 * /pools: Remove 'e' to edit shortcut.
+* Change to date-based versioning scheme.
 
 # Release 2317
 
