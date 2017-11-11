@@ -16,10 +16,10 @@ export default class Users {
   }
 
   // Wordbreak long usernames (e.g. GiantCaveMushroom) by inserting
-  // zero-width spaces at lowercase -> non-lowercase transitions.
+  // wordbreaks at lowercase -> non-lowercase transitions.
   static initializeWordBreaks() {
-    this.userLinks().text((i, name) =>
-      name.replace(/([a-z])(?=[^a-z])/g, c => c + "\u200B")
+    this.userLinks().html((i, name) =>
+      name.replace(/([a-z])(?=[^a-z])/g, c => c + "<wbr>")
     );
   }
 
