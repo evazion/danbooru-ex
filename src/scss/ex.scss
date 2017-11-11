@@ -13,6 +13,7 @@ $post-preview: "article.post-preview, #c-moderator-post-queues .post-preview asi
 @import "scss/post_previews.scss";
 @import "scss/tag.scss";
 @import "scss/pseudo_tag_types.scss";
+@import "scss/wiki_pages.scss";
 
 .ex-fixed {
     position: fixed !important;
@@ -185,13 +186,6 @@ article.post-preview {
 .ui-selectable {
     -ms-touch-action: none;
     touch-action: none;
-}
-
-/* The icon beside wiki page collapsible headers. */
-a.ui-icon.collapsible-header {
-    display: inline-block;
-    margin-left: -8px;
-    cursor: pointer;
 }
 
 .ex-short-relative-time {
