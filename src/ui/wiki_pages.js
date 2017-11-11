@@ -12,7 +12,7 @@ export default class WikiPages {
 
   // Add collapse/expand button to headings.
   static initializeCollapsibleHeadings() {
-    const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+    const $headings = $("#wiki-page-body :header");
 
     if ($headings.length < 3) {
       return;
@@ -37,13 +37,12 @@ export default class WikiPages {
 
   // Add Table of Contents expandable.
   static initializeTableOfContents() {
-    const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+    const $headings = $("#wiki-page-body :header");
 
     const hasToC =
       $("div.expandable-header > span")
-      .filter((i, e) =>
-        $(e).text().match(/table of contents/i)
-      ).length > 0;
+      .filter((i, e) => $(e).text().match(/table of contents/i))
+      .length > 0;
 
     if ($headings.length < 3 || hasToC) {
       return;
@@ -71,21 +70,19 @@ export default class WikiPages {
                     .replace(/[^a-z]+/g, '-')
                     .replace(/^-|-$/, '');
 
-      const next_level = parseInt(e.tagName[1]);
-      if (next_level > level) {
+      const nextLevel = parseInt(e.tagName[1]);
+      if (nextLevel > level) {
         $submenu = $('<ul></ul>');
         $menu.append($submenu);
         $menu = $submenu;
-      } else if (next_level < level) {
+      } else if (nextLevel < level) {
         $menu = $menu.parent();
       }
 
       $(e).attr('id', anchor);
-      $menu.append($(
-        `<li><a href="#${anchor}">${header}</a></li>`
-      ));
+      $menu.append($(`<li><a href="#${anchor}">${header}</a></li>`));
 
-      level = next_level;
+      level = nextLevel;
     });
   }
 }
