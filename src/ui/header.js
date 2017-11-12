@@ -82,7 +82,7 @@ export default class Header {
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" data-autocomplete="tag-query" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
+          <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
           <input type="submit" value="Go">
         </form>
 
