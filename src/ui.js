@@ -30,6 +30,9 @@ export default class UI {
 
     EX.config.styleWikiLinks && UI.initializeWikiLinks();
     EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
+
+    const $viewport = $('<div id="ex-viewport"></div>');
+    $("body").append($viewport);
   }
 
   // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).

@@ -27,9 +27,6 @@ export default class PostPreviews {
   }
 
   static initialize(selector) {
-    const $viewport = $('<div id="ex-viewport"></div>');
-    $("body").append($viewport);
-
     $(document).on('mouseover', selector, event => {
       const delay = EX.config.thumbnailPreviewDelay;
       const [, postID] = $(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
@@ -74,7 +71,7 @@ export default class PostPreviews {
         position: {
           my: "top left",
           at: "top right",
-          viewport: $viewport,
+          viewport: $("#ex-viewport"),
           effect: false,
           adjust: {
             method: "flipinvert shift",

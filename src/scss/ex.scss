@@ -10,10 +10,12 @@ $post-preview: "article.post-preview, #c-moderator-post-queues .post-preview asi
 @import "scss/posts.scss";
 @import "scss/users.scss";
 @import "scss/panel.scss";
-@import "scss/post_previews.scss";
 @import "scss/tag.scss";
 @import "scss/pseudo_tag_types.scss";
 @import "scss/wiki_pages.scss";
+@import "scss/qtip.scss";
+@import "scss/post_previews.scss";
+@import "scss/user_excerpts.scss";
 
 .ex-fixed {
     position: fixed !important;

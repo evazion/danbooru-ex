@@ -7,8 +7,38 @@ import Post from "../post.js";
 import User from "../user.js";
 
 export default class Users {
+  static get QTIP_SETTINGS() {
+    return {
+      overwrite: false,
+      style: {
+        classes: "qtip-bootstrap",
+        tip: { corner: false },
+      },
+      show: {
+        solo: true,
+        ready: true
+      },
+      hide: {
+        delay: 100,
+        fixed: true,
+      },
+      position: {
+        my: "top left",
+        at: "top right",
+        effect: false,
+        adjust: {
+          method: "flipinvert shift",
+          resize: false,
+          scroll: false,
+          x: 10,
+        }
+      }
+    };
+  }
+
   static initialize() {
     this.initializeWordBreaks();
+    this.initializeUserTooltops();
 
     if ($("#c-users #a-show").length) {
       this.initializeExpandableGalleries();
@@ -24,33 +54,32 @@ export default class Users {
   }
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initializeUserLinks() {
-    const $users = this.userLinks();
-    const ids = $users.map((i, e) => this.parseUserId($(e)));
+  static initializeUserTooltops() {
+    // XXX triggers on Profile / Settings links on /static/site_map
+    $(document).on("mouseover", '#page a[href^="/users/"]', e => {
+        const $user = $(e.target);
+        const userId = Users.parseUserId($user);
 
-    User.search(ids).then(users => {
-      users = _.keyBy(users, "id");
-      $users.each((i, e) => {
-        const $user = $(e);
-        const id = this.parseUserId($user);
-        const user = users[id];
+        if (userId === null) {
+            return;
+        }
 
-        _(user).forOwn((value, key) =>
-          $user.attr(`data-${_(key).kebabCase()}`, value)
-        );
+        const qtipParams = _.merge(Users.QTIP_SETTINGS, {
+          show: { event: e.type },
+          position: { viewport: $("#ex-viewport") },
+          content: {
+            text: (event, api) => {
+              User.get(userId).then(user => {
+                api.set("content.text", Users.renderExcerpt(user));
+                api.reposition(event, false);
+              });
 
-        const privileges =
-          user.level_string +
-          (user.is_banned         ? " Banned"      : "") + 
-          (user.is_super_voter    ? " Supervoter"  : "") +
-          (user.can_approve_posts ? " Approver"    : "") +
-          (user.can_upload_free   ? " Contributor" : "");
+              return "Loading...";
+            },
+          }
+        });
 
-        const tooltip =
-          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
-
-        $user.attr("title", tooltip);
-      });
+        $user.qtip(qtipParams);
     });
   }
 
@@ -112,10 +141,44 @@ export default class Users {
     });
   }
 
+  static renderExcerpt(user) {
+    return `
+      <section class="ex-excerpt ex-user-excerpt">
+        <div class="ex-excerpt-title ex-user-excerpt-title">
+          <span class="user-info">${User.render(user)}</span>
+        </div>
+        <div class="ex-excerpt-body ex-user-excerpt-body">
+          <dl class="info">
+            <dt>Joined</dt>
+            <dd>${moment(user.created_at).fromNow()}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Uploads</dt>
+            <dd>${user.post_upload_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Edits</dt>
+            <dd>${user.post_update_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Notes</dt>
+            <dd>${user.note_update_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Comments</dt>
+            <dd>${user.comment_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Forum Posts</dt>
+            <dd>${user.forum_post_count}</dd>
+          </dl>
+        </div>
+      </section>
+    `;
+  }
+
   static userLinks() {
-    return $('a[href^="/users/"]')
-      .filter((i, e) => !$(e).text().match(/My Account|Profile/))
-      .filter((i, e) => this.parseUserId($(e)));
+    return $('#page a[href^="/users/"]').filter((i, e) => this.parseUserId($(e)));
   }
 
   static parseUserId($user) {

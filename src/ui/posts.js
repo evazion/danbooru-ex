@@ -242,8 +242,8 @@ export default class Posts {
 
   static renderExcerpt(post, uploader) {
     return `
-      <section class="ex-post-excerpt">
-        <div class="ex-post-excerpt-title">
+      <section class="ex-excerpt ex-post-excerpt">
+        <div class="ex-excerpt-title ex-post-excerpt-title">
           <span class="post-info id">
             Post #${post.id}
           </span>
@@ -281,7 +281,7 @@ export default class Posts {
             </a>
           </span>
         </div>
-        <div class="ex-post-excerpt-body">
+        <div class="ex-excerpt-body ex-post-excerpt-body">
           ${Posts.preview(post, { size: "large", classes: [ "ex-post-excerpt-preview", "ex-no-tooltip" ] })}
           <div class="ex-post-excerpt-metadata">
             ${Tag.renderTagList(post, "ex-tag-list-inline")}
