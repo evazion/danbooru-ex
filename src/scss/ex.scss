@@ -12,7 +12,6 @@ $post-preview: "article.post-preview, #c-moderator-post-queues .post-preview asi
 @import "scss/panel.scss";
 @import "scss/tag.scss";
 @import "scss/pseudo_tag_types.scss";
-@import "scss/wiki_pages.scss";
 @import "scss/qtip.scss";
 @import "scss/post_previews.scss";
 @import "scss/user_excerpts.scss";
@@ -223,4 +222,15 @@ article.post-preview {
 .paginator menu li {
     line-height: 2.5em;
     display: inline-block;
+}
+
+/* The icon beside collapsible headers on wiki pages and expandable galleries. */
+a.ui-icon.collapsible-header {
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Avoid pushing headers further right. */
+#c-wiki-pages #a-show a.ui-icon.collapsible-header {
+    margin-left: -8px;
 }
