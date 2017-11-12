@@ -2,25 +2,29 @@ import _ from "lodash";
 import $ from "jquery";
 
 export default class Resource {
-  static request(url, params = {}) {
+  static request(type, url, params = {}) {
     const query = `${url}?${decodeURIComponent($.param(params))}`;
-    console.time(`GET ${query}`);
+    console.time(`${type} ${query}`);
 
-    const request = $.getJSON(url, params);
-    console.log(`[NET] GET ${query}`, request);
+    const request = $.ajax({ url, type, data: params });
+    console.log(`[NET] ${type} ${query}`, request);
 
     return request.always(() => {
-      console.timeEnd(`GET ${query}`);
+      console.timeEnd(`${type} ${query}`);
       console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request)
     });
   }
 
+  static put(id, params = {}) {
+    return this.request("PUT", `${this.controller}/${id}.json`, params);
+  }
+
   static get(id, params = {}) {
-    return this.request(`${this.controller}/${id}.json`, params);
+    return this.request("GET", `${this.controller}/${id}.json`, params);
   }
 
   static index(params = {}) {
-    return this.request(`${this.controller}.json`, params);
+    return this.request("GET", `${this.controller}.json`, params);
   }
 
   static search(values, otherParams) {

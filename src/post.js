@@ -12,4 +12,8 @@ export default Resource.Post = class Post extends Resource {
       post.tag_string_general.split(/\s+/).map(name => ({ name, category: 0 }))
     );
   }
+
+  static update(postId, tags) {
+    return this.put(postId, { "post[old_tag_string]": "", "post[tag_string]": tags });
+  }
 }

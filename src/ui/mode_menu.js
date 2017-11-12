@@ -3,6 +3,7 @@
 import _ from "lodash";
 
 import EX from "../ex.js";
+import Post from "../post.js";
 import Posts from "./posts.js";
 import PreviewPanel from "./preview_panel.js";
 
@@ -137,12 +138,34 @@ export default class ModeMenu {
     const mode = ModeMenu.getMode();
 
     if (mode === "tag-script") {
-      const tag_script = ModeMenu.getTagScript();
-      $(".ui-selected").each((i, e) => {
-        const post_id = $(e).closest(".post-preview").data("id");
-        Danbooru.TagScript.run(post_id, tag_script);
-      });
+      const tags = ModeMenu.getTagScript();
+      const postIds = $(".ui-selected").map((i, e) => $(e).closest(".post-preview").data("id"));
+
+      ModeMenu.updatePosts(postIds, tags);
     }
+  }
+
+  static updatePosts(postIds, tags, updated = 0, total = postIds.length) {
+    const requests = _.map(postIds, postId => {
+      const promise = Promise.resolve(Post.update(postId, tags));
+
+      return promise.then(post => {
+          updated++;
+          Danbooru.notice(`Updated post #${postId} (${total - updated} remaining)`);
+          return { post: post, status: 200 };
+        }).catch(resp => {
+          return { id: postId, status: resp.status };
+        });
+    });
+
+    Promise.all(requests).then(posts => {
+      const failedPosts = _(posts).difference(_.filter(posts, { status: 200 })).map("id").value();
+      const delay = Math.min((failedPosts.length / 4), 3);
+
+      if (failedPosts.length > 0) {
+        _.delay(() => ModeMenu.updatePosts(failedPosts, tags, updated, total), delay * 1000);
+      }
+    });
   }
 
   static selectAll(event) {
