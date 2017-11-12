@@ -41,6 +41,7 @@ export default class Users {
     this.initializeUserTooltops();
 
     if ($("#c-users #a-show").length) {
+      this.initializeCollapsibleHeaders();
       this.initializeExpandableGalleries();
     }
   }
@@ -83,9 +84,24 @@ export default class Users {
     });
   }
 
+  static initializeCollapsibleHeaders () {
+    $("#c-users #a-show > .box").each((i, e) => {
+      const $gallery = $(e);
+
+      // Make gallery headers collapsible.
+      const $toggleCollapse = $(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>`);
+      $gallery.find("h2").prepend($toggleCollapse);
+
+      $toggleCollapse.click(event => {
+        $(event.target).closest("h2").next("div").slideToggle();
+        $(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+        return false;
+      });
+    });
+  }
+
   static initializeExpandableGalleries() {
-    const user =
-      $("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
+    const user = $("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
 
     // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
     $(".box a[href^='/favorites?user_id=']").attr(
@@ -94,16 +110,6 @@ export default class Users {
 
     $("#c-users #a-show > .box").each((i, e) => {
       const $gallery = $(e).addClass("ex-post-gallery");
-
-      // Make gallery headers collapsible.
-      const $toggleCollapse = $(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header" href="#"></a>`);
-      $gallery.find("h2").prepend($toggleCollapse);
-
-      $toggleCollapse.click(event => {
-        $(event.target).closest("h2").next("div").slideToggle();
-        $(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
-        return false;
-      });
 
       // Store the tag search corresponding to this gallery section in a data
       // attribute for the click handler.
@@ -123,7 +129,6 @@ export default class Users {
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
         Post.index({ tags: $gallery.data("tags"), page, limit }).then(posts => {
-          console.log("inserting thumbnails");
           const html = posts.map(Posts.preview).join("");
 
           // Hide the original posts to avoid appending duplicate posts.
