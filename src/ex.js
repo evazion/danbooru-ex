@@ -29,7 +29,7 @@ export default window.EX = class EX {
     EX.config.enableHeader && UI.Header.initialize();
     EX.config.resizeableSidebars && UI.Sidebar.initialize();
     EX.config.showThumbnailPreviews && UI.PostPreviews.initializeThumbnailPreviews();
-    EX.config.showPostLinkPreviews && UI.PostPreviews.initializePostLinkPreviews();
+    // EX.config.showPostLinkPreviews && UI.PostPreviews.initializePostLinkPreviews();
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();

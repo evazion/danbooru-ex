@@ -9,8 +9,8 @@ import User from "../user.js";
 export default class PostPreviews {
   // Show post previews when hovering over post #1234 links.
   static initializePostLinkPreviews() {
-    // const posts = $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text()));
-    // PostPreviews.initialize('a[href^="/posts/"]');
+    const posts = $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text()));
+    PostPreviews.initialize(posts);
   }
 
   // Show post previews when hovering over thumbnails.
