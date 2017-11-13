@@ -133,7 +133,7 @@ export default class Config {
       tagScriptNumber: Setting.Session({
         value: 1
       }),
-      headerFixed: Setting.Session({
+      headerFixed: Setting.Shared({
         value: true
       }),
     };
