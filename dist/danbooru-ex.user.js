@@ -1,21 +1,24 @@
 // ==UserScript==
-// @name         Danbooru EX
+// @name         Danbooru EX (Beta)
+// @version      2017.11.13@02:50:45
 // @namespace    https://github.com/evazion/danbooru-ex
-// @version      2317
-// @source       https://danbooru.donmai.us/users/52664
+// @source       https://github.com/evazion/danbooru-ex
 // @description  Danbooru UI Enhancements
 // @author       evazion
 // @match        *://*.donmai.us/*
-// @match        *://localhost/*
 // @grant        none
 // @run-at       document-body
-// @downloadURL  https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
+// @downloadURL  https://github.com/evazion/danbooru-ex/raw/unstable/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.15.0/lodash.js
-// @require      https://unpkg.com/filesize@3.3.0
+// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js
+// @require      https://unpkg.com/filesize@3.5.11
 // @require      https://unpkg.com/css-element-queries@0.3.2/src/ResizeSensor.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.js
+// @require      https://unpkg.com/mousetrap@1.6.0/mousetrap.js
+// @require      https://unpkg.com/mousetrap@1.6.0/plugins/record/mousetrap-record.js
+// @require      https://unpkg.com/mousetrap@1.6.0/plugins/global-bind/mousetrap-global-bind.js
 // ==/UserScript==
 
 /*
@@ -27,7 +30,10 @@ console.time("loaded");
 console.time("preinit");
 console.time("initialized");
 
-var danbooruEX = (function ($$1,moment$1,_$1,filesize) {
+window.moment = moment;
+window.Mousetrap = Mousetrap;
+
+var danbooruEX = (function ($$1,_,Mousetrap,moment,ResizeSensor,filesize) {
 'use strict';
 
 function ___$insertStyle(css) {
@@ -46,161 +52,174 @@ function ___$insertStyle(css) {
 
   return css;
 }
-$$1 = 'default' in $$1 ? $$1['default'] : $$1;
-moment$1 = 'default' in moment$1 ? moment$1['default'] : moment$1;
-_$1 = 'default' in _$1 ? _$1['default'] : _$1;
-filesize = 'default' in filesize ? filesize['default'] : filesize;
+
+$$1 = $$1 && $$1.hasOwnProperty('default') ? $$1['default'] : $$1;
+_ = _ && _.hasOwnProperty('default') ? _['default'] : _;
+Mousetrap = Mousetrap && Mousetrap.hasOwnProperty('default') ? Mousetrap['default'] : Mousetrap;
+moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
+ResizeSensor = ResizeSensor && ResizeSensor.hasOwnProperty('default') ? ResizeSensor['default'] : ResizeSensor;
+filesize = filesize && filesize.hasOwnProperty('default') ? filesize['default'] : filesize;
+
+/* global Danbooru */
+
+class Setting {
+  constructor({ value, help, configurable, storage } = {}) {
+    this.value = value;
+    this.help = help;
+    this.configurable = configurable;
+    this.storage = storage;
+  }
+
+  static Session({ value } = {}) {
+    return new Setting({ value, help: "none", configurable: false, storage: window.sessionStorage });
+  }
+
+  static Shared({ value = true, help, configurable = true } = {}) {
+    return new Setting({ value, help, configurable, storage: window.localStorage });
+  }
+}
 
 class Config {
-  static get Defaults() {
+  static get Items() {
     return {
-      enableHeader: {
-        configurable: true,
+      schemaVersion: Setting.Shared({
+        configurable: false,
+        value: 2
+      }),
+
+      enableHeader: Setting.Shared({
         help: "Enable header bar containing search box and mode menu.",
-        value: true,
-      },
-      enableModeMenu: {
-        configurable: true,
+      }),
+      enableModeMenu: Setting.Shared({
         help: "Enable mode menu in header bar, disable mode menu in the sidebar. Required for preview panel.",
-        value: true,
-      },
-      enablePreviewPanel: {
-        configurable: true,
+      }),
+      enablePreviewPanel: Setting.Shared({
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
-        value: true,
-      },
-      enableHotkeys: {
-        configurable: true,
+      }),
+      enableHotkeys: Setting.Shared({
         help: "Enable additional keyboard shortcuts.",
-        value: true,
-      },
-      showThumbnailPreviews: {
-        configurable: true,
+      }),
+      enableLargeThumbnails: Setting.Shared({
+        configurable: false,
+        help: "Enable extra large thumbnails (experimental; bandwidth intensive).",
+        value: false,
+      }),
+      largeThumbnailSize: Setting.Shared({
+        configurable: false,
+        help: "The size (in pixels) of large thumbnails.",
+        value: 229,
+      }),
+      showThumbnailPreviews: Setting.Shared({
         help: "Show post preview tooltips when hovering over thumbnails.",
-        value: true,
-      },
-      showPostLinkPreviews: {
-        configurable: true,
+      }),
+      showPostLinkPreviews: Setting.Shared({
         help: "Show post preview tooltips when hovering over post #1234 links.",
-        value: true,
-      },
-      enableNotesLivePreview: {
-        configurable: true,
+      }),
+      enableNotesLivePreview: Setting.Shared({
         help: "Automatically update note preview as you edit.",
-        value: true,
-      },
-      usernameTooltips: {
-        configurable: true,
+      }),
+      usernameTooltips: Setting.Shared({
         help: "Enable tooltips on usernames",
         value: false,
-      },
-      styleWikiLinks: {
-        configurable: true,
+      }),
+      styleWikiLinks: Setting.Shared({
         help: "Colorize tags in the wiki and forum, underline links to empty tags, and add tooltips to tags.",
-        value: true,
-      },
-      useRelativeTimestamps: {
-        configurable: true,
+      }),
+      useRelativeTimestamps: Setting.Shared({
         help: 'Replace fixed times ("2016-08-10 23:25") with relative times ("3 months ago").',
-        value: true,
-      },
-      resizeableSidebars: {
-        configurable: true,
+      }),
+      resizeableSidebars: Setting.Shared({
         help: "Make the tag sidebar resizeable (drag edge to resize).",
-        value: true,
-      },
-      autoplayVideos: {
-        configurable: true,
+      }),
+      autoplayVideos: Setting.Shared({
         help: "Enable autoplay for webm and mp4 posts (normally enabled by Danbooru).",
-        value: true,
-      },
-      loopVideos: {
-        configurable: true,
+      }),
+      loopVideos: Setting.Shared({
         help: "Enable looping for video_with_sound posts (normally disabled by Danbooru).",
-        value: true,
-      },
-      muteVideos: {
-        configurable: true,
+      }),
+      muteVideos: Setting.Shared({
         help: "Mute video_with_sound posts by default.",
         value: false,
-      },
+      }),
 
-      artistsRedesign: {
-        configurable: true,
+      artistsRedesign: Setting.Shared({
         help: "Enable the redesigned /artists index.",
-        value: true,
-      },
-      commentsRedesign: {
-        configurable: true,
+      }),
+      commentsRedesign: Setting.Shared({
         help: "Enable comment scores and extra info on posts in /comments",
-        value: true,
-      },
-      forumRedesign: {
-        configurable: true,
+      }),
+      forumRedesign: Setting.Shared({
         help: 'Replace Permalinks on forum posts with "forum #1234" links',
-        value: true,
-      },
-      postsRedesign: {
-        configurable: true,
+      }),
+      postsRedesign: Setting.Shared({
         help: 'Move artist tags to the top of the tag list, put tag counts next to tag list headers, and add hotkeys for rating / voting on posts.',
-        value: true,
-      },
-      postVersionsRedesign: {
-        configurable: true,
+      }),
+      postVersionsRedesign: Setting.Shared({
         help: "Add thumbnails on the /post_versions page",
-        value: true,
-      },
-      wikiRedesign: {
-        configurable: true,
+      }),
+      wikiRedesign: Setting.Shared({
         help: "Make header sections in wiki entries collapsible and add table of contents to long wiki pages",
-        value: true,
-      },
-      usersRedesign: {
-        configurable: true,
+      }),
+      usersRedesign: Setting.Shared({
         help: "Add expandable saved searches to user account pages",
-        value: true,
-      },
-      thumbnailPreviewDelay: {
+      }),
+
+      thumbnailPreviewDelay: Setting.Shared({
         configurable: false,
         help: "The delay in milliseconds when hovering over a thumbnail before the preview appears.",
         value: 650,
-      },
+      }),
 
-      schemaVersion: {
-        configurable: false, value: 1,
-      }, defaultSidebarWidth: {
-        configurable: false, value: 210,
-      }, defaultPreviewPanelWidth: {
-        configurable: false, value: 480,
-      }, sidebarState: {
-        configurable: false, value: {},
-      }, previewPanelState: {
-        configurable: false, value: {},
-      }, modeMenuState: {
-        configurable: false, value: {},
-      }, tagScriptNumber: {
-        configurable: false, value: 1,
-      }, tagScripts: {
+      tagScripts: Setting.Shared({
         configurable: false,
-        value: _$1.fill(Array(10), ""),
-      }, headerState: {
-        configurable: false, value: "ex-fixed",
-      },
+        value: _.fill(Array(10), "")
+      }),
+
+      defaultSidebarWidth: Setting.Session({
+        value: 210
+      }),
+      defaultPreviewPanelWidth: Setting.Session({
+        value: 480
+      }),
+      sidebarState: Setting.Session({
+        value: {}
+      }),
+      previewPanelState: Setting.Session({
+        value: {}
+      }),
+      modeMenuState: Setting.Session({
+        value: {}
+      }),
+      tagScriptNumber: Setting.Session({
+        value: 1
+      }),
+      headerFixed: Setting.Session({
+        value: true
+      }),
     };
   }
 
   constructor() {
-    this.storage = window.localStorage;
+    this.migrate();
 
     if ($("#c-users #a-edit").length) {
       this.initializeForm();
     }
   }
 
+  migrate() {
+    if (Config.Items.schemaVersion.storage["EX.config.schemaVersion"] === undefined) {
+      this.reset();
+    }
+
+    this.schemaVersion = Config.Items.schemaVersion.value;
+  }
+
   get(key) {
-    const value = JSON.parse(_$1.defaultTo(
-      this.storage["EX.config." + key],
-      JSON.stringify(Config.Defaults[key].value)
+    const item = Config.Items[key];
+    const value = JSON.parse(_.defaultTo(
+      item.storage["EX.config." + key],
+      JSON.stringify(item.value)
     ));
 
     console.log(`[CFG] READ EX.config.${key}:`, value);
@@ -208,18 +227,20 @@ class Config {
   }
 
   set(key, value) {
-    this.storage["EX.config." + key] = JSON.stringify(value);
+    const item = Config.Items[key];
+    item.storage["EX.config." + key] = JSON.stringify(value);
     console.log(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
   get all() {
-    return _$1.mapValues(Config.Defaults, (v, k) => this.get(k));
+    return _.mapValues(Config.Items, (v, k) => this.get(k));
   }
 
   reset() {
-    _$1(Config.Defaults).keys().each(key => {
-      delete this.storage["EX.config." + key];
+    _(Config.Items).each((item, key) => {
+      console.log(`[CFG] DELETE EX.config.${key}`);
+      delete item.storage["EX.config." + key];
     });
 
     return this;
@@ -233,8 +254,8 @@ class Config {
 
   initializeForm() {
     const settingsHtml =
-      _$1(Config.Defaults)
-      .map((props, name) => _$1.merge(props, { name }))
+      _(Config.Items)
+      .map((props, name) => _.merge(props, { name }))
       .filter("configurable")
       .map(setting => this.renderOption(setting))
       .join("");
@@ -278,13 +299,13 @@ class Config {
 
   renderOption(setting) {
     const name = setting.name;
-    const id = "ex_config_" + _$1.snakeCase(name);
+    const id = "ex_config_" + _.snakeCase(name);
     const value = this.get(name) ? "checked" : "";
 
     return `
       <div class="input checkbox optional">
-        <input class="boolean optional" type="checkbox" ${value} name="${_$1.camelCase(name)}" id="${id}">
-        <label class="boolean optional" for="${id}">${_$1.startCase(name)}</label>
+        <input class="boolean optional" type="checkbox" ${value} name="${_.camelCase(name)}" id="${id}">
+        <label class="boolean optional" for="${id}">${_.startCase(name)}</label>
         <div class="hint">${setting.help}</div>
       </div>
     `;
@@ -292,7 +313,7 @@ class Config {
 }
 
 // Define getters/setters for `Config.showHeaderBar` et al.
-for (let k of _$1.keys(Config.Defaults)) {
+for (let k of _.keys(Config.Items)) {
   const key = k;
   Object.defineProperty(Config.prototype, key, {
     get: function ()  { return this.get(key) },
@@ -303,7 +324,7 @@ for (let k of _$1.keys(Config.Defaults)) {
 }
 
 class DText {
-  static create_expandable(name, content) {
+  static createExpandable(name, content) {
     const $expandable = $(`
       <div class="expandable">
         <div class="expandable-header">
@@ -322,7 +343,7 @@ class DText {
     $(function () {
       $expandable.find('.expandable-button').off("click").click(e => {
         $(e.target).closest('.expandable').find('.expandable-content').fadeToggle('fast');
-        $(e.target).val((_, val) => val === 'Show' ? 'Hide' : 'Show');
+        $(e.target).val((_$$1, val) => val === 'Show' ? 'Hide' : 'Show');
         e.preventDefault();
       });
     });
@@ -332,28 +353,39 @@ class DText {
 }
 
 class Resource {
-  static get(params) {
-    const url = "/" + _$1.snakeCase(this.name.toLowerCase() + "s");
-    const query = `${url}.json?${decodeURIComponent($$1.param(params))}`;
-    const request = $$1.getJSON(url, params);
+  static request(type, url, params = {}) {
+    const query = `${url}?${decodeURIComponent($$1.param(params))}`;
+    console.time(`${type} ${query}`);
 
-    console.time(`GET ${query}`);
-    console.log(`[NET] GET ${query}`, request);
+    const request = $$1.ajax({ url, type, data: params });
+    console.log(`[NET] ${type} ${query}`, request);
 
     return request.always(() => {
-      console.timeEnd(`GET ${query}`);
+      console.timeEnd(`${type} ${query}`);
       console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request);
     });
+  }
+
+  static put(id, params = {}) {
+    return this.request("PUT", `${this.controller}/${id}.json`, params);
+  }
+
+  static get(id, params = {}) {
+    return this.request("GET", `${this.controller}/${id}.json`, params);
+  }
+
+  static index(params = {}) {
+    return this.request("GET", `${this.controller}.json`, params);
   }
 
   static search(values, otherParams) {
     const key = this.primaryKey;
     const requests = this.batch(values).map(batch => {
-      const params = _$1.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
-      return this.get(params);
+      const params = _.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
+      return this.index(params);
     });
 
-    return Promise.all(requests).then(_$1.flatten);
+    return Promise.all(requests).then(_.flatten);
   }
 
   // Collect items in batches, with each batch having a max count of 1000 items
@@ -361,7 +393,7 @@ class Resource {
   // because these are the parameter limits for requests to the API.
   static batch(items, limit = 1000, maxLength = 6500) {
     let item_batches = [[]];
-    items = _$1(items).sortBy().sortedUniq().value();
+    items = _(items).sortBy().sortedUniq().value();
 
     for (let item of items) {
       const current_batch = item_batches[0];
@@ -377,13 +409,107 @@ class Resource {
       }
     }
 
-    return _$1(item_batches).reject(_$1.isEmpty).reverse().value();
+    return _(item_batches).reject(_.isEmpty).reverse().value();
   }
 
   static get searchParams() {
     return { limit: 1000 };
   }
+
+  static get controller() {
+    return "/" + _.snakeCase(this.name + "s");
+  }
 }
+
+var Post = Resource.Post = class Post extends Resource {
+  static get primaryKey() { return "post"; }
+
+  static tags(post) {
+    return _.concat(
+      post.tag_string_artist.split(/\s+/).map(name => ({ name, category: 1 })),
+      post.tag_string_copyright.split(/\s+/).map(name => ({ name, category: 3 })),
+      post.tag_string_character.split(/\s+/).map(name => ({ name, category: 4 })),
+      post.tag_string_general.split(/\s+/).map(name => ({ name, category: 0 }))
+    );
+  }
+
+  static update(postId, tags) {
+    return this.put(postId, { "post[old_tag_string]": "", "post[tag_string]": tags });
+  }
+};
+
+var Tag = Resource.Tag = class Tag extends Resource {
+  static get Categories() {
+    return [
+      "General",    // 0
+      "Artist",     // 1
+      undefined,    // 2 (unused)
+      "Copyright",  // 3
+      "Character"   // 4
+    ];
+  }
+
+  static get searchParams() {
+    return _.merge({}, super.searchParams, { search: { hide_empty: "no" }});
+  }
+
+  static get primaryKey() { return "name"; }
+
+  static renderTag(tag) {
+    const href = `/posts?tags=${encodeURIComponent(tag.name)}`;
+    return `<a class="search-tag tag-type-${tag.category}" href="${href}">${_.escape(tag.name)}</a>`;
+  }
+
+  static renderTagList(post, classes) {
+    const tags = Post.tags(post);
+    return `
+      <section class="ex-tag-list ${classes}">
+        <h1>Tags</h1>
+        <ul>${tags.map(Tag.renderTagListItem).join("")}</ul>
+      </section>
+    `;
+  }
+
+  static renderTagListItem(tag) {
+    return `<li class="category-${tag.category}">${Tag.renderTag(tag)}</li>`;
+  }
+
+  static renderSearchTagListItem(tag) {
+    return `
+      <li class="category-${tag.category}">
+        <a class="wiki-link" href="/wiki_pages/show_or_new?title=${encodeURIComponent(tag.name)}">?</a>
+        ${Tag.renderTag(tag)}
+        <span class="post-count">${tag.post_count}</span>
+      </li>
+    `;
+  }
+};
+
+var TagImplication = Resource.TagImplication = class TagImplication extends Resource {
+  static get primaryKey() { return "id"; }
+};
+
+/* global Danbooru */
+
+var User = Resource.User = class User extends Resource {
+  static get primaryKey() { return "id"; }
+
+  static render(user) {
+    let classes = "user-" + user.level_string.toLowerCase();
+
+    if (user.can_approve_posts) { classes += " user-post-approver"; }
+    if (user.can_upload_free)   { classes += " user-post-uploader"; }
+    if (user.is_super_voter)    { classes += " user-super-voter"; }
+    if (user.is_banned)         { classes += " user-banned"; }
+    if (Danbooru.meta("style-usernames") === "true") { classes += " with-style"; }
+
+    return `
+      <a class="${classes}" href="/users/${user.id}">${_.escape(user.name)}</a>
+    `;
+  }
+};
+
+/* global Danbooru */
 
 class Posts {
   static initialize() {
@@ -391,11 +517,13 @@ class Posts {
       return;
     }
 
+    $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
-    Posts.initialize_patches();
+    Posts.initializePatches();
+    // Posts.initializeImplications();
     Posts.initializeTagList();
-    Posts.initialize_hotkeys();
-    Posts.initialize_video();
+    Posts.initializeHotkeys();
+    Posts.initializeVideo();
   }
 
   // Resize notes/ugoira controls as window is resized.
@@ -405,8 +533,24 @@ class Posts {
     });
   }
 
+  static initializeLargeThumbnails() {
+    $("article.post-preview").each((i, e) => {
+      const $post = $(e);
+      const $img = $post.find("img");
+
+      const data = Posts.normalize($post.data());
+      const src = `${data.large_file_url}`;
+      // const src = `//danbooru.s3.amazonaws.com/${data.md5}.${data.file_ext}`;
+
+      const size = `${EX.config.largeThumbnailSize}px`;
+      $post.css({ "width": size, "height": size });
+      $img.css({ "width": size, "height": size, "object-fit": "contain" });
+      $img.attr("src", src);
+    });
+  }
+
   // Update Rating in sidebar when it changes.
-  static initialize_patches() {
+  static initializePatches() {
     function patched_update_data(update_data, data) {
       const rating = data.rating === 's' ? "Safe"
                     : data.rating === 'q' ? "Questionable"
@@ -417,11 +561,11 @@ class Posts {
       return update_data(data);
     }
 
-    Danbooru.Post.update_data = _$1.wrap(Danbooru.Post.update_data, patched_update_data);
+    Danbooru.Post.update_data = _.wrap(Danbooru.Post.update_data, patched_update_data);
   }
 
   static initializeTagList() {
-    _$1.forOwn({
+    _.forOwn({
       "Artist": "artist",
       "Copyrights": "copyright",
       "Characters": "character",
@@ -436,13 +580,40 @@ class Posts {
     });
   }
 
+  static initializeImplications() {
+    let $tags = $('#tag-list');
+    let tag_string = $("#image-container").data("tags");
+
+    TagImplication.index({ search: { antecedent_name: tag_string }}).then(implications => {
+      let implied_tag_names = _(implications).map('descendant_names').flatMap(str => str.split(" ")).sort().uniq().value();
+
+      Tag.search(implied_tag_names).then(implied_tags => {
+        let sortCategory = (category) =>
+            category === 1 ? 1  // artist
+          : category === 2 ? 2  // copyright
+          : category === 4 ? 3  // character
+          : category === 0 ? 4  // general
+          :                  0; // other
+
+        implied_tags = _.sortBy(implied_tags, [(tag) => sortCategory(tag.category), "name"]);
+
+        $tags.append(`
+          <h2>Implied Tags</h2>
+          <ul>
+            ${implied_tags.map(Tag.renderSearchTagListItem).join("")}
+          </ul>
+        `);
+      });
+    });
+  }
+
   /*
    * Alt+S: Rate Safe.
    * Alt+Q: Rate Questionable.
    * Alt+E: Rate Explicit.
    * U / Alt+U: Vote up / vote down.
    */
-  static initialize_hotkeys() {
+  static initializeHotkeys() {
     const post_id = Danbooru.meta("post-id");
 
     const rate = function (post_id, rating) {
@@ -456,11 +627,11 @@ class Posts {
     $(document).keydown("alt+q", rate(post_id, 'q'));
     $(document).keydown("alt+e", rate(post_id, 'e'));
 
-    $(document).keydown("u",     e => Danbooru.Post.vote('up',   post_id));
-    $(document).keydown("alt+u", e => Danbooru.Post.vote('down', post_id));
+    $(document).keydown("u",     () => Danbooru.Post.vote('up',   post_id));
+    $(document).keydown("alt+u", () => Danbooru.Post.vote('down', post_id));
   }
 
-  static initialize_video() {
+  static initializeVideo() {
     const $video = $("video#image").get(0);
     if ($video) {
       $video.autoplay = EX.config.autoplayVideos;
@@ -472,13 +643,13 @@ class Posts {
   // Convert the object returned by $(post).data() to an object with the same
   // properties that the JSON API returns.
   static normalize(data) {
-    let post = _$1.mapKeys(data, (v, k) => _$1.snakeCase(k));
+    let post = _.mapKeys(data, (v, k) => _.snakeCase(k));
     post.md5 = post.md_5;
 
     const flags = post.flags.split(/\s+/);
-    post.is_pending = _$1.indexOf(flags, "pending") !== -1;
-    post.is_flagged = _$1.indexOf(flags, "flagged") !== -1;
-    post.is_deleted = _$1.indexOf(flags, "deleted") !== -1;
+    post.is_pending = _.indexOf(flags, "pending") !== -1;
+    post.is_flagged = _.indexOf(flags, "flagged") !== -1;
+    post.is_deleted = _.indexOf(flags, "deleted") !== -1;
 
     post.has_visible_children = post.has_children;
     post.tag_string = post.tags;
@@ -486,6 +657,7 @@ class Posts {
     post.status_flags = post.flags;
     post.image_width = post.width;
     post.image_height = post.height;
+    post.large_file_url = post.large_file_url.replace(/https?:\/\/.*\.donmai\.us\//, "");
 
     return post;
   }
@@ -503,9 +675,9 @@ class Posts {
     const data_attributes = `
       data-id="${post.id}"
       data-has-sound="${!!post.tag_string.match(/(video_with_sound|flash_with_sound)/)}"
-      data-tags="${_$1.escape(post.tag_string)}"
+      data-tags="${_.escape(post.tag_string)}"
       data-pools="${post.pool_string}"
-      data-uploader="${_$1.escape(post.uploader_name)}"
+      data-uploader="${_.escape(post.uploader_name)}"
       data-approver-id="${post.approver_id}"
       data-rating="${post.rating}"
       data-width="${post.image_width}"
@@ -524,18 +696,40 @@ class Posts {
       data-preview-file-url="${post.preview_file_url}"
     `;
 
-    const src = (size === "preview") ? post.preview_file_url
-              : (size === "large")   ? post.large_file_url
-              : post.file_url;
+    let src, scale;
+    if (size === "preview") {
+      src = post.preview_file_url;
 
-    // XXX only do this if <video>.
-    const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
-    const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
-    const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+      scale = Math.min(150 / post.image_width, 150 / post.image_height);
+      scale = Math.min(1, scale);
+    } else if (size === "large") {
+      src = post.large_file_url;
 
-    const media = (post.file_ext.match(/webm|mp4|zip/) && size != "preview")
-                ? `<video class="post-media" ${autoplay} ${loop} ${muted} src="${src}" title="${_$1.escape(post.tag_string)}">`
-                : `<img class="post-media" itemprop="thumbnailUrl" src="${src}" title="${_$1.escape(post.tag_string)}">`;
+      scale = Math.min(1, 850 / post.image_width);
+    } else {
+      src = post.file_url;
+
+      scale = 1;
+    }
+
+    const [width, height] = [Math.round(post.image_width * scale), Math.round(post.image_height * scale)];
+
+    let media;
+    if (post.file_ext.match(/webm|mp4|zip/) && size != "preview") {
+      const autoplay = (size === "large" || EX.config.autoplayVideos) ? "autoplay" : "";
+      const loop     = (size === "large" || EX.config.loopVideos)     ? "loop"     : "";
+      const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
+
+      media = `
+        <video class="post-media" ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
+               src="${src}" title="${_.escape(post.tag_string)}">
+      `;
+    } else {
+      media = `
+        <img class="post-media" itemprop="thumbnailUrl" width="${width}" height="${height}"
+             src="${src}" title="${_.escape(post.tag_string)}">
+      `;
+    }
 
     // XXX get the tag params from the URL if on /posts.
     const tag_params = "";
@@ -545,6 +739,57 @@ class Posts {
                id="post_${post.id}" class="${preview_class}" ${data_attributes}>
         <a href="/posts/${post.id}${tag_params}">${media}</a>
       </article>
+    `;
+  }
+
+  static renderExcerpt(post, uploader) {
+    return `
+      <section class="ex-excerpt ex-post-excerpt">
+        <div class="ex-excerpt-title ex-post-excerpt-title">
+          <span class="post-info id">
+            Post #${post.id}
+          </span>
+
+          <span class="separator">·</span>
+          <span class="post-info uploader">${User.render(uploader)}</span>
+
+          <span class="separator">·</span>
+          <time class="post-info created-at ex-short-relative-time"
+                datetime="${post.created_at}"
+                title="${moment(post.created_at).format()}">
+            ${moment(post.created_at).locale("en-short").fromNow()} ago
+          </time>
+
+          <span class="separator">·</span>
+          <span class="post-info up-score">
+            ${post.up_score}
+            <a href="#">
+              <i class="fa fa-lg fa-thumbs-o-up" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="post-info down-score">
+            ${post.down_score}
+            <a href="#">
+              <i class="fa fa-lg fa-thumbs-o-down" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="separator">·</span>
+          <span class="post-info fav-count">
+            <a href="#">${post.fav_count}</a>
+            <a href="#">
+              <i class="fa fa-lg fa-star-o" aria-hidden="true"></i>
+            </a>
+          </span>
+        </div>
+        <div class="ex-excerpt-body ex-post-excerpt-body">
+          ${Posts.preview(post, { size: "large", classes: [ "ex-post-excerpt-preview", "ex-no-tooltip" ] })}
+          <div class="ex-post-excerpt-metadata">
+            ${Tag.renderTagList(post, "ex-tag-list-inline")}
+          </div>
+        </div>
+      </section>
     `;
   }
 }
@@ -557,22 +802,25 @@ class PreviewPanel {
       #c-post-appeals #a-index,
       #c-post-flags #a-index,
       #c-post-versions #a-index,
+      #c-explore-posts > div,
       #c-notes #a-index,
       #c-pools #a-gallery,
       #c-pools #a-show,
       #c-comments #a-index,
       #c-moderator-post-queues #a-show,
-      #c-users #a-show
+      #c-users #a-show,
+      #c-wiki-pages > div > #content,
+      #c-wiki-page-versions > div > #content
     `);
 
     if ($content.length === 0) {
       return;
     }
 
-    $content.parent().addClass("ex-preview-panel-container");
-    $content.addClass("ex-content-panel");
+    $content.parent().addClass("ex-panel-container");
+    $content.addClass("ex-content-panel ex-panel");
     $content.after(`
-      <section id="ex-preview-panel-resizer" class="ex-vertical-resizer"></section>
+      <div id="ex-preview-panel-resizer" class="ex-vertical-resizer"></div>
       <section id="ex-preview-panel" class="ex-panel">
         <div>
           <article>
@@ -586,23 +834,27 @@ class PreviewPanel {
     // PreviewPanel.origTop = $("#ex-preview-panel > div").offset().top;
     PreviewPanel.origTop = 127;
 
-    const width = _$1.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
+    const width = _.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
     PreviewPanel.setWidth(width);
     PreviewPanel.setHeight();
     PreviewPanel.save();
 
     if (ModeMenu.getMode() === "view") {
-      $("#ex-preview-panel").hide();
+      PreviewPanel.$panel.hide();
     }
 
-    $(document).scroll(_$1.throttle(PreviewPanel.setHeight, 16));
+    $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
     $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
       helper: "clone",
-      drag: _$1.throttle(PreviewPanel.resize, 16),
-      stop: _$1.debounce(PreviewPanel.save, 100),
+      drag: _.throttle(PreviewPanel.resize, 16),
+      stop: _.debounce(PreviewPanel.save, 100),
     });
+  }
+
+  static get $panel() {
+    return $("#ex-preview-panel");
   }
 
   static resize(e, ui) {
@@ -612,20 +864,24 @@ class PreviewPanel {
 
   static save() {
     let state = EX.config.previewPanelState;
-    state[EX.config.pageKey()] = $("#ex-preview-panel").width();
+    state[EX.config.pageKey()] = PreviewPanel.$panel.width();
     EX.config.previewPanelState = state;
-  };
+  }
+
+  static opened() {
+    return PreviewPanel.$panel.is(":visible") && PreviewPanel.$panel.width() > 0;
+  }
 
   static open() {
-    $("#ex-preview-panel").show({ effect: "slide", direction: "left" }).promise().then((e) => {
-      PreviewPanel.save();
-    });
+    if (PreviewPanel.$panel.width() === 0) {
+      PreviewPanel.setWidth(EX.config.defaultPreviewPanelWidth);
+    }
+
+    PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then(PreviewPanel.save);
   }
 
   static close() {
-    $("#ex-preview-panel").hide({ effect: "slide", direction: "right" }).promise().then((e) => {
-      PreviewPanel.save();
-    });
+    PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then(PreviewPanel.save);
   }
 
   static switchMode() {
@@ -637,7 +893,8 @@ class PreviewPanel {
   }
 
   static setWidth(width) {
-    $("#ex-preview-panel").width(width);
+    PreviewPanel.$panel.width(width);
+    PreviewPanel.$panel.css({ flex: `0 0 ${width}px` });
     $("#ex-preview-panel > div").width(width);
   }
 
@@ -664,32 +921,47 @@ class PreviewPanel {
   }
 }
 
+/* global Danbooru */
+
 class ModeMenu {
   static initialize() {
     ModeMenu.uninitializeDanbooruModeMenu();
+    ModeMenu.overrideDanbooruArrowKeys();
     ModeMenu.initializeModeMenu();
     ModeMenu.initializeTagScriptControls();
     ModeMenu.initializeThumbnails();
-    ModeMenu.initializeHotkeys();
   }
 
   static uninitializeDanbooruModeMenu() {
-    Danbooru.PostModeMenu.initialize = _$1.noop;
-    Danbooru.PostModeMenu.show_notice = _$1.noop;
+    Danbooru.PostModeMenu.initialize = _.noop;
+    Danbooru.PostModeMenu.show_notice = _.noop;
     $(".post-preview a").unbind("click", Danbooru.PostModeMenu.click);
     $(document).unbind("keydown", "1 2 3 4 5 6 7 8 9 0", Danbooru.PostModeMenu.change_tag_script);
     $("#sidebar #mode-box").hide();
   }
 
+  // Danbooru's default left / right arrow key bindings conflict with our use
+  // of the arrow keys in tag script / preview mode. Ignore these bindings
+  // during these modes.
+  static overrideDanbooruArrowKeys() {
+    Danbooru.Paginator.next_page = _.wrap(Danbooru.Paginator.next_page, function(next_page) {
+      if (ModeMenu.getMode() == "view") { next_page(); }
+    });
+
+    Danbooru.Paginator.prev_page = _.wrap(Danbooru.Paginator.prev_page, function(prev_page) {
+      if (ModeMenu.getMode() == "view") { prev_page(); }
+    });
+  }
+
   static initializeModeMenu() {
     $('.ex-mode-menu select[name="mode"]').change(ModeMenu.switchMode);
-    const mode = _$1.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], "view");
+    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], "view");
     ModeMenu.setMode(mode);
   }
 
   static initializeTagScriptControls() {
     $('.ex-mode-menu input[name="tag-script"]').on(
-      "input", _$1.debounce(ModeMenu.saveTagScript, 250)
+      "input", _.debounce(ModeMenu.saveTagScript, 250)
     );
 
     $('.ex-mode-menu select[name="tag-script-number"]').change(ModeMenu.switchTagScript);
@@ -701,27 +973,16 @@ class ModeMenu {
   }
 
   static initializeThumbnails() {
-    $(`
+    const selector = `
       .mod-queue-preview aside a,
       div.post-preview .preview a,
       article.post-preview a
-    `).click(ModeMenu.onThumbnailClick);
+    `;
 
-    $(document).on("ex.post-preview:create", event => {
-      $(event.target).find("a").click(ModeMenu.onThumbnailClick);
-    });
-  }
+    $(document).on("click", selector, ModeMenu.onThumbnailClick);
 
-  static initializeHotkeys() {
-    $(document).keydown("1 2 3 4 5 6 7 8 9", ModeMenu.switchToTagScript);
-
-    $(document).keydown("shift+a", ModeMenu.applyTagScript);
-    $(document).keydown("ctrl+a",  ModeMenu.selectAll);
-    $(document).keydown("ctrl+i",  ModeMenu.invertSelection);
-
-    $(document).keydown("esc", e => ModeMenu.setMode("view"));
-    $(document).keydown("`", e => ModeMenu.toggleMode("preview"));
-    $(document).keydown("shift+`", e => ModeMenu.toggleMode("preview"));
+    // Hide cursor when clicking outside of thumbnails.
+    $(document).on("click", () => $(".ex-cursor").removeClass("ex-cursor"));
   }
 
   static switchToTagScript(event) {
@@ -775,26 +1036,17 @@ class ModeMenu {
   static onThumbnailClick(event) {
     // Only apply on left click, not middle click and not ctrl+left click.
     if (event.ctrlKey || event.which !== 1) {
-      return;
+      return true;
     }
 
-    switch (ModeMenu.getMode()) {
-      case "view":
-        return;
+    // XXX prevent focused text fields from staying focused when clicking on thumbnails.
+    $(":focus").blur();
 
-      case "tag-script":
-        $(event.target).closest(".ui-selectee").toggleClass("ui-selected");
-        /* fallthrough */
-
-      case "preview":
-        let post = Posts.normalize($(event.target).closest(".post-preview").data());
-
-        const html = Posts.preview(post, { size: "large" });
-        $("#ex-preview-panel article").replaceWith(html);
-
-        PreviewPanel.setHeight();
-        event.preventDefault();
-        break;
+    if (ModeMenu.getMode() === "view") {
+      return true;
+    } else {
+      Selection.moveCursorTo($(event.target), { selectTarget: true, selectInterval: event.shiftKey });
+      return false;
     }
   }
 
@@ -802,12 +1054,34 @@ class ModeMenu {
     const mode = ModeMenu.getMode();
 
     if (mode === "tag-script") {
-      const tag_script = ModeMenu.getTagScript();
-      $(".ui-selected").each((i, e) => {
-        const post_id = $(e).closest(".post-preview").data("id");
-        Danbooru.TagScript.run(post_id, tag_script);
-      });
+      const tags = ModeMenu.getTagScript();
+      const postIds = $(".ui-selected").map((i, e) => $(e).closest(".post-preview").data("id"));
+
+      ModeMenu.updatePosts(postIds, tags);
     }
+  }
+
+  static updatePosts(postIds, tags, updated = 0, total = postIds.length) {
+    const requests = _.map(postIds, postId => {
+      const promise = Promise.resolve(Post.update(postId, tags));
+
+      return promise.then(post => {
+          updated++;
+          Danbooru.notice(`Updated post #${postId} (${total - updated} remaining)`);
+          return { post: post, status: 200 };
+        }).catch(resp => {
+          return { id: postId, status: resp.status };
+        });
+    });
+
+    Promise.all(requests).then(posts => {
+      const failedPosts = _(posts).difference(_.filter(posts, { status: 200 })).map("id").value();
+      const delay = Math.min((failedPosts.length / 4), 3);
+
+      if (failedPosts.length > 0) {
+        _.delay(() => ModeMenu.updatePosts(failedPosts, tags, updated, total), delay * 1000);
+      }
+    });
   }
 
   static selectAll(event) {
@@ -859,10 +1133,153 @@ class ModeMenu {
   }
 }
 
+class Selection {
+  static get post() {
+    return "article.post-preview, div.post-preview .preview, .mod-queue-preview aside";
+  }
+
+  static get $cursor() {
+    return Selection.active()
+         ? $(".ex-cursor")
+         : $(Selection.post).first().addClass("ex-cursor");
+  }
+
+  static set $cursor($newCursor) {
+    Selection.$cursor.removeClass("ex-cursor");
+    return $newCursor.addClass("ex-cursor");
+  }
+
+  static active() {
+    return $(".ex-cursor").length > 0;
+  }
+
+  static between($from, $to) {
+    if ($from.nextAll().is($to)) {
+      return $from.nextUntil($to, Selection.post).add($to).andSelf();
+    } else if ($from.prevAll().is($to)) {
+      return $from.prevUntil($to, Selection.post).add($to).andSelf();
+    } else {
+      return $();
+    }
+  }
+
+  static selectBetween($from, $to) {
+    return Selection.between($from, $to).addClass("ui-selected");
+  }
+
+  static deselectBetween($from, $to) {
+    return Selection.between($from, $to).removeClass("ui-selected");
+  }
+
+  static moveCursor(direction, { selectInterval = false } = {}) {
+    // XXX if ($(Selection.post).length === 0) {
+    if (ModeMenu.getMode() === "view") {
+      return true;
+    }
+
+    const post = Selection.post;
+    const $cursor = Selection.$cursor;
+    const firstInColumn = $posts =>
+      $posts.filter((i, e) => $(e).position().left === $cursor.position().left).first();
+
+    const $target = direction === "left"  ? $cursor.prev(post)
+                  : direction === "right" ? $cursor.next(post)
+                  : direction === "up"    ? firstInColumn($cursor.prevAll(post))
+                  : direction === "down"  ? firstInColumn($cursor.nextAll(post))
+                  : $();
+
+    // XXX cleanup
+    if ($target.length) {
+      if (selectInterval) { 
+        $cursor.closest(Selection.post).toggleClass("ui-selected");
+      }
+
+      Selection.moveCursorTo($target, { selectInterval });
+    }
+  }
+
+  static moveCursorTo($target, { selectTarget = false, selectInterval = false } = {}) {
+    const $newCursor = $target.closest(Selection.post);
+    const $oldCursor = $(".ex-cursor").length
+                     ? $(".ex-cursor")
+                     : $newCursor;
+
+    const $newMark = $newCursor;
+    const $oldMark = $(".ex-mark").length
+                   ? $(".ex-mark")
+                   : $(Selection.post).first().addClass("ex-mark");
+
+    Selection.swapCursor($oldCursor, $newCursor);
+    
+    if (selectTarget) {
+        $newCursor.toggleClass("ui-selected");
+    }
+
+    if (selectInterval) {
+        Selection.deselectBetween($oldMark, $oldCursor);
+        Selection.selectBetween($oldMark, $newCursor);
+    } else {
+        $oldMark.removeClass("ex-mark");
+        $newMark.addClass("ex-mark");
+    }
+  }
+
+  static swapCursor($oldCursor, $newCursor) {
+    $oldCursor.removeClass("ex-cursor");
+    $newCursor.addClass("ex-cursor");
+
+    Selection.scrollWindowTo($newCursor);
+    $newCursor.find("a").focus();
+
+    const post = Posts.normalize($newCursor.closest(".post-preview").data());
+    const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
+
+    $("#ex-preview-panel article").replaceWith(html);
+    PreviewPanel.setHeight();
+  }
+
+  static scrollWindowTo($target) {
+    const targetTop = $target.position().top;
+    const targetHeight = $target.height();
+
+    if (targetTop + targetHeight > window.scrollY + window.innerHeight) {
+      window.scrollTo(0, targetTop + 2*targetHeight - window.innerHeight);
+    } else if (targetTop < window.scrollY) {
+      window.scrollTo(0, targetTop - targetHeight);
+    }
+  }
+
+  static toggleSelected() {
+    if (!Selection.active()) { return true; }
+    Selection.$cursor.toggleClass("ui-selected");
+  }
+
+  static open() {
+    if (!Selection.active()) { return true; }
+    window.location = Selection.$cursor.find("a").attr("href");
+  }
+
+  static openInNewTab() {
+    if (!Selection.active()) { return true; }
+    window.open(Selection.$cursor.find("a").attr("href"));
+  }
+
+  static favorite() {
+    if (!Selection.active()) { return true; }
+
+    const post = Posts.normalize(Selection.$cursor.closest(".post-preview").data());
+
+    $.post("/favorites.json", { post_id: post.id }).then(() =>
+      Danbooru.notice(`You have favorited post #${post.id}.`)
+    );
+  }
+}
+
+/* global Danbooru */
+
 class Header {
   static initialize() {
     Header.initializeHeader();
-    Header.initializeHotkeys();
 
     if (EX.config.enableModeMenu) {
       Header.initializeModeMenu();
@@ -874,12 +1291,68 @@ class Header {
   }
 
   static initializeHeader() {
-    let $header = $(`
-      <header style="display: none;" id="ex-header" class="${EX.config.headerState}">
+    let $header = $$1(Header.render()).insertBefore("#top");
+    _.defer(() => $header.show());
+
+    // Initalize header search box.
+    Header.$tags.val($$1("#sidebar #tags").val());
+    Danbooru.Autocomplete.initialize_all();
+
+    Header.$close.click(Header.toggle);
+    $$1(document).scroll(_.throttle(Header.onScroll, 16));
+  }
+
+  static initializeModeMenu() {
+    $$1(".ex-mode-menu").show();
+    ModeMenu.initialize();
+  }
+
+  static onScroll() {
+    $$1("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
+    // Shrink header after scrolling down.
+    window.scrollY > 0 && $$1("header h1").addClass("ex-small-header");
+  }
+
+  static executeSearchInNewTab() {
+    // XXX
+    if ($$1("#ex-header #ex-tags:focus").length) {
+      const tags = Header.$tags.val().trim();
+      window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
+    }
+  }
+
+  static focusSearch() {
+    // Add a space to end if box is non-empty and doesn't already have trailing space.
+    Header.$tags.val().length && Header.$tags.val((i, v) => v.replace(/\s*$/, ' '));
+    Header.$tags.focus();
+    return false;
+  }
+
+  static close() {
+    Header.$el.addClass("ex-static").removeClass("ex-fixed");
+    EX.config.headerFixed = false;
+  }
+
+  static open() {
+    Header.$el.addClass("ex-fixed").removeClass("ex-static");
+    EX.config.headerFixed = true;
+  }
+
+  static toggle() {
+    return EX.config.headerFixed ? Header.close() : Header.open();
+  }
+
+  static get $el()    { return $$1("#ex-header"); }
+  static get $close() { return $$1("#ex-header .ex-header-close"); }
+  static get $tags()  { return $$1("#ex-header #ex-tags"); }
+
+  static render() {
+    return `
+      <header style="display: none;" id="ex-header" class="${EX.config.headerFixed ? "ex-fixed" : "ex-static"}">
         <h1><a href="/">Danbooru</a></h1>
 
         <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" name="tags" id="tags" class="ui-autocomplete-input" autocomplete="off">
+          <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
           <input type="submit" value="Go">
         </form>
 
@@ -904,7 +1377,7 @@ class Header {
               <option value="9">9</option>
             </select>
 
-            <input name="tag-script" type="text" placeholder="Enter tag script">
+            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
             <button name="apply" type="button">Apply</button>
 
             <label>Select</label>
@@ -917,55 +1390,330 @@ class Header {
           <i class="fa fa-lg" aria-hidden="true"></i>
 	</span>
       </header>
-    `).insertBefore("#top");
-    _.defer(() => $header.show());
-
-    // Initalize header search box.
-    $("#ex-header #tags").val($("#sidebar #tags").val());
-    Danbooru.Autocomplete.initialize_all();
-
-    $(".ex-header-close").click(Header.toggleClose);
-  }
-
-  static initializeHotkeys() {
-    let $search = $("#ex-header #tags");
-
-    $search.keydown("ctrl+return", e => {
-      const tags = $(e.target).val().trim();
-      window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
-    });
-
-    // Shift+Q: Focus and search box.
-    $(document).keydown('shift+q', e => {
-      // Add a space to end if box is non-empty and doesn't already have trailing space.
-      $search.val().length && $search.val((i, v) => v.replace(/\s*$/, ' '));
-      $search.focus();
-
-      e.preventDefault();
-    });
-  }
-
-  static initializeModeMenu() {
-    $(".ex-mode-menu").show();
-    ModeMenu.initialize();
-  }
-
-  static toggleClose(event) {
-    let $header = $("#ex-header");
-
-    if ($header.hasClass("ex-fixed")) {
-      $header.slideUp().promise().then(e => {
-        $header.toggleClass("ex-fixed ex-static").show();
-        EX.config.headerState = $header.attr("class");
-      });
-    } else {
-      $header.toggleClass("ex-fixed ex-static");
-      EX.config.headerState = $header.attr("class");
-    }
-
-    event.preventDefault();
+    `;
   }
 }
+
+class Navigation {
+  static gotoPageN(n) {
+    if (location.search.match(/page=(\d+)/)) {
+      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
+    } else {
+      location.search += `&page=${n}`;
+    }
+  }
+
+  static gotoPage(event) {
+    Navigation.gotoPageN(Number(event.key));
+  }
+
+  static gotoLastPage(event) {
+    // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
+    const n = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
+
+    if (n) {
+      Navigation.gotoPageN(n);
+    }
+  }
+
+  static gotoPageDialog() {
+    const $dialog = $(`
+      <form>
+        <input id="ex-dialog-input" type="text" placeholder="Enter page number">
+        <input type="submit" value="Go">
+      </form>
+    `).dialog({
+      title: "Go To Page",
+      minHeight: 0,
+      minWidth: 0,
+      resizable: false,
+      modal: true,
+    });
+
+    $dialog.submit(() => {
+      const page = $dialog.find('input[type="text"]').val();
+      Navigation.gotoPageN(page);
+      return false;
+    });
+
+    return false;
+  }
+
+  static goTop()    { window.scrollTo(0, 0); }
+  static goBottom() { window.scrollTo(0, $(document).height()); }
+  static goForward() { window.history.forward(); }
+  static goBack()    { window.history.back(); }
+
+  static scroll(direction, duration, distance) {
+    return _.throttle(() => {
+      const top = $(window).scrollTop() + direction * $(window).height() * distance;
+      $('html, body').animate({scrollTop: top}, duration, "linear");
+    }, duration);
+  }
+}
+
+/* global Danbooru */
+
+class Keys {
+  constructor() {
+    this.actions = {};
+    this.bindings = [];
+  }
+
+  register(actions = {}) {
+    this.actions = _.merge({}, this.actions, actions);
+    return this;
+  }
+
+  bind(bindings) {
+    _(bindings).each(binding => {
+      const keys = _(binding).keys().get(0);
+      const action = binding[keys];
+      const callback = this.actions[action];
+
+      if (action === undefined || callback === undefined) {
+        console.log(`[KEY] FAIL ${keys} -> ${action}`);
+        return this;
+      }
+
+      Mousetrap.bind(keys, event => {
+        console.log(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
+
+        return callback(event) === true;
+      });
+
+      console.log(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
+    });
+
+    this.bindings = _.concat(this.bindings, bindings);
+    return this;
+  }
+
+  initialize() {
+    // Numpad 5
+    Mousetrap.addKeycodes({ 12: "clear" });
+
+    this.register({
+      "escape": Keys.escape,
+
+      "goto-page": Navigation.gotoPage,
+      "goto-last-page": Navigation.gotoLastPage,
+      "goto-page-dialog": Navigation.gotoPageDialog,
+      
+      "go-my-account": () => window.location = `/users/${Danbooru.meta("current-user-id")}`,
+      "go-my-dmails": () => window.location = "/dmails",
+      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`,
+      "go-my-saved-searches": () => window.location = `/saved_searches`,
+      "go-my-settings": () => window.location = `/users/${Danbooru.meta("current-user-id")}/edit`,
+
+      "go-artists-index": () => window.location = "/artists",
+      "go-bur-new": () => window.location = "/bulk_update_requests/new",
+      "go-comments-index": () => window.location = "/comments",
+      "go-forum-index": () => window.location = "/forum_topics",
+      "go-pools-index": () => window.location = "/pools",
+      "go-post-index": () => window.location = "/posts",
+      "go-wiki-index": () => window.location = "/wiki_pages",
+
+      "go-top": Navigation.goTop,
+      "go-bottom": Navigation.goBottom,
+      "go-forward": Navigation.goForward,
+      "go-back": Navigation.goBack,
+
+      "header-open": Header.open,
+      "header-close": Header.close,
+      "header-toggle": Header.toggle,
+      "header-focus-search": Header.focusSearch,
+      "header-execute-search-in-new-tab": Header.executeSearchInNewTab,
+
+      "select-all": ModeMenu.selectAll,
+      "invert-selection": ModeMenu.invertSelection,
+      "apply-tag-script": ModeMenu.applyTagScript,
+      "switch-to-tag-script": ModeMenu.switchToTagScript,
+      "set-preview-mode": () => ModeMenu.setMode("preview"),
+
+      "move-cursor-up": e => Selection.moveCursor("up", { selectInterval: e.shiftKey }),
+      "move-cursor-right": e => Selection.moveCursor("right", { selectInterval: e.shiftKey }),
+      "move-cursor-down": e => Selection.moveCursor("down", { selectInterval: e.shiftKey }),
+      "move-cursor-left": e => Selection.moveCursor("left", { selectInterval: e.shiftKey }),
+
+      "cursor-open": Selection.open,
+      "cursor-open-in-new-tab": Selection.openInNewTab,
+      "cursor-toggle-selected": Selection.toggleSelected,
+
+      "cursor-favorite": Selection.favorite,
+
+      "save-search": () => $("#save-search").click(),
+    });
+
+    this.bind([
+      { "q": "header-focus-search" },
+      // XXX { "mod enter": "header-execute-search-in-new-tab" },
+      { "h o": "header-open" },
+      { "h c": "header-close" },
+      { "h t": "header-toggle" },
+      { "h h": "header-focus-search" },
+
+      { "S": "save-search" },
+
+      { "g :": "goto-page-dialog" },
+      { "g 0": "goto-last-page" },
+      { "g 1": "goto-page" },
+      { "g 2": "goto-page" },
+      { "g 3": "goto-page" },
+      { "g 4": "goto-page" },
+      { "g 5": "goto-page" },
+      { "g 6": "goto-page" },
+      { "g 7": "goto-page" },
+      { "g 8": "goto-page" },
+      { "g 9": "goto-page" },
+
+      { "g g": "go-top" },
+      { "G":   "go-bottom" },
+      { "g f": "go-forward" },
+      { "g b": "go-back" },
+
+      { "g h": "go-my-account" },
+      { "g d": "go-my-dmails" },
+      { "g F": "go-my-favorites" },
+      { "g s": "go-my-settings" },
+      { "g S": "go-my-saved-searches" },
+
+      { "g a": "go-artists-index" },
+      { "g B": "go-bur-new" },
+      { "g c": "go-comments-index" },
+      { "g f": "go-forum-index" },
+      { "g P": "go-pools-index" },
+      { "g p": "go-post-index" },
+      { "g w": "go-wiki-index" },
+
+      { "1": "switch-to-tag-script" },
+      { "2": "switch-to-tag-script" },
+      { "3": "switch-to-tag-script" },
+      { "4": "switch-to-tag-script" },
+      { "5": "switch-to-tag-script" },
+      { "6": "switch-to-tag-script" },
+      { "7": "switch-to-tag-script" },
+      { "8": "switch-to-tag-script" },
+      { "9": "switch-to-tag-script" },
+
+      { "shift+a": "apply-tag-script" },
+      { "ctrl+a": "select-all" },
+      { "ctrl+i": "invert-selection" },
+      { "`": "set-preview-mode" },
+      { "~": "set-preview-mode" },
+ 
+      { "up": "move-cursor-up" },
+      { "right": "move-cursor-right" },
+      { "down": "move-cursor-down" },
+      { "left": "move-cursor-left" },
+
+      { "shift+up": "move-cursor-up" },
+      { "shift+right": "move-cursor-right" },
+      { "shift+down": "move-cursor-down" },
+      { "shift+left": "move-cursor-left" },
+
+      { "return": "cursor-open" },
+      { "ctrl+return": "cursor-open-in-new-tab" },
+      { "space": "cursor-toggle-selected" },
+
+      { "clear": "cursor-toggle-selected" }, // Numpad 5
+      { "del": "apply-tag-script" }, // Numpad Period
+      { "*": "select-all" }, // Numpad Multiply
+
+      { "f": "cursor-favorite" },
+    ]);
+
+    // XXX don't hardcode these
+    Mousetrap.bindGlobal("esc", Keys.escape);
+    Mousetrap.bindGlobal("ctrl+return", Keys.submitForm);
+
+    // XXX figure out how to unbind W/S properly.
+    //$(document).unbind("keydown", "w s");
+    //Mousetrap.bind("w", Keys.scroll(+1, 50, 0.06));
+    //Mousetrap.bind("s", Keys.scroll(-1, 50, 0.06));
+    Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
+    Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
+  }
+
+  /* Actions */
+
+  static escape(event) {
+    const $target = $(event.target);
+    
+    if ($target.is("input, textarea")) {
+      $target.blur();
+    } else {
+      $('#close-notice-link').click();
+      // XXX only do if no notice and not already in view mode.
+      ModeMenu.setMode("view");
+    }
+
+    // Allow event to bubble up so that escape still closes jquery UI dialogs.
+    return true;
+  }
+
+  static submitForm(event) {
+    const $target = $(event.target);
+
+    if ($target.is("input, textarea")) {
+      $target.closest("form").find('input[type="submit"][value="Submit"]').click();
+    }
+
+    return false;
+  }
+}
+
+class PseudoTagTypes {
+  static initialize() {
+    const $links = $(`a[href^="/posts?tags="]`);
+    if ($links.length === 0) {
+      return;
+    }
+
+    const requests = [
+      $.getJSON("/related_tag.json?category=general&query=tag_group:meme"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:image_composition"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:text"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:artistic_license"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:posture"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:face_tags"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:hair_color"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:hair_styles"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:hair"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:body-parts"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:nudity"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:sex_acts"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:sexual_positions"),
+      $.getJSON("/related_tag.json?category=general&query=tag_group:attire"),
+    ];
+
+    Promise.all(requests).then(allRelatedTags => {
+      // Merge all related tags lists into one big { "tag": [ "tag-group" ] } object.
+      const tagGroups = allRelatedTags.map(relatedTags => {
+        const tagGroup = _.kebabCase(relatedTags.query.replace(/tag_group:/, ""));
+        const tagsToGroup =
+          _(relatedTags.wiki_page_tags)
+          .map("[0]")
+          .map(tag => ({ [tag]: [tagGroup] }))
+          .reduce(_.merge);
+
+          return tagsToGroup;
+      }).reduce(_.merge);
+
+      $links.each((i, e) => {
+        const $tagLink = $(e);
+        const tag = decodeURIComponent($(e).attr("href").replace(/\/posts\?tags=/, ""));
+
+        _(tagGroups[tag]).each(type => {
+          $tagLink.addClass(`ex-tag-type-${type}`);
+          $tagLink.parent('[class^="category-"]').addClass(`ex-tag-type-${type}`);
+        });
+      });
+    });
+  }
+}
+
+/* global Danbooru */
 
 class Notes {
   static initialize() {
@@ -991,44 +1739,160 @@ class Notes {
   }
 }
 
+class PostPreviews {
+  // Show post previews when hovering over post #1234 links.
+  static initializePostLinkPreviews() {
+    const posts = $$1('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($$1(e).text()));
+    PostPreviews.initialize(posts);
+  }
+
+  // Show post previews when hovering over thumbnails.
+  static initializeThumbnailPreviews() {
+    // The thumbnail container is .post-preview on every page but comments and
+    // the mod queue. Handle those specially.
+    const posts = `
+      .post-preview:not(.ex-no-tooltip) > a > img,
+      #c-comments .post-preview > .preview > a > img,
+      #c-post-moderator-queues .mod-queue-preview aside img
+    `;
+
+    PostPreviews.initialize(posts);
+  }
+
+  static initialize(selector) {
+    $$1(document).on('mouseover', selector, event => {
+      const delay = EX.config.thumbnailPreviewDelay;
+      const [, postID] = $$1(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
+
+      $$1(event.target).qtip({
+        content: {
+          text: (event, api) => {
+            Post.get(postID).then(post => {
+              User.get(post.uploader_id).then(uploader => {
+                api.set("content.text", Posts.renderExcerpt(post, uploader));
+                api.reposition(event, false);
+              });
+            });
+
+            return "Loading...";
+          }
+        },
+        events: {
+          show: (event) => {
+            if (PreviewPanel.opened()) {
+              event.preventDefault();
+            }
+          }
+        },
+        overwrite: false,
+        style: {
+          classes: "qtip-bootstrap",
+          tip: {
+            corner: false,
+          }
+        },
+        show: {
+          delay: delay,
+          solo: true,
+          event: event.type,
+          ready: true
+        },
+        hide: {
+          delay: 100,
+          fixed: true,
+        },
+        position: {
+          my: "top left",
+          at: "top right",
+          viewport: $$1("#ex-viewport"),
+          effect: false,
+          adjust: {
+            method: "flipinvert shift",
+            resize: false,
+            scroll: false,
+            x: 10,
+          }
+        }
+      }, event);
+    });
+  }
+}
+
+class Sidebar {
+  static initialize() {
+    let $sidebar = Sidebar.$panel;
+
+    if ($sidebar.length === 0) {
+      return;
+    }
+    
+    $sidebar.parent().addClass("ex-panel-container");
+    $sidebar.addClass("ex-panel");
+
+    const width = _.defaultTo(EX.config.sidebarState[EX.config.pageKey()], EX.config.defaultSidebarWidth);
+    Sidebar.width = width;
+
+    $sidebar.after(`
+      <div id="ex-sidebar-resizer" class="ex-vertical-resizer"></div>
+    `);
+
+    $$1("#ex-sidebar-resizer").draggable({
+      axis: "x",
+      helper: "clone",
+      drag: _.throttle(Sidebar.resize, 16),
+      stop: _.debounce(Sidebar.save, 100),
+    });
+  }
+
+  static resize(event, ui) {
+    const width = Math.max(0, ui.position.left - Sidebar.$panel.position().left);
+    Sidebar.width = width;
+  }
+
+  static open() {
+    if (Sidebar.width === 0) {
+      Sidebar.width = EX.config.defaultSidebarWidth;
+    }
+
+    Sidebar.$panel.show({ effect: "slide", direction: "right" }).promise().then(Sidebar.save);
+  }
+
+  static close() {
+    Sidebar.$panel.hide({ effect: "slide", direction: "left" }).promise().then(Sidebar.save);
+  }
+
+  static save() {
+    let state = EX.config.sidebarState;
+    state[EX.config.pageKey()] = Math.max(0, Sidebar.width);
+    EX.config.sidebarState = state;
+  }
+
+  static get $panel() {
+    return $$1("#sidebar");
+  }
+
+  static get width() {
+    return Sidebar.$panel.width();
+  }
+
+  static set width(width) {
+    Sidebar.$panel.width(width);
+    Sidebar.$panel.toggle(Sidebar.$panel.width() > 0);
+  }
+}
+
 var Artist = Resource.Artist = class Artist extends Resource {
   static get primaryKey() { return "id"; }
 };
 
-var Tag = Resource.Tag = class Tag extends Resource {
-  static get Categories() {
-    return [
-      "General",    // 0
-      "Artist",     // 1
-      undefined,    // 2 (unused)
-      "Copyright",  // 3
-      "Character"   // 4
-    ];
-  }
-
-  static get searchParams() {
-    return _$1.merge({}, super.searchParams, { search: { hide_empty: "no" }});
-  }
-
-  static get primaryKey() { return "name"; }
-};
-
 class Artists {
   static initialize() {
-    if ($("#c-artists #a-show").length) {
-      Artists.initialize_hotkeys();
-    }
-
     if ($("#c-artists #a-index").length) {
-      Artists.replace_index();
+      Artists.replaceIndex();
     }
   }
 
-  static initialize_hotkeys() {
-    $(document).keydown("e", e => UI.openEditPage('artists'));
-  }
-
-  static replace_index() {
+  static replaceIndex() {
     let $table = $("#c-artists #a-index > table:nth-child(2)");
 
     let artists = _($table.find("> tbody > tr")).map(e => ({
@@ -1039,9 +1903,9 @@ class Artists {
     let requests = [
       Artist.search(artists.map("id"), { order: UI.query("search[order]") }),
       Tag.search(artists.map("name"), { hide_empty: "no" }),
-      Artist.get({ search: { is_active: true, order: "created_at" }, limit: 8 }),
-      Artist.get({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
-      Artist.get({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: true, order: "created_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: true, order: "updated_at" }, limit: 8 }),
+      Artist.index({ search: { is_active: false, order: "updated_at" }, limit: 8 }),
     ];
 
     Promise.all(requests).then(([artists, tags, created, updated, deleted]) => {
@@ -1053,38 +1917,38 @@ class Artists {
 
       let $paginator = $(".paginator");
 
-      const index = Artists.render_index(artists, created, updated, deleted);
+      const index = Artists.renderIndex(artists, created, updated, deleted);
       $("#c-artists #a-index").addClass("ex-index").html(index);
 
       $paginator.appendTo("#content");
     });
   }
 
-  static render_index(artists, created, updated, deleted) {
+  static renderIndex(artists, created, updated, deleted) {
     return `
     <aside id="sidebar">
-      ${Artists.render_sidebar(created, updated, deleted)}
+      ${Artists.renderSidebar(created, updated, deleted)}
     </aside>
 
     <section id="content">
-      ${Artists.render_table(artists)}
+      ${Artists.renderTable(artists)}
     </section>
     `;
   }
 
-  static render_sidebar(created, updated, deleted) {
+  static renderSidebar(created, updated, deleted) {
     return `
     <section class="ex-artists-search">
-      ${Artists.render_search_form()}
+      ${Artists.renderSearchForm()}
     </section>
 
     <section class="ex-artists-recent-changes">
-      ${Artists.render_recent_changes(created, updated, deleted)}
+      ${Artists.renderRecentChanges(created, updated, deleted)}
     </section>
     `;
   }
 
-  static render_search_form() {
+  static renderSearchForm() {
     return `
     <h1>Search</h1>
 
@@ -1108,8 +1972,8 @@ class Artists {
     `;
   }
 
-  static render_recent_changes(created, updated, deleted) {
-    function render_artists_list(artists, heading, params) {
+  static renderRecentChanges(created, updated, deleted) {
+    function renderArtistsList(artists, heading, params) {
       return `
       <section class="ex-artists-list">
         <div class="ex-artists-list-heading">
@@ -1119,21 +1983,21 @@ class Artists {
           </span>
         </div>
         <ul>
-          ${render_ul(artists)}
+          ${renderUl(artists)}
         </ul>
       </section>
       `;
     }
 
-    function render_ul(artists) {
+    function renderUl(artists) {
       return _(artists).map(artist => `
         <li class="category-1">
           ${UI.linkTo(artist.name, `/artists/${artist.id}`)}
 
 	  <time class="ex-short-relative-time"
                 datetime="${artist.updated_at}"
-                title="${moment$1(artist.updated_at).format()}">
-            ${moment$1(artist.updated_at).locale("en-short").fromNow()}
+                title="${moment(artist.updated_at).format()}">
+            ${moment(artist.updated_at).locale("en-short").fromNow()}
           </time>
         </li>
       `).join("");
@@ -1142,13 +2006,13 @@ class Artists {
     return `
     <h1>Recent Changes</h1>
 
-    ${render_artists_list(created, "New Artists",     { is_active: true,  order: "created_at" })}
-    ${render_artists_list(updated, "Updated Artists", { is_active: true,  order: "updated_at" })}
-    ${render_artists_list(deleted, "Deleted Artists", { is_active: false, order: "updated_at" })}
+    ${renderArtistsList(created, "New Artists",     { is_active: true,  order: "created_at" })}
+    ${renderArtistsList(updated, "Updated Artists", { is_active: true,  order: "updated_at" })}
+    ${renderArtistsList(deleted, "Deleted Artists", { is_active: false, order: "updated_at" })}
     `;
   }
 
-  static render_table(artists) {
+  static renderTable(artists) {
     return `
     <table class="ex-artists striped" width="100%">
       <thead>
@@ -1164,14 +2028,14 @@ class Artists {
         </tr>
       </thead>
       <tbody>
-        ${artists.map(Artists.render_row).join("")}
+        ${artists.map(Artists.renderRow).join("")}
       </tbody>
     </table>
     `;
   }
 
-  static render_row(artist) {
-    const other_names =
+  static renderRow(artist) {
+    const otherNames =
       (artist.other_names || "")
       .split(/\s+/)
       .sort()
@@ -1180,7 +2044,7 @@ class Artists {
       )
       .join(", ");
 
-    const group_link = UI.linkTo(
+    const groupLink = UI.linkTo(
       artist.group_name, "/artists", { search: { name: `group:${artist.group_name}` }}, "ex-artist-group-name"
     );
 
@@ -1197,49 +2061,51 @@ class Artists {
 	${UI.linkTo(artist.tag.post_count, "/posts", { tags: artist.name }, "search-tag")}
       </td>
       <td class="ex-artist-other-names">
-	${other_names}
+	${otherNames}
       </td>
       <td class="ex-artist-group-name">
-	${artist.group_name ? group_link : ""}
+	${artist.group_name ? groupLink : ""}
       </td>
       <td class="ex-artist-status">
 	${artist.is_banned ? "Banned" : ""}
 	${artist.is_active ? ""       : "Deleted"}
       </td>
       <td class="ex-artist-created">
-	${moment$1(artist.created_at).fromNow()}
+	${moment(artist.created_at).fromNow()}
       </td>
       <td class="ex-artist-updated">
-	${moment$1(artist.updated_at).fromNow()}
+	${moment(artist.updated_at).fromNow()}
       </td>
     </tr>
     `;
   }
 }
 
+/* global Danbooru */
+
 class Comments {
   static initialize() {
     if ($("#c-comments").length || $("#c-posts #a-show").length) {
       $(function () {
-        Comments.initialize_patches();
-        Comments.initialize_metadata();
+        Comments.initializePatches();
+        Comments.initializeMetadata();
       });
     }
 
     if ($("#c-comments #a-index").length && window.location.search.match(/group_by=post/)) {
-      Comments.initialize_tag_list();
+      Comments.initializeTagList();
     }
   }
 
-  static initialize_patches() {
+  static initializePatches() {
     // HACK: "Show all comments" replaces the comment list's HTML then
     // initializes all the reply/edit/vote links. We hook into that
     // initialization here so we can add in our own metadata at the same time.
-    Danbooru.Comment.initialize_vote_links = function ($parent) {
+    Danbooru.Comment.initializeVoteLinks = function ($parent) {
       $parent = $parent || $(document);
       $parent.find(".unvote-comment-link").hide();
 
-      Comments.initialize_metadata($parent);
+      Comments.initializeMetadata($parent);
     };
   }
 
@@ -1247,7 +2113,7 @@ class Comments {
    * Add 'comment #1234' permalink.
    * Add comment scores.
    */
-  static initialize_metadata($parent) {
+  static initializeMetadata($parent) {
     $parent = $parent || $(document);
 
     $parent.find('.comment').each((i, e) => {
@@ -1256,9 +2122,6 @@ class Comments {
       const post_id = $(e).data('post-id');
       const comment_id = $(e).data('comment-id');
       const comment_score = $(e).data('score');
-
-      const $upvote_link = $menu.find(`#comment-vote-up-link-for-${comment_id}`);
-      const $downvote_link = $menu.find(`#comment-vote-down-link-for-${comment_id}`);
 
       if ($menu.children().length > 0) {
         $menu.append($('<li> | </li>'));
@@ -1280,7 +2143,7 @@ class Comments {
   }
 
   // Sort tags by type, and put artist tags first.
-  static initialize_tag_list() {
+  static initializeTagList() {
     const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
 
     $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {
@@ -1342,15 +2205,14 @@ class Comments {
 class ForumPosts {
   static initialize() {
     if ($("#c-forum-topics #a-show").length) {
-        ForumPosts.initialize_permalinks();
+        ForumPosts.initializePermalinks();
     }
   }
 
   // On forum posts, change "Permalink" to "Forum #1234". */
-  static initialize_permalinks() {
+  static initializePermalinks() {
     $(".forum-post menu").each((i, e) => {
       let $forum_id  = $(e).find("li:nth-child(1)");
-      let $quote     = $(e).find("li:nth-child(2)");
       let $permalink = $(e).find("li:last-child");
 
       $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
@@ -1364,23 +2226,15 @@ class ForumPosts {
   }
 }
 
-class Pools {
-  static initialize() {
-    if ($("#c-pools #a-show").length) {
-      $(document).keydown("e", e => EX.UI.openEditPage('pools'));
-    }
-  }
-}
-
 class PostVersions {
   static initialize() {
     if ($("#c-post-versions #a-index").length && !UI.query("search[post_id]")) {
-      PostVersions.initialize_thumbnails();
+      PostVersions.initializeThumbnails();
     }
   }
 
   // Show thumbnails instead of post IDs.
-  static initialize_thumbnails() {
+  static initializeThumbnails() {
     let $post_column = $('tr td:nth-child(1)');
     let post_ids = $.map($post_column, e => $(e).text().match(/(\d+).\d+/)[1] );
 
@@ -1389,11 +2243,11 @@ class PostVersions {
       let search = 'id:' + ids.join(',');
 
       return $.get(`/posts.json?tags=${search}`).then(data => {
-        data.forEach((post, i) => post_data[post.id] = post);
+        data.forEach(post => post_data[post.id] = post);
       });
     });
 
-    Promise.all(requests).then(_ => {
+    Promise.all(requests).then(() => {
       $post_column.each((i, e) => {
         let post_id = $(e).text().match(/(\d+).\d+/)[1];
         $(e).html(Posts.preview(post_data[post_id]));
@@ -1402,63 +2256,156 @@ class PostVersions {
   }
 }
 
-var Post = Resource.Post = class Post extends Resource { };
-
-var User = Resource.User = class User extends Resource {
+var PostCount = Resource.PostCount = class PostCount extends Resource {
   static get primaryKey() { return "id"; }
+  static get controller() { return "/counts/posts"; }
+
+  static count(query) {
+    return PostCount.index({ tags: query }).then(response => response.counts.posts);
+  }
 };
 
+class SavedSearches {
+  static initialize() {
+    if ($("#c-saved-searches #a-index").length === 0) {
+      return;
+    }
+
+    $("thead tr").replaceWith($(`
+      <tr>
+        <th id="ss-query" data-sort="string" data-sort-multicolumn="1,2,3">
+          Query
+        </th>
+        <th id="ss-labels" data-sort="string" data-sort-multicolumn="2,1,3">
+          Labels
+        </th>
+        <th id="ss-latest-post" data-sort="int" data-sort-multicolumn="2,3,1" data-sort-default="desc">
+          Latest Post
+        <th></th>
+      </tr>
+    `));
+
+    $("tbody tr").each((i, row) => {
+      $(`<td class="ss-latest-post"></td>`).insertBefore($(row).find(".links"));
+    });
+
+    $("tbody tr").each((i, row) => {
+      const $search = $(row).find("td:first-child");
+      const tags = $search.text();
+
+      PostCount.count(tags).then(count => {
+        $search.append(`<span class="post-count">${count}</span>`);
+      });
+
+      Post.index({ tags: tags, limit: 1 }).then(posts => {
+        const post = _.first(posts);
+        const post_link =
+          (post === undefined)
+          ? "<em>none</em>"
+          : `<td data-sort-value="${post.id}"><a href="/posts/${post.id}">post #${post.id}</a>`;
+
+        $(row).find(".ss-latest-post").replaceWith($(post_link));
+      });
+    });
+  }
+}
+
 class Users {
+  static get QTIP_SETTINGS() {
+    return {
+      overwrite: false,
+      style: {
+        classes: "qtip-bootstrap",
+        tip: { corner: false },
+      },
+      show: {
+        solo: true,
+        ready: true
+      },
+      hide: {
+        delay: 100,
+        fixed: true,
+      },
+      position: {
+        my: "top left",
+        at: "top right",
+        effect: false,
+        adjust: {
+          method: "flipinvert shift",
+          resize: false,
+          scroll: false,
+          x: 10,
+        }
+      }
+    };
+  }
+
   static initialize() {
     this.initializeWordBreaks();
+    this.initializeUserTooltops();
 
     if ($$1("#c-users #a-show").length) {
+      this.initializeCollapsibleHeaders();
       this.initializeExpandableGalleries();
     }
   }
 
   // Wordbreak long usernames (e.g. GiantCaveMushroom) by inserting
-  // zero-width spaces at lowercase -> non-lowercase transitions.
+  // wordbreaks at lowercase -> non-lowercase transitions.
   static initializeWordBreaks() {
-    this.userLinks().text((i, name) =>
-      name.replace(/([a-z])(?=[^a-z])/g, c => c + "\u200B")
+    this.userLinks().html((i, name) =>
+      name.replace(/([a-z])(?=[^a-z])/g, c => c + "<wbr>")
     );
   }
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initializeUserLinks() {
-    const $users = this.userLinks();
-    const ids = $users.map((i, e) => this.parseUserId($$1(e)));
+  static initializeUserTooltops() {
+    // XXX triggers on Profile / Settings links on /static/site_map
+    $$1(document).on("mouseover", '#page a[href^="/users/"]', e => {
+        const $user = $$1(e.target);
+        const userId = Users.parseUserId($user);
 
-    User.search(ids).then(users => {
-      users = _$1.keyBy(users, "id");
-      $users.each((i, e) => {
-        const $user = $$1(e);
-        const id = this.parseUserId($user);
-        const user = users[id];
+        if (userId === null) {
+            return;
+        }
 
-        _$1(user).forOwn((value, key) =>
-          $user.attr(`data-${_$1(key).kebabCase()}`, value)
-        );
+        const qtipParams = _.merge(Users.QTIP_SETTINGS, {
+          show: { event: e.type },
+          position: { viewport: $$1("#ex-viewport") },
+          content: {
+            text: (event, api) => {
+              User.get(userId).then(user => {
+                api.set("content.text", Users.renderExcerpt(user));
+                api.reposition(event, false);
+              });
 
-        const privileges =
-          user.level_string +
-          (user.is_banned         ? " Banned"      : "") + 
-          (user.is_super_voter    ? " Supervoter"  : "") +
-          (user.can_approve_posts ? " Approver"    : "") +
-          (user.can_upload_free   ? " Contributor" : "");
+              return "Loading...";
+            },
+          }
+        });
 
-        const tooltip =
-          `${user.name} (${privileges}) - joined ${moment(user.created_at).fromNow()}`;
+        $user.qtip(qtipParams);
+    });
+  }
 
-        $user.attr("title", tooltip);
+  static initializeCollapsibleHeaders () {
+    $$1("#c-users #a-show > .box").each((i, e) => {
+      const $gallery = $$1(e);
+
+      // Make gallery headers collapsible.
+      const $toggleCollapse = $$1(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>`);
+      $gallery.find("h2").prepend($toggleCollapse);
+
+      $toggleCollapse.click(event => {
+        $$1(event.target).closest("h2").next("div").slideToggle();
+        $$1(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+        return false;
       });
     });
   }
 
   static initializeExpandableGalleries() {
-    const user =
-      $$1("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
+    const user = $$1("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
 
     // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
     $$1(".box a[href^='/favorites?user_id=']").attr(
@@ -1468,19 +2415,9 @@ class Users {
     $$1("#c-users #a-show > .box").each((i, e) => {
       const $gallery = $$1(e).addClass("ex-post-gallery");
 
-      // Make gallery headers collapsible.
-      const $toggleCollapse = $$1(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header" href="#"></a>`);
-      $gallery.find("h2").prepend($toggleCollapse);
-
-      $toggleCollapse.click(event => {
-        $$1(event.target).closest("h2").next("div").slideToggle();
-        $$1(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
-        return false;
-      });
-
       // Store the tag search corresponding to this gallery section in a data
       // attribute for the click handler.
-      const [match, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
+      const [, tags] = $gallery.find('h2 a[href^="/posts"]').attr("href").match(/\/posts\?tags=(.*)/);
       $gallery.attr("data-tags", decodeURIComponent(tags));
 
       $gallery.find("> div").append(`
@@ -1495,8 +2432,7 @@ class Users {
         const limit = 30;
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
 
-        Post.get({ tags: $gallery.data("tags"), page, limit }).then(posts => {
-          console.log("inserting thumbnails");
+        Post.index({ tags: $gallery.data("tags"), page, limit }).then(posts => {
           const html = posts.map(Posts.preview).join("");
 
           // Hide the original posts to avoid appending duplicate posts.
@@ -1514,14 +2450,48 @@ class Users {
     });
   }
 
+  static renderExcerpt(user) {
+    return `
+      <section class="ex-excerpt ex-user-excerpt">
+        <div class="ex-excerpt-title ex-user-excerpt-title">
+          <span class="user-info">${User.render(user)}</span>
+        </div>
+        <div class="ex-excerpt-body ex-user-excerpt-body">
+          <dl class="info">
+            <dt>Joined</dt>
+            <dd>${moment(user.created_at).fromNow()}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Uploads</dt>
+            <dd>${user.post_upload_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Edits</dt>
+            <dd>${user.post_update_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Notes</dt>
+            <dd>${user.note_update_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Comments</dt>
+            <dd>${user.comment_count}</dd>
+          </dl>
+          <dl class="info">
+            <dt>Forum Posts</dt>
+            <dd>${user.forum_post_count}</dd>
+          </dl>
+        </div>
+      </section>
+    `;
+  }
+
   static userLinks() {
-    return $$1('a[href^="/users/"]')
-      .filter((i, e) => !$$1(e).text().match(/My Account|Profile/))
-      .filter((i, e) => this.parseUserId($$1(e)));
+    return $$1('#page a[href^="/users/"]').filter((i, e) => this.parseUserId($$1(e)));
   }
 
   static parseUserId($user) {
-    return _$1.nth($user.attr("href").match(/^\/users\/(\d+)$/), 1);
+    return _.nth($user.attr("href").match(/^\/users\/(\d+)$/), 1);
   }
 }
 
@@ -1531,13 +2501,13 @@ class WikiPages {
       return;
     }
 
-    WikiPages.initialize_collapsible_headings();
-    WikiPages.initialize_table_of_contents();
+    WikiPages.initializeCollapsibleHeadings();
+    WikiPages.initializeTableOfContents();
   }
 
   // Add collapse/expand button to headings.
-  static initialize_collapsible_headings() {
-    const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+  static initializeCollapsibleHeadings() {
+    const $headings = $("#wiki-page-body :header");
 
     if ($headings.length < 3) {
       return;
@@ -1561,21 +2531,20 @@ class WikiPages {
   }
 
   // Add Table of Contents expandable.
-  static initialize_table_of_contents() {
-    const $headings = $("#wiki-page-body").find('h1,h2,h3,h4,h5,h6');
+  static initializeTableOfContents() {
+    const $headings = $("#wiki-page-body :header");
 
     const hasToC =
       $("div.expandable-header > span")
-      .filter((i, e) =>
-        $(e).text().match(/table of contents/i)
-      ).length > 0;
+      .filter((i, e) => $(e).text().match(/table of contents/i))
+      .length > 0;
 
     if ($headings.length < 3 || hasToC) {
       return;
     }
 
     const $toc =
-      DText.create_expandable(
+      DText.createExpandable(
         'Table of Contents',
         '<p class="tn">This table of contents was autogenerated by Danbooru EX.</p> <ul></ul>'
       ).prependTo('#wiki-page-body');
@@ -1596,67 +2565,66 @@ class WikiPages {
                     .replace(/[^a-z]+/g, '-')
                     .replace(/^-|-$/, '');
 
-      const next_level = parseInt(e.tagName[1]);
-      if (next_level > level) {
+      const nextLevel = parseInt(e.tagName[1]);
+      if (nextLevel > level) {
         $submenu = $('<ul></ul>');
         $menu.append($submenu);
         $menu = $submenu;
-      } else if (next_level < level) {
+      } else if (nextLevel < level) {
         $menu = $menu.parent();
       }
 
       $(e).attr('id', anchor);
-      $menu.append($(
-        `<li><a href="#${anchor}">${header}</a></li>`
-      ));
+      $menu.append($(`<li><a href="#${anchor}">${header}</a></li>`));
 
-      level = next_level;
+      level = nextLevel;
     });
   }
 }
 
+/* global Danbooru */
+
 class UI {
   static initialize() {
-    UI.initialize_footer();
-    UI.initialize_moment();
-    UI.initialize_patches();
+    UI.initializeFooter();
+    UI.initializeMoment();
+    UI.initializePatches();
 
-    EX.config.showThumbnailPreviews && UI.initialize_post_thumbnail_previews();
-    EX.config.showPostLinkPreviews && UI.initialize_post_link_previews();
-    EX.config.styleWikiLinks && UI.initialize_wiki_links();
-    EX.config.useRelativeTimestamps && UI.initialize_relative_times();
-    EX.config.resizeableSidebars && UI.initialize_resizeable_sidebar();
-    EX.config.enableHotkeys && UI.initialize_hotkeys();
+    EX.config.styleWikiLinks && UI.initializeWikiLinks();
+    EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
+
+    const $viewport = $('<div id="ex-viewport"></div>');
+    $("body").append($viewport);
   }
 
   // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
-  static initialize_patches() {
-    const old_toggle_tag = Danbooru.RelatedTag.toggle_tag;
+  static initializePatches() {
+    const oldToggleTag = Danbooru.RelatedTag.toggle_tag;
     Danbooru.RelatedTag.toggle_tag = function (e) {
       if (e.which === 1) {
-        return old_toggle_tag(e);
+        return oldToggleTag(e);
       }
     };
   }
 
   // Use relative times everywhere.
-  static initialize_relative_times() {
+  static initializeRelativeTimes() {
     const ABS_DATE = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/;
-    const abs_dates = $('time').filter((i, e) => $(e).text().match(ABS_DATE));
+    const absDates = $('time').filter((i, e) => $(e).text().match(ABS_DATE));
 
-    abs_dates.each((i, e) => {
-      const time_ago = moment($(e).attr('datetime')).fromNow();
-      $(e).text(time_ago);
+    absDates.each((i, e) => {
+      const timeAgo = moment($(e).attr('datetime')).fromNow();
+      $(e).text(timeAgo);
     });
   }
 
-  static initialize_footer() {
+  static initializeFooter() {
     $("footer").append(
       `| Danbooru EX <a href="https://github.com/evazion/danbooru-ex">v${GM_info.script.version}</a> – <a href="/users/${$('meta[name="current-user-id"]').attr("content")}/edit#ex-settings">Settings</a>`
     );
   }
 
-  static initialize_moment() {
+  static initializeMoment() {
     moment.locale("en-short", {
       relativeTime : {
           future: "in %s",
@@ -1679,241 +2647,65 @@ class UI {
     moment.defaultFormat = "MMMM Do YYYY, h:mm a";
   }
 
-  // Show post previews when hovering over post #1234 links.
-  static initialize_post_link_previews() {
-    $('a[href^="/posts/"]')
-      .filter((i, e) => /post #\d+/.test($(e).text()))
-      .addClass('ex-thumbnail-tooltip-link');
-
-    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
-  }
-
-  // Show post previews when hovering over thumbnails.
-  static initialize_post_thumbnail_previews() {
-    // The thumbnail container is .post-preview on every page but comments and
-    // the mod queue. Handle those specially.
-    if ($("#c-comments").length) {
-      $("#c-comments .post-preview .preview img").addClass('ex-thumbnail-tooltip-link');
-    } else if ($("#c-post-moderator-queues").length) {
-      $("#c-post-moderator-queues .mod-queue-preview aside img").addClass('ex-thumbnail-tooltip-link');
-    } else {
-      $(".post-preview img").addClass('ex-thumbnail-tooltip-link');
-    }
-
-    $(document).on("ex.post-preview:create", event => {
-      const $post = $(event.target).find("img").addClass('ex-thumbnail-tooltip-link');
-      UI.install_tooltips($post);
-      return false;
-    });
-
-    UI.install_tooltips($(".ex-thumbnail-tooltip-link"));
-  }
-
-  static install_tooltips($target) {
-    const max_size = 450;
-
-    $target.tooltip({
-      items: "*",
-      content: `<div style="width: ${max_size}px; height: ${max_size}px"></div>`,
-      show: { delay: EX.config.thumbnailPreviewDelay },
-      position: {
-        my: "left+10 top",
-        at: "right top",
-      },
-      open: (e, ui) => {
-        try {
-          // XXX should instead disable thumbnails when preview panel is open.
-          if (ModeMenu.getMode() === "preview" || ModeMenu.getMode() === "tag-script") {
-            $(ui.tooltip).css({ visibility: "hidden" });
-            return;
-          }
-
-          let $e = $(e.target);
-          let $link = $e;
-
-          // XXX hack
-          if ($e.prop("nodeName") === "IMG") {
-            $link = $e.closest("a");
-          }
-
-          const id = $link.attr('href').match(/\/posts\/(\d+)/)[1];
-
-          // XXX avoid lookup on tooltip open.
-          $.getJSON(`/posts/${id}.json`).then(post =>
-            $(ui.tooltip).html(Posts.preview(post, { size: "large", classes: [ "ex-thumbnail-tooltip" ]}))
-          );
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    });
-  }
-
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
   // creation date and post count.
-  static initialize_wiki_links() {
-    function parse_tag_name(wiki_link) {
-      return decodeURIComponent($(wiki_link).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
+  static initializeWikiLinks() {
+    function parseTagName(wikiLink) {
+      return decodeURIComponent($(wikiLink).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
     }
 
-    const meta_wikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
+    const metaWikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
 
-    const $wiki_links =
+    const $wikiLinks =
       $(`a[href^="/wiki_pages/show_or_new?title="]`)
       .filter((i, e) => $(e).text() != "?");
 
     const tags =
-      _$1($wiki_links.toArray())
-      .map(parse_tag_name)
-      .reject(tag => tag.match(meta_wikis))
+      _($wikiLinks.toArray())
+      .map(parseTagName)
+      .reject(tag => tag.match(metaWikis))
       .value();
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
     Tag.search(tags).then(tags => {
-      tags = _$1.keyBy(tags, "name");
-      $wiki_links.each((i, e) => {
-        const $wiki_link = $(e);
-        const name = parse_tag_name($wiki_link);
+      tags = _.keyBy(tags, "name");
+      $wikiLinks.each((i, e) => {
+        const $wikiLink = $(e);
+        const name = parseTagName($wikiLink);
         const tag = tags[name];
 
-        if (name.match(meta_wikis)) {
+        if (name.match(metaWikis)) {
           return;
         } else if (tag === undefined) {
-          $wiki_link.addClass('tag-dne');
+          $wikiLink.addClass('tag-dne');
           return;
         }
 
-        const tag_created_at = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
+        const tagCreatedAt = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
 
-        const tag_title =
-          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tag_created_at}`;
+        const tagTitle =
+          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tagCreatedAt}`;
 
-        _$1(tag).forOwn((value, key) =>
-          $wiki_link.attr(`data-tag-${_$1(key).kebabCase()}`, value)
+        _(tag).forOwn((value, key) =>
+          $wikiLink.attr(`data-tag-${_(key).kebabCase()}`, value)
         );
 
-        $wiki_link.addClass(`tag-type-${tag.category}`).attr('title', tag_title);
+        $wikiLink.addClass(`tag-type-${tag.category}`).attr('title', tagTitle);
 
         if (tag.post_count === 0) {
-          $wiki_link.addClass("tag-post-count-empty");
+          $wikiLink.addClass("tag-post-count-empty");
         } else if (tag.post_count < 100) {
-          $wiki_link.addClass("tag-post-count-small");
+          $wikiLink.addClass("tag-post-count-small");
         } else if (tag.post_count < 1000) {
-          $wiki_link.addClass("tag-post-count-medium");
+          $wikiLink.addClass("tag-post-count-medium");
         } else if (tag.post_count < 10000) {
-          $wiki_link.addClass("tag-post-count-large");
+          $wikiLink.addClass("tag-post-count-large");
         } else if (tag.post_count < 100000) {
-          $wiki_link.addClass("tag-post-count-huge");
+          $wikiLink.addClass("tag-post-count-huge");
         } else {
-          $wiki_link.addClass("tag-post-count-gigantic");
+          $wikiLink.addClass("tag-post-count-gigantic");
         }
       });
-    });
-  }
-
-  static initialize_resizeable_sidebar() {
-    let $sidebar = $("#sidebar");
-
-    if ($sidebar.length === 0) {
-      return;
-    }
-
-    const width = _$1.defaultTo(EX.config.sidebarState[EX.config.pageKey()], EX.config.defaultSidebarWidth);
-    $sidebar.toggle(width > 0);
-
-    $sidebar.addClass("ex-panel").width(width).after(`
-      <section id="ex-sidebar-resizer" class="ex-vertical-resizer"></section>
-    `);
-
-    // XXX fix magic numbers (28 = 2em).
-    const drag = function (e, ui) {
-      $sidebar.width(Math.max(0, ui.position.left - 28));
-      $sidebar.toggle($sidebar.width() > 0);
-    };
-
-    const stop = function (e, ui) {
-      let state = EX.config.sidebarState;
-      state[EX.config.pageKey()] = Math.max(0, ui.position.left - 28);
-      EX.config.sidebarState = state;
-    };
-
-    $("#ex-sidebar-resizer").draggable({
-      axis: "x",
-      helper: "clone",
-      drag: _$1.throttle(drag, 16),
-      stop: _$1.debounce(stop, 100),
-    });
-  }
-
-  // Global keybindings.
-  // - Escape: Close notice popups.
-  // - W: Smooth scroll up.
-  // - S: Smooth scroll down.
-  // - Ctrl+Enter: Submit form.
-  static initialize_hotkeys() {
-    // Escape: Close notice popups.
-    $(document).keydown('esc', e => $('#close-notice-link').click());
-
-    // Escape: Unfocus text entry field.
-    $('#tag-script-field').attr('type', 'text');
-    $('input[type=text],textarea').keydown('esc', e => $(e.target).blur());
-
-    UI.initialize_scroll_hotkeys();
-
-    if ($(".paginator").length) {
-      UI.initialize_paginator_hotkeys();
-    }
-
-    $(".dtext-previewable textarea").keydown("ctrl+return", e => {
-      $(e.target).closest("form").find('input[type="submit"][value="Submit"]').click();
-      e.preventDefault();
-    });
-  }
-
-  static initialize_scroll_hotkeys() {
-    let scroll = (direction, duration, distance) =>
-      _$1.throttle(() => {
-        const top = $(window).scrollTop() + direction * $(window).height() * distance;
-        $('html, body').animate({scrollTop: top}, duration, "linear");
-      }, duration);
-    /*
-    Danbooru.Shortcuts.nav_scroll_down =
-        () => Danbooru.scroll_to($(window).scrollTop() + $(window).height() * 0.15);
-    Danbooru.Shortcuts.nav_scroll_up =
-        () => Danbooru.scroll_to($(window).scrollTop() - $(window).height() * 0.15);
-    */
-
-    // Enable smooth scrolling with W/S keys.
-    Danbooru.Shortcuts.nav_scroll_down = scroll(+1, 50, 0.06);
-    Danbooru.Shortcuts.nav_scroll_up   = scroll(-1, 50, 0.06);
-  }
-
-  /*
-   * Shift+1..9: Jump to page N.
-   * Shift+0: Jump to last page.
-   */
-  static initialize_paginator_hotkeys() {
-    // Add paginator above results.
-    // $('.paginator').clone().insertBefore('#post-sections');
-
-    /* Shift+1..9: Jump to page N. */
-    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(n =>
-      $(document).keydown(`shift+${n}`, e => {
-        UI.gotoPage(n);
-        e.preventDefault();
-      })
-    );
-
-    // Shift+0: Switch to last page if there is one.
-    $(document).keydown(`shift+0`, e => {
-      e.preventDefault();
-
-      // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
-      const last_page = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
-
-      if (last_page) {
-        UI.gotoPage(last_page);
-      }
     });
   }
 
@@ -1923,7 +2715,7 @@ class UI {
                ? path
                : path + "?" + query;
 
-    return `<a class="${_$1.escape(classes.join(" "))}" href="${href}">${_$1.escape(name)}</a>`;
+    return `<a class="${_.escape(classes.join(" "))}" href="${href}">${_.escape(name)}</a>`;
   }
 
   static query(param) {
@@ -1932,68 +2724,71 @@ class UI {
 
   static openEditPage(controller) {
     // FIXME: Get the ID from the 'Show' link. This is brittle.
-    const $show_link =
+    const $showLink =
       $('#nav > menu:nth-child(2) a')
       .filter((i, e) => $(e).text().match(/^Show$/));
 
-    const id = $show_link.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
+    const id = $showLink.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
 
     window.location.href = `/${controller}/${id}/edit`;
-  }
-
-  // Go to page N.
-  static gotoPage(n) {
-    if (location.search.match(/page=(\d+)/)) {
-      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
-    } else {
-      location.search += `&page=${n}`;
-    }
   }
 }
 
 UI.Header = Header;
 UI.ModeMenu = ModeMenu;
 UI.Notes = Notes;
+UI.PostPreviews = PostPreviews;
 UI.PreviewPanel = PreviewPanel;
+UI.Sidebar = Sidebar;
 
 UI.Artists = Artists;
 UI.Comments = Comments;
 UI.ForumPosts = ForumPosts;
-UI.Pools = Pools;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;
+UI.SavedSearches = SavedSearches;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n/* Fit posts to screen width. */\n#image {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-vertical-resizer {\n  cursor: col-resize;\n  width: 1px;\n  border: 0.5em solid white;\n  background: #f2f2f2;\n  transition: background 0.125s; }\n\n.ex-vertical-resizer:hover {\n  background: #cccccc;\n  transition: background 0.125s; }\n\n.ex-panel {\n  overflow: hidden; }\n\n.ex-preview-panel-container {\n  display: flex;\n  min-height: 100vh; }\n\n#ex-preview-panel {\n  width: 0;\n  overflow: hidden; }\n\n#ex-preview-panel > div {\n  display: flex;\n  overflow-y: auto; }\n\n#ex-preview-panel > div > article {\n  width: auto;\n  height: auto;\n  margin: auto; }\n\n#ex-preview-panel > div > article.post-preview .post-media {\n  max-width: 100%;\n  max-height: 100%;\n  box-sizing: border-box; }\n\n#ex-preview-panel .ex-fixed {\n  position: fixed; }\n\n.ex-content-panel {\n  flex: 1;\n  margin-left: 0px !important; }\n\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding-top: 5px;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid #EEE; }\n\n#ex-header.ex-fixed {\n  position: fixed; }\n\n#ex-header h1 {\n  display: inline-block;\n  font-size: 2.5em;\n  margin: 0 30px; }\n\n#ex-header .ex-search-box {\n  margin: auto;\n  display: flex;\n  flex: 0 1 30%; }\n\n#ex-header .ex-search-box input[name=\"tags\"] {\n  flex: 0 1 100%; }\n\n#ex-header .ex-search-box input[type=\"submit\"] {\n  flex: 1;\n  margin: auto 1em; }\n\n#ex-header .ex-mode-menu {\n  margin: auto;\n  flex: 1 2 70%; }\n\n#ex-header .ex-mode-menu .ex-tag-script-controls {\n  display: inline-block;\n  margin: auto; }\n\n#ex-header .ex-mode-menu label {\n  font-weight: bold;\n  cursor: auto; }\n\n#ex-header .ex-header-close {\n  margin: auto;\n  margin-right: 30px;\n  color: #0073ff;\n  cursor: pointer; }\n\n/* http://fontawesome.io/icon/times-circle/ */\n#ex-header.ex-fixed .ex-header-close .fa::before {\n  content: \"\\f057\"; }\n\n/* http://fontawesome.io/icon/thumb-tack/ */\n#ex-header.ex-static .ex-header-close .fa::before {\n  content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  #ex-header h1,\n  header#top h1 {\n    font-size: 1.5em; }\n  #ex-header .ex-mode-menu label {\n    display: none; } }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\n/* Highlight thumbnails in grey when hovering in preview or tag script mode. */\nbody.mode-preview article.post-preview:hover,\nbody.mode-preview #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-preview #c-comments .post-preview .preview:hover,\nbody.mode-tag-script article.post-preview:hover,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside:hover,\nbody.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #EEEEEE; }\n\nbody.mode-tag-script article.post-preview.ui-selected,\nbody.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected,\nbody.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: lightblue; }\n\nbody.mode-tag-script article.post-preview.ui-selected {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-tooltip {\n  padding: 8px;\n  position: absolute;\n  z-index: 9999;\n  max-width: 300px;\n  -webkit-box-shadow: 0 0 5px #aaa;\n  box-shadow: 0 0 5px #aaa; }\n\n.ui-tooltip {\n  max-width: 450px !important;\n  max-height: 450px !important;\n  border-width: 2px; }\n\n.ui-tooltip .ex-thumbnail-tooltip .post-media {\n  max-width: 450px;\n  max-height: 450px;\n  height: auto;\n  box-sizing: border-box; }\n\n.ui-tooltip .post-preview {\n  width: auto;\n  height: auto;\n  margin: 0; }\n\na.ui-icon.collapsible-header {\n  display: inline-block;\n  margin-left: -8px; }\n\n.ex-short-relative-time {\n  color: #CCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n");
+___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n@import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white;\n  /* http://fontawesome.io/icon/times-circle/ */\n  /* http://fontawesome.io/icon/thumb-tack/ */ }\n  #ex-header.ex-fixed.ex-header-scrolled {\n    border-bottom: 1px solid #EEEEEE;\n    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n  #ex-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px; }\n  #ex-header .ex-search-box {\n    margin: auto;\n    display: flex;\n    flex: 0 1 30%; }\n    #ex-header .ex-search-box input#ex-tags {\n      flex: 0 1 100%; }\n    #ex-header .ex-search-box input[type=\"submit\"] {\n      flex: 1;\n      margin: auto 1em; }\n  #ex-header .ex-mode-menu {\n    margin: auto;\n    flex: 1 2 70%; }\n    #ex-header .ex-mode-menu .ex-tag-script-controls {\n      display: inline-block;\n      margin: auto; }\n    #ex-header .ex-mode-menu label {\n      font-weight: bold;\n      cursor: auto; }\n      @media (max-width: 1280px) {\n        #ex-header .ex-mode-menu label {\n          display: none; } }\n  #ex-header .ex-header-close {\n    margin: auto;\n    margin-right: 30px;\n    color: #0073ff;\n    cursor: pointer; }\n  #ex-header.ex-fixed .ex-header-close .fa::before {\n    content: \"\\f057\"; }\n  #ex-header.ex-static .ex-header-close .fa::before {\n    content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n/*\nred\norange\ngreen\npurple\n#6633FF (light purple)\ngray\n#0000FF (blue)\n\n0 - hsl(213, 100%, 50%);\n1 - #A00\n3 - #A0A\n4 - #0A0\n\n#CCC\n*/\n.ex-general-tag-list .ex-tag-type-meme, .row.list-of-tags .ex-tag-type-meme {\n  order: -200; }\n\na.ex-tag-type-meme {\n  color: purple !important; }\n\n.ex-general-tag-list .ex-tag-type-image-composition, .row.list-of-tags .ex-tag-type-image-composition {\n  order: -190; }\n\na.ex-tag-type-image-composition {\n  color: #0000FF !important; }\n\n.ex-general-tag-list .ex-tag-type-text, .row.list-of-tags .ex-tag-type-text {\n  order: -180; }\n\na.ex-tag-type-text {\n  color: blue !important; }\n\n.ex-general-tag-list .ex-tag-type-artistic-license, .row.list-of-tags .ex-tag-type-artistic-license {\n  order: -170; }\n\na.ex-tag-type-artistic-license {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-posture, .row.list-of-tags .ex-tag-type-posture {\n  order: -160; }\n\na.ex-tag-type-posture {\n  color: green !important; }\n\n.ex-general-tag-list .ex-tag-type-face-tags, .row.list-of-tags .ex-tag-type-face-tags {\n  order: -150; }\n\na.ex-tag-type-face-tags {\n  color: lightgreen !important; }\n\n.ex-general-tag-list .ex-tag-type-hair-color, .row.list-of-tags .ex-tag-type-hair-color {\n  order: -140; }\n\na.ex-tag-type-hair-color {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-hair-styles, .row.list-of-tags .ex-tag-type-hair-styles {\n  order: -130; }\n\na.ex-tag-type-hair-styles {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-hair, .row.list-of-tags .ex-tag-type-hair {\n  order: -120; }\n\na.ex-tag-type-hair {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-body-parts, .row.list-of-tags .ex-tag-type-body-parts {\n  order: -110; }\n\na.ex-tag-type-body-parts {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-nudity, .row.list-of-tags .ex-tag-type-nudity {\n  order: -100; }\n\na.ex-tag-type-nudity {\n  color: #6633FF !important; }\n\n.ex-general-tag-list .ex-tag-type-sex-acts, .row.list-of-tags .ex-tag-type-sex-acts {\n  order: -90; }\n\na.ex-tag-type-sex-acts {\n  color: orange !important; }\n\n.ex-general-tag-list .ex-tag-type-sexual-positions, .row.list-of-tags .ex-tag-type-sexual-positions {\n  order: -80; }\n\na.ex-tag-type-sexual-positions {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-attire, .row.list-of-tags .ex-tag-type-attire {\n  order: -70; }\n\na.ex-tag-type-attire {\n  color: teal !important; }\n\n.ex-general-tag-list {\n  display: flex;\n  flex-direction: column; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
 
-window.moment = moment$1;
-
-var ex = window.EX = class EX {
+var EX = window.EX = class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
+  static get Keys() { return Keys; }
+  static get PseudoTagTypes() { return PseudoTagTypes; }
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
   static initialize() {
     console.timeEnd("preinit");
-
     console.groupCollapsed("settings");
+
+    EX.version = GM_info.script.version;
     EX.config = new EX.Config();
+    EX.keys = new EX.Keys();
+
+    if (EX.config.enableHotkeys) { EX.keys.initialize(); }
 
     EX.config.enableHeader && UI.Header.initialize();
+    EX.config.resizeableSidebars && UI.Sidebar.initialize();
+    EX.config.showThumbnailPreviews && UI.PostPreviews.initializeThumbnailPreviews();
+    // EX.config.showPostLinkPreviews && UI.PostPreviews.initializePostLinkPreviews();
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
     EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
+    EX.config.enableLargeThumbnails && EX.UI.Posts.initializeLargeThumbnails();
+    // XXX
+    // EX.PseudoTagTypes.initialize();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
     EX.config.forumRedesign && EX.UI.ForumPosts.initialize();
-    EX.config.poolsRedesign && EX.UI.Pools.initialize();
     EX.config.postsRedesign && EX.UI.Posts.initialize();
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
     EX.config.usersRedesign && EX.UI.Users.initialize();
+    // EX.UI.SavedSearches.initialize();
 
     console.groupEnd("settings");
     console.timeEnd("initialized");
@@ -2001,19 +2796,19 @@ var ex = window.EX = class EX {
 };
 
 console.log("Danbooru:", window.Danbooru);
-console.log("EX:", EX);
+console.log("EX:", window.EX);
 
 console.timeEnd("loaded");
-$(function () {
+$$1(function () {
   try {
-    EX.initialize();
+    window.EX.initialize();
   } catch(e) {
     console.trace(e);
-    $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
+    $$1("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
     throw e;
   }
 });
 
-return ex;
+return EX;
 
-}(jQuery,moment,_,filesize));
+}(jQuery,_,Mousetrap,moment,ResizeSensor,filesize));
