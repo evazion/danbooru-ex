@@ -38,7 +38,6 @@ export default class Users {
 
   static initialize() {
     this.initializeWordBreaks();
-    this.initializeUserTooltops();
 
     if ($("#c-users #a-show").length) {
       this.initializeCollapsibleHeaders();
@@ -55,7 +54,7 @@ export default class Users {
   }
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initializeUserTooltops() {
+  static initializeUserTooltips() {
     // XXX triggers on Profile / Settings links on /static/site_map
     $(document).on("mouseover", '#page a[href^="/users/"]', e => {
         const $user = $(e.target);
