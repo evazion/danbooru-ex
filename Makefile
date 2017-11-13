@@ -1,21 +1,24 @@
 .ONESHELL:
-.PHONY: all bump serve watch clean release changelog
+.PHONY: all bump serve watch clean stable unstable changelog
 
 VERSION := $(shell cat VERSION)
 
-ifeq ($(MAKECMDGOALS),release)
+ifeq ($(MAKECMDGOALS),stable)
 NAME := Danbooru EX
 URL  := https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
-else
+else ifeq ($(MAKECMDGOALS),unstable)
 NAME := Danbooru EX (Beta)
+URL  := https://github.com/evazion/danbooru-ex/raw/unstable/dist/danbooru-ex.user.js
+else 
+NAME := Danbooru EX (Dev)
 URL  := http://localhost:8000/danbooru-ex.user.js
-# URL  := https://github.com/evazion/danbooru-ex/raw/master/dist/danbooru-ex.user.js
 endif
 
 all: dist/danbooru-ex.user.js | bump
 dist/danbooru-ex.user.js: $(shell find src) rollup.config.js VERSION Makefile | dist
 	NAME="$(NAME)" VERSION="$(VERSION)" URL="$(URL)" npm run exec -- rollup -c
 
+stable unstable: all
 release: all
 	git tag -a -m "Release $(VERSION)" "v$(VERSION)" 
 	git push --tags
