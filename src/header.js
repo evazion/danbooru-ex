@@ -6,7 +6,6 @@
 // @description  Danbooru UI Enhancements
 // @author       evazion
 // @match        *://*.donmai.us/*
-// @match        *://localhost/*
 // @grant        none
 // @run-at       document-body
 // @downloadURL  <@URL@>
