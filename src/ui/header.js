@@ -24,6 +24,9 @@ export default class Header {
     let $header = $(Header.render()).insertBefore("#top");
     _.defer(() => $header.show());
 
+    // Move news announcements inside of EX header.
+    $("#news-updates").insertBefore("#ex-header .ex-header-wrapper");
+
     // Initalize header search box.
     Header.$tags.val($("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
@@ -79,46 +82,48 @@ export default class Header {
   static render() {
     return `
       <header style="display: none;" id="ex-header" class="${EX.config.headerFixed ? "ex-fixed" : "ex-static"}">
-        <h1><a href="/">Danbooru</a></h1>
+        <div class="ex-header-wrapper">
+          <h1><a href="/">Danbooru</a></h1>
 
-        <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
-          <input type="submit" value="Go">
-        </form>
+          <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
+            <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
+            <input type="submit" value="Go">
+          </form>
 
-        <section class="ex-mode-menu" style="display: none">
-          <label for="mode">Mode</label>
-          <select name="mode">
-            <option value="view">View</option>
-            <option value="preview">Preview</option>
-            <option value="tag-script">Tag script</option>
-          </select>
-
-          <fieldset class="ex-tag-script-controls" style="display: none">
-            <select name="tag-script-number">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
+          <section class="ex-mode-menu" style="display: none">
+            <label for="mode">Mode</label>
+            <select name="mode">
+              <option value="view">View</option>
+              <option value="preview">Preview</option>
+              <option value="tag-script">Tag script</option>
             </select>
 
-            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
-            <button name="apply" type="button">Apply</button>
+            <fieldset class="ex-tag-script-controls" style="display: none">
+              <select name="tag-script-number">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+              </select>
 
-            <label>Select</label>
-            <button name="select-all" type="button">All/None</button>
-            <button name="select-invert" type="button">Invert</button>
-          </fieldset>
-        </section>
+              <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
+              <button name="apply" type="button">Apply</button>
 
-	<a class="ex-header-close">
-          <i class="fa fa-lg" aria-hidden="true"></i>
-	</span>
+              <label>Select</label>
+              <button name="select-all" type="button">All/None</button>
+              <button name="select-invert" type="button">Invert</button>
+            </fieldset>
+          </section>
+
+          <a class="ex-header-close">
+            <i class="fa fa-lg" aria-hidden="true"></i>
+          </a>
+        </div>
       </header>
     `;
   }

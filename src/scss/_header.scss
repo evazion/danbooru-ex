@@ -1,5 +1,4 @@
 #ex-header {
-    display: flex;
     position: absolute;
     top: 0;
     padding: 5px 0;
@@ -8,56 +7,60 @@
     background: white;
     border-bottom: 1px solid white;
 
-    &.ex-fixed.ex-header-scrolled {
-        border-bottom: 1px solid $dim-border-color;
-        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
-    }
+    .ex-header-wrapper {
+      display: flex;
 
-    h1 {
-        display: inline-block;
-        font-size: 2.5em;
-        margin: 0 30px;
-    }
+      &.ex-fixed.ex-header-scrolled {
+          border-bottom: 1px solid $dim-border-color;
+          box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+      }
 
-    .ex-search-box {
-        margin: auto;
-        display: flex;
-        flex: 0 1 30%;
+      h1 {
+          display: inline-block;
+          font-size: 2.5em;
+          margin: 0 30px;
+      }
 
-        input#ex-tags {
-            flex: 0 1 100%;
-        }
+      .ex-search-box {
+          margin: auto;
+          display: flex;
+          flex: 0 1 30%;
 
-        input[type="submit"] {
-            flex: 1;
-            margin: auto 1em;
-        }
-    }
+          input#ex-tags {
+              flex: 0 1 100%;
+          }
 
-    .ex-mode-menu {
-        margin: auto;
-        flex: 1 2 70%;
+          input[type="submit"] {
+              flex: 1;
+              margin: auto 1em;
+          }
+      }
 
-        .ex-tag-script-controls {
-            display: inline-block;
-            margin: auto;
-        }
+      .ex-mode-menu {
+          margin: auto;
+          flex: 1 2 70%;
 
-        label {
-            font-weight: bold;
-            cursor: auto;
+          .ex-tag-script-controls {
+              display: inline-block;
+              margin: auto;
+          }
 
-            @media (max-width: 1280px) {
-                display: none;
-            }
-        }
-    }
+          label {
+              font-weight: bold;
+              cursor: auto;
 
-    .ex-header-close {
-        margin: auto;
-        margin-right: 30px;
-        color: #0073ff;
-        cursor: pointer;
+              @media (max-width: 1280px) {
+                  display: none;
+              }
+          }
+      }
+
+      .ex-header-close {
+          margin: auto;
+          margin-right: 30px;
+          color: #0073ff;
+          cursor: pointer;
+      }
     }
 
     /* http://fontawesome.io/icon/times-circle/ */
@@ -76,3 +79,8 @@
 }
 
 h1.ex-small-header { font-size: 1.5em !important; }
+
+/* Fix sidebar search box from rendering on top of EX header bar. */
+#page #sidebar input[type="text"] {
+  z-index: 10 !important;
+}
