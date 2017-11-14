@@ -102,7 +102,6 @@ export default class Keys {
 
     this.bind([
       { "q": "header-focus-search" },
-      // XXX { "mod enter": "header-execute-search-in-new-tab" },
       { "h o": "header-open" },
       { "h c": "header-close" },
       { "h t": "header-toggle" },
@@ -210,7 +209,9 @@ export default class Keys {
   static submitForm(event) {
     const $target = $(event.target);
 
-    if ($target.is("input, textarea")) {
+    if ($target.is("#ex-tags:focus")) {
+      Header.executeSearchInNewTab();
+    } else if ($target.is("input, textarea")) {
       $target.closest("form").find('input[type="submit"][value="Submit"]').click();
     }
 
