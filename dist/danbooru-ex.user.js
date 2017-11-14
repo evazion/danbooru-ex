@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Danbooru EX (Beta)
-// @version      2017.11.13@02:50:45
+// @version      2017.11.14@05:45:11
 // @namespace    https://github.com/evazion/danbooru-ex
 // @source       https://github.com/evazion/danbooru-ex
 // @description  Danbooru UI Enhancements
@@ -26,12 +26,9 @@
  */
 
 console.log("Danbooru EX:", GM_info.script.version);
-console.time("loaded");
-console.time("preinit");
-console.time("initialized");
-
-window.moment = moment;
-window.Mousetrap = Mousetrap;
+// console.time("loaded");
+// console.time("preinit");
+// console.time("initialized");
 
 var danbooruEX = (function ($$1,_,Mousetrap,moment,ResizeSensor,filesize) {
 'use strict';
@@ -193,7 +190,7 @@ class Config {
       tagScriptNumber: Setting.Session({
         value: 1
       }),
-      headerFixed: Setting.Session({
+      headerFixed: Setting.Shared({
         value: true
       }),
     };
@@ -222,14 +219,14 @@ class Config {
       JSON.stringify(item.value)
     ));
 
-    console.log(`[CFG] READ EX.config.${key}:`, value);
+    EX.debug(`[CFG] READ EX.config.${key}:`, value);
     return value;
   }
 
   set(key, value) {
     const item = Config.Items[key];
     item.storage["EX.config." + key] = JSON.stringify(value);
-    console.log(`[CFG] SAVE EX.config.${key} =`, value);
+    EX.debug(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
@@ -239,7 +236,7 @@ class Config {
 
   reset() {
     _(Config.Items).each((item, key) => {
-      console.log(`[CFG] DELETE EX.config.${key}`);
+      EX.debug(`[CFG] DELETE EX.config.${key}`);
       delete item.storage["EX.config." + key];
     });
 
@@ -355,14 +352,14 @@ class DText {
 class Resource {
   static request(type, url, params = {}) {
     const query = `${url}?${decodeURIComponent($$1.param(params))}`;
-    console.time(`${type} ${query}`);
+    // console.time(`${type} ${query}`);
 
     const request = $$1.ajax({ url, type, data: params });
-    console.log(`[NET] ${type} ${query}`, request);
+    // EX.debug(`[NET] ${type} ${query}`, request);
 
     return request.always(() => {
-      console.timeEnd(`${type} ${query}`);
-      console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request);
+      // console.timeEnd(`${type} ${query}`);
+      EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request);
     });
   }
 
@@ -429,6 +426,7 @@ var Post = Resource.Post = class Post extends Resource {
       post.tag_string_artist.split(/\s+/).map(name => ({ name, category: 1 })),
       post.tag_string_copyright.split(/\s+/).map(name => ({ name, category: 3 })),
       post.tag_string_character.split(/\s+/).map(name => ({ name, category: 4 })),
+      post.tag_string_meta.split(/\s+/).map(name => ({ name, category: 5 })),
       post.tag_string_general.split(/\s+/).map(name => ({ name, category: 0 }))
     );
   }
@@ -445,7 +443,8 @@ var Tag = Resource.Tag = class Tag extends Resource {
       "Artist",     // 1
       undefined,    // 2 (unused)
       "Copyright",  // 3
-      "Character"   // 4
+      "Character",  // 4
+      "Meta"        // 5
     ];
   }
 
@@ -570,6 +569,7 @@ class Posts {
       "Copyrights": "copyright",
       "Characters": "character",
       "Tags": "general",
+      "Meta": "meta",
     }, (category, heading) => {
       let $header = $('#tag-list :header').filter((i, e) => $(e).text().match(heading));
       let $tags = $header.next('ul');
@@ -1294,6 +1294,9 @@ class Header {
     let $header = $$1(Header.render()).insertBefore("#top");
     _.defer(() => $header.show());
 
+    // Move news announcements inside of EX header.
+    $$1("#news-updates").insertBefore("#ex-header .ex-header-wrapper");
+
     // Initalize header search box.
     Header.$tags.val($$1("#sidebar #tags").val());
     Danbooru.Autocomplete.initialize_all();
@@ -1349,46 +1352,48 @@ class Header {
   static render() {
     return `
       <header style="display: none;" id="ex-header" class="${EX.config.headerFixed ? "ex-fixed" : "ex-static"}">
-        <h1><a href="/">Danbooru</a></h1>
+        <div class="ex-header-wrapper">
+          <h1><a href="/">Danbooru</a></h1>
 
-        <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
-          <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
-          <input type="submit" value="Go">
-        </form>
+          <form class="ex-search-box" action="/posts" accept-charset="UTF-8" method="get">
+            <input type="text" data-autocomplete="tag-query" name="tags" id="ex-tags" class="ui-autocomplete-input" autocomplete="off">
+            <input type="submit" value="Go">
+          </form>
 
-        <section class="ex-mode-menu" style="display: none">
-          <label for="mode">Mode</label>
-          <select name="mode">
-            <option value="view">View</option>
-            <option value="preview">Preview</option>
-            <option value="tag-script">Tag script</option>
-          </select>
-
-          <fieldset class="ex-tag-script-controls" style="display: none">
-            <select name="tag-script-number">
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
+          <section class="ex-mode-menu" style="display: none">
+            <label for="mode">Mode</label>
+            <select name="mode">
+              <option value="view">View</option>
+              <option value="preview">Preview</option>
+              <option value="tag-script">Tag script</option>
             </select>
 
-            <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
-            <button name="apply" type="button">Apply</button>
+            <fieldset class="ex-tag-script-controls" style="display: none">
+              <select name="tag-script-number">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+              </select>
 
-            <label>Select</label>
-            <button name="select-all" type="button">All/None</button>
-            <button name="select-invert" type="button">Invert</button>
-          </fieldset>
-        </section>
+              <input id="${EX.config.enableModeMenu ? "tag-script-field" : "" }" name="tag-script" type="text" data-autocomplete="tag-query" placeholder="Enter tag script">
+              <button name="apply" type="button">Apply</button>
 
-	<a class="ex-header-close">
-          <i class="fa fa-lg" aria-hidden="true"></i>
-	</span>
+              <label>Select</label>
+              <button name="select-all" type="button">All/None</button>
+              <button name="select-invert" type="button">Invert</button>
+            </fieldset>
+          </section>
+
+          <a class="ex-header-close">
+            <i class="fa fa-lg" aria-hidden="true"></i>
+          </a>
+        </div>
       </header>
     `;
   }
@@ -1472,17 +1477,17 @@ class Keys {
       const callback = this.actions[action];
 
       if (action === undefined || callback === undefined) {
-        console.log(`[KEY] FAIL ${keys} -> ${action}`);
+        EX.debug(`[KEY] FAIL ${keys} -> ${action}`);
         return this;
       }
 
       Mousetrap.bind(keys, event => {
-        console.log(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
+        EX.debug(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
 
         return callback(event) === true;
       });
 
-      console.log(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
+      EX.debug(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
     });
 
     this.bindings = _.concat(this.bindings, bindings);
@@ -1547,7 +1552,6 @@ class Keys {
 
     this.bind([
       { "q": "header-focus-search" },
-      // XXX { "mod enter": "header-execute-search-in-new-tab" },
       { "h o": "header-open" },
       { "h c": "header-close" },
       { "h t": "header-toggle" },
@@ -1655,61 +1659,13 @@ class Keys {
   static submitForm(event) {
     const $target = $(event.target);
 
-    if ($target.is("input, textarea")) {
+    if ($target.is("#ex-tags:focus")) {
+      Header.executeSearchInNewTab();
+    } else if ($target.is("input, textarea")) {
       $target.closest("form").find('input[type="submit"][value="Submit"]').click();
     }
 
     return false;
-  }
-}
-
-class PseudoTagTypes {
-  static initialize() {
-    const $links = $(`a[href^="/posts?tags="]`);
-    if ($links.length === 0) {
-      return;
-    }
-
-    const requests = [
-      $.getJSON("/related_tag.json?category=general&query=tag_group:meme"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:image_composition"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:text"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:artistic_license"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:posture"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:face_tags"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:hair_color"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:hair_styles"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:hair"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:body-parts"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:nudity"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:sex_acts"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:sexual_positions"),
-      $.getJSON("/related_tag.json?category=general&query=tag_group:attire"),
-    ];
-
-    Promise.all(requests).then(allRelatedTags => {
-      // Merge all related tags lists into one big { "tag": [ "tag-group" ] } object.
-      const tagGroups = allRelatedTags.map(relatedTags => {
-        const tagGroup = _.kebabCase(relatedTags.query.replace(/tag_group:/, ""));
-        const tagsToGroup =
-          _(relatedTags.wiki_page_tags)
-          .map("[0]")
-          .map(tag => ({ [tag]: [tagGroup] }))
-          .reduce(_.merge);
-
-          return tagsToGroup;
-      }).reduce(_.merge);
-
-      $links.each((i, e) => {
-        const $tagLink = $(e);
-        const tag = decodeURIComponent($(e).attr("href").replace(/\/posts\?tags=/, ""));
-
-        _(tagGroups[tag]).each(type => {
-          $tagLink.addClass(`ex-tag-type-${type}`);
-          $tagLink.parent('[class^="category-"]').addClass(`ex-tag-type-${type}`);
-        });
-      });
-    });
   }
 }
 
@@ -2342,7 +2298,6 @@ class Users {
 
   static initialize() {
     this.initializeWordBreaks();
-    this.initializeUserTooltops();
 
     if ($$1("#c-users #a-show").length) {
       this.initializeCollapsibleHeaders();
@@ -2359,7 +2314,7 @@ class Users {
   }
 
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
-  static initializeUserTooltops() {
+  static initializeUserTooltips() {
     // XXX triggers on Profile / Settings links on /static/site_map
     $$1(document).on("mouseover", '#page a[href^="/users/"]', e => {
         const $user = $$1(e.target);
@@ -2721,17 +2676,6 @@ class UI {
   static query(param) {
     return new URL(window.location).searchParams.get(param);
   }
-
-  static openEditPage(controller) {
-    // FIXME: Get the ID from the 'Show' link. This is brittle.
-    const $showLink =
-      $('#nav > menu:nth-child(2) a')
-      .filter((i, e) => $(e).text().match(/^Show$/));
-
-    const id = $showLink.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
-
-    window.location.href = `/${controller}/${id}/edit`;
-  }
 }
 
 UI.Header = Header;
@@ -2750,19 +2694,20 @@ UI.SavedSearches = SavedSearches;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n@import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);\n#ex-header {\n  display: flex;\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white;\n  /* http://fontawesome.io/icon/times-circle/ */\n  /* http://fontawesome.io/icon/thumb-tack/ */ }\n  #ex-header.ex-fixed.ex-header-scrolled {\n    border-bottom: 1px solid #EEEEEE;\n    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n  #ex-header h1 {\n    display: inline-block;\n    font-size: 2.5em;\n    margin: 0 30px; }\n  #ex-header .ex-search-box {\n    margin: auto;\n    display: flex;\n    flex: 0 1 30%; }\n    #ex-header .ex-search-box input#ex-tags {\n      flex: 0 1 100%; }\n    #ex-header .ex-search-box input[type=\"submit\"] {\n      flex: 1;\n      margin: auto 1em; }\n  #ex-header .ex-mode-menu {\n    margin: auto;\n    flex: 1 2 70%; }\n    #ex-header .ex-mode-menu .ex-tag-script-controls {\n      display: inline-block;\n      margin: auto; }\n    #ex-header .ex-mode-menu label {\n      font-weight: bold;\n      cursor: auto; }\n      @media (max-width: 1280px) {\n        #ex-header .ex-mode-menu label {\n          display: none; } }\n  #ex-header .ex-header-close {\n    margin: auto;\n    margin-right: 30px;\n    color: #0073ff;\n    cursor: pointer; }\n  #ex-header.ex-fixed .ex-header-close .fa::before {\n    content: \"\\f057\"; }\n  #ex-header.ex-static .ex-header-close .fa::before {\n    content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n/*\nred\norange\ngreen\npurple\n#6633FF (light purple)\ngray\n#0000FF (blue)\n\n0 - hsl(213, 100%, 50%);\n1 - #A00\n3 - #A0A\n4 - #0A0\n\n#CCC\n*/\n.ex-general-tag-list .ex-tag-type-meme, .row.list-of-tags .ex-tag-type-meme {\n  order: -200; }\n\na.ex-tag-type-meme {\n  color: purple !important; }\n\n.ex-general-tag-list .ex-tag-type-image-composition, .row.list-of-tags .ex-tag-type-image-composition {\n  order: -190; }\n\na.ex-tag-type-image-composition {\n  color: #0000FF !important; }\n\n.ex-general-tag-list .ex-tag-type-text, .row.list-of-tags .ex-tag-type-text {\n  order: -180; }\n\na.ex-tag-type-text {\n  color: blue !important; }\n\n.ex-general-tag-list .ex-tag-type-artistic-license, .row.list-of-tags .ex-tag-type-artistic-license {\n  order: -170; }\n\na.ex-tag-type-artistic-license {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-posture, .row.list-of-tags .ex-tag-type-posture {\n  order: -160; }\n\na.ex-tag-type-posture {\n  color: green !important; }\n\n.ex-general-tag-list .ex-tag-type-face-tags, .row.list-of-tags .ex-tag-type-face-tags {\n  order: -150; }\n\na.ex-tag-type-face-tags {\n  color: lightgreen !important; }\n\n.ex-general-tag-list .ex-tag-type-hair-color, .row.list-of-tags .ex-tag-type-hair-color {\n  order: -140; }\n\na.ex-tag-type-hair-color {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-hair-styles, .row.list-of-tags .ex-tag-type-hair-styles {\n  order: -130; }\n\na.ex-tag-type-hair-styles {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-hair, .row.list-of-tags .ex-tag-type-hair {\n  order: -120; }\n\na.ex-tag-type-hair {\n  color: brown !important; }\n\n.ex-general-tag-list .ex-tag-type-body-parts, .row.list-of-tags .ex-tag-type-body-parts {\n  order: -110; }\n\na.ex-tag-type-body-parts {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-nudity, .row.list-of-tags .ex-tag-type-nudity {\n  order: -100; }\n\na.ex-tag-type-nudity {\n  color: #6633FF !important; }\n\n.ex-general-tag-list .ex-tag-type-sex-acts, .row.list-of-tags .ex-tag-type-sex-acts {\n  order: -90; }\n\na.ex-tag-type-sex-acts {\n  color: orange !important; }\n\n.ex-general-tag-list .ex-tag-type-sexual-positions, .row.list-of-tags .ex-tag-type-sexual-positions {\n  order: -80; }\n\na.ex-tag-type-sexual-positions {\n  color: red !important; }\n\n.ex-general-tag-list .ex-tag-type-attire, .row.list-of-tags .ex-tag-type-attire {\n  order: -70; }\n\na.ex-tag-type-attire {\n  color: teal !important; }\n\n.ex-general-tag-list {\n  display: flex;\n  flex-direction: column; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
+___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n@import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);\n#ex-header {\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white;\n  /* http://fontawesome.io/icon/times-circle/ */\n  /* http://fontawesome.io/icon/thumb-tack/ */ }\n  #ex-header .ex-header-wrapper {\n    display: flex; }\n    #ex-header .ex-header-wrapper.ex-fixed.ex-header-scrolled {\n      border-bottom: 1px solid #EEEEEE;\n      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n    #ex-header .ex-header-wrapper h1 {\n      display: inline-block;\n      font-size: 2.5em;\n      margin: 0 30px; }\n    #ex-header .ex-header-wrapper .ex-search-box {\n      margin: auto;\n      display: flex;\n      flex: 0 1 30%; }\n      #ex-header .ex-header-wrapper .ex-search-box input#ex-tags {\n        flex: 0 1 100%; }\n      #ex-header .ex-header-wrapper .ex-search-box input[type=\"submit\"] {\n        flex: 1;\n        margin: auto 1em; }\n    #ex-header .ex-header-wrapper .ex-mode-menu {\n      margin: auto;\n      flex: 1 2 70%; }\n      #ex-header .ex-header-wrapper .ex-mode-menu .ex-tag-script-controls {\n        display: inline-block;\n        margin: auto; }\n      #ex-header .ex-header-wrapper .ex-mode-menu label {\n        font-weight: bold;\n        cursor: auto; }\n        @media (max-width: 1280px) {\n          #ex-header .ex-header-wrapper .ex-mode-menu label {\n            display: none; } }\n    #ex-header .ex-header-wrapper .ex-header-close {\n      margin: auto;\n      margin-right: 30px;\n      color: #0073ff;\n      cursor: pointer; }\n  #ex-header.ex-fixed .ex-header-close .fa::before {\n    content: \"\\f057\"; }\n  #ex-header.ex-static .ex-header-close .fa::before {\n    content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* Fix sidebar search box from rendering on top of EX header bar. */\n#page #sidebar input[type=\"text\"] {\n  z-index: 10 !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
 
 var EX = window.EX = class EX {
   static get Config() { return Config; }
   static get DText() { return DText; }
   static get Keys() { return Keys; }
-  static get PseudoTagTypes() { return PseudoTagTypes; }
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
+  static get logLevel() { return 1; }
+
   static initialize() {
-    console.timeEnd("preinit");
-    console.groupCollapsed("settings");
+    // console.timeEnd("preinit");
+    // console.groupCollapsed("settings");
 
     EX.version = GM_info.script.version;
     EX.config = new EX.Config();
@@ -2776,10 +2721,8 @@ var EX = window.EX = class EX {
     // EX.config.showPostLinkPreviews && UI.PostPreviews.initializePostLinkPreviews();
     EX.UI.initialize();
     EX.config.enableNotesLivePreview && EX.UI.Notes.initialize();
-    EX.config.usernameTooltips && EX.UI.Users.initializeUserLinks();
+    EX.config.usernameTooltips && EX.UI.Users.initializeUserTooltips();
     EX.config.enableLargeThumbnails && EX.UI.Posts.initializeLargeThumbnails();
-    // XXX
-    // EX.PseudoTagTypes.initialize();
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
@@ -2790,15 +2733,20 @@ var EX = window.EX = class EX {
     EX.config.usersRedesign && EX.UI.Users.initialize();
     // EX.UI.SavedSearches.initialize();
 
-    console.groupEnd("settings");
-    console.timeEnd("initialized");
+    // console.groupEnd("settings");
+    // console.timeEnd("initialized");
+  }
+
+  static debug(...params) {
+    if (EX.logLevel === 0) {
+      console.log(...params);
+    }
   }
 };
 
-console.log("Danbooru:", window.Danbooru);
-console.log("EX:", window.EX);
+window.EX.debug("Danbooru:", window.Danbooru);
+// console.timeEnd("loaded");
 
-console.timeEnd("loaded");
 $$1(function () {
   try {
     window.EX.initialize();

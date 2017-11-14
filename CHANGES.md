@@ -5,6 +5,11 @@
 * Fix tag autocomplete in the header search box and in the tag script box.
 * Fix conflict between Danbooru's left/right arrow keybindings and Danbooru EX's
   left/right keybindings in tag script mode.
+* Fix header bar state (pinned vs unpinned) not being remembered between tabs.
+* Fix ctrl+enter shortcut in search box.
+* Fix news announcements overlapping the header bar.
+* Fix to support new meta tag category.
+* Disable console debugging logs by default.
 
 #### Changes
 
