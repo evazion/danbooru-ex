@@ -9,7 +9,8 @@ export default Resource.Tag = class Tag extends Resource {
       "Artist",     // 1
       undefined,    // 2 (unused)
       "Copyright",  // 3
-      "Character"   // 4
+      "Character",  // 4
+      "Meta"        // 5
     ];
   }
 

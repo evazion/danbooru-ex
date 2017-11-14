@@ -68,6 +68,7 @@ export default class Posts {
       "Copyrights": "copyright",
       "Characters": "character",
       "Tags": "general",
+      "Meta": "meta",
     }, (category, heading) => {
       let $header = $('#tag-list :header').filter((i, e) => $(e).text().match(heading));
       let $tags = $header.next('ul');

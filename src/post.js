@@ -9,6 +9,7 @@ export default Resource.Post = class Post extends Resource {
       post.tag_string_artist.split(/\s+/).map(name => ({ name, category: 1 })),
       post.tag_string_copyright.split(/\s+/).map(name => ({ name, category: 3 })),
       post.tag_string_character.split(/\s+/).map(name => ({ name, category: 4 })),
+      post.tag_string_meta.split(/\s+/).map(name => ({ name, category: 5 })),
       post.tag_string_general.split(/\s+/).map(name => ({ name, category: 0 }))
     );
   }
