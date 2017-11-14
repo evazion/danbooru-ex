@@ -26,9 +26,6 @@
  */
 
 console.log("Danbooru EX:", GM_info.script.version);
-console.time("loaded");
-console.time("preinit");
-console.time("initialized");
-
-window.moment = moment;
-window.Mousetrap = Mousetrap;
+// console.time("loaded");
+// console.time("preinit");
+// console.time("initialized");

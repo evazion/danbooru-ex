@@ -1,17 +1,18 @@
 import _ from "lodash";
 import $ from "jquery";
+import EX from "./ex.js";
 
 export default class Resource {
   static request(type, url, params = {}) {
     const query = `${url}?${decodeURIComponent($.param(params))}`;
-    console.time(`${type} ${query}`);
+    // console.time(`${type} ${query}`);
 
     const request = $.ajax({ url, type, data: params });
-    console.log(`[NET] ${type} ${query}`, request);
+    // EX.debug(`[NET] ${type} ${query}`, request);
 
     return request.always(() => {
-      console.timeEnd(`${type} ${query}`);
-      console.log(`[NET] ${request.status} ${request.statusText} ${query}`, request)
+      // console.timeEnd(`${type} ${query}`);
+      EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request)
     });
   }
 

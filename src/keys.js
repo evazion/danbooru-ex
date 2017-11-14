@@ -7,6 +7,7 @@ import Header from "./ui/header.js";
 import ModeMenu from "./ui/mode_menu.js";
 import { Selection } from "./ui/mode_menu.js";
 import Navigation from "./navigation.js";
+import EX from "./ex.js";
 
 export default class Keys {
   constructor() {
@@ -26,17 +27,17 @@ export default class Keys {
       const callback = this.actions[action];
 
       if (action === undefined || callback === undefined) {
-        console.log(`[KEY] FAIL ${keys} -> ${action}`);
+        EX.debug(`[KEY] FAIL ${keys} -> ${action}`);
         return this;
       }
 
       Mousetrap.bind(keys, event => {
-        console.log(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
+        EX.debug(`[KEY] EXEC ${keys} -> ${action} (${callback.name})`);
 
         return callback(event) === true;
       });
 
-      console.log(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
+      EX.debug(`[KEY] BIND ${keys} -> ${action} (${callback.name})`);
     });
 
     this.bindings = _.concat(this.bindings, bindings);

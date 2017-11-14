@@ -1,6 +1,7 @@
 /* global Danbooru */
 
 import _ from "lodash";
+import EX from "./ex.js";
 
 export class Setting {
   constructor({ value, help, configurable, storage } = {}) {
@@ -162,14 +163,14 @@ export default class Config {
       JSON.stringify(item.value)
     ));
 
-    console.log(`[CFG] READ EX.config.${key}:`, value);
+    EX.debug(`[CFG] READ EX.config.${key}:`, value);
     return value;
   }
 
   set(key, value) {
     const item = Config.Items[key];
     item.storage["EX.config." + key] = JSON.stringify(value);
-    console.log(`[CFG] SAVE EX.config.${key} =`, value);
+    EX.debug(`[CFG] SAVE EX.config.${key} =`, value);
     return this;
   }
 
@@ -179,7 +180,7 @@ export default class Config {
 
   reset() {
     _(Config.Items).each((item, key) => {
-      console.log(`[CFG] DELETE EX.config.${key}`);
+      EX.debug(`[CFG] DELETE EX.config.${key}`);
       delete item.storage["EX.config." + key]
     });
 

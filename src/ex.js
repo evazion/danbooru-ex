@@ -14,9 +14,11 @@ export default window.EX = class EX {
   static get Resource() { return Resource; }
   static get UI() { return UI; }
 
+  static get logLevel() { return 1; }
+
   static initialize() {
-    console.timeEnd("preinit");
-    console.groupCollapsed("settings");
+    // console.timeEnd("preinit");
+    // console.groupCollapsed("settings");
 
     EX.version = GM_info.script.version;
     EX.config = new EX.Config();
@@ -42,15 +44,20 @@ export default window.EX = class EX {
     EX.config.usersRedesign && EX.UI.Users.initialize();
     // EX.UI.SavedSearches.initialize();
 
-    console.groupEnd("settings");
-    console.timeEnd("initialized");
+    // console.groupEnd("settings");
+    // console.timeEnd("initialized");
+  }
+
+  static debug(...params) {
+    if (EX.logLevel === 0) {
+      console.log(...params);
+    }
   }
 }
 
-console.log("Danbooru:", window.Danbooru);
-console.log("EX:", window.EX);
+window.EX.debug("Danbooru:", window.Danbooru);
+// console.timeEnd("loaded");
 
-console.timeEnd("loaded");
 $(function () {
   try {
     window.EX.initialize();
