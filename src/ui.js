@@ -159,17 +159,6 @@ export default class UI {
   static query(param) {
     return new URL(window.location).searchParams.get(param);
   }
-
-  static openEditPage(controller) {
-    // FIXME: Get the ID from the 'Show' link. This is brittle.
-    const $showLink =
-      $('#nav > menu:nth-child(2) a')
-      .filter((i, e) => $(e).text().match(/^Show$/));
-
-    const id = $showLink.attr('href').match(new RegExp(`/${controller}/(\\d+)$`))[1];
-
-    window.location.href = `/${controller}/${id}/edit`;
-  }
 }
 
 UI.Header = Header;
