@@ -8,8 +8,8 @@ export default class ForumPosts {
   // On forum posts, change "Permalink" to "Forum #1234". */
   static initializePermalinks() {
     $(".forum-post menu").each((i, e) => {
-      let $forum_id  = $(e).find("li:nth-child(1)");
-      let $permalink = $(e).find("li:last-child");
+      let $forum_id  = $(e).find("li:nth-of-type(1)");
+      let $permalink = $(e).find("li:last-of-type").first();
 
       $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
       $forum_id.remove();
