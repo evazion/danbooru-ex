@@ -156,7 +156,6 @@ export default class Posts {
     post.status_flags = post.flags;
     post.image_width = post.width;
     post.image_height = post.height;
-    post.large_file_url = post.large_file_url.replace(/https?:\/\/.*\.donmai\.us\//, "");
 
     return post;
   }
