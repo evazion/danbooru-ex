@@ -74,8 +74,6 @@ export default class Keys {
       "go-forward": Navigation.goForward,
       "go-back": Navigation.goBack,
 
-      "header-open": Header.open,
-      "header-close": Header.close,
       "header-toggle": Header.toggle,
       "header-focus-search": Header.focusSearch,
       "header-execute-search-in-new-tab": Header.executeSearchInNewTab,
@@ -102,8 +100,6 @@ export default class Keys {
 
     this.bind([
       { "q": "header-focus-search" },
-      { "h o": "header-open" },
-      { "h c": "header-close" },
       { "h t": "header-toggle" },
       { "h h": "header-focus-search" },
 

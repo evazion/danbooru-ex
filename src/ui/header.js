@@ -61,18 +61,10 @@ export default class Header {
     return false;
   }
 
-  static close() {
-    Header.$el.addClass("ex-static").removeClass("ex-fixed");
-    EX.config.headerFixed = false;
-  }
-
-  static open() {
-    Header.$el.addClass("ex-fixed").removeClass("ex-static");
-    EX.config.headerFixed = true;
-  }
-
   static toggle() {
-    return EX.config.headerFixed ? Header.close() : Header.open();
+    Header.$el.toggleClass("ex-fixed ex-static");
+    Header.$close.find("i").toggleClass("fa-times-circle fa-thumbtack");
+    EX.config.headerFixed = !EX.config.headerFixed;
   }
 
   static get $el()    { return $("#ex-header"); }
@@ -121,7 +113,7 @@ export default class Header {
           </section>
 
           <a class="ex-header-close">
-            <i class="fa fa-lg" aria-hidden="true"></i>
+            <i class="fas fa-lg ${EX.config.headerFixed ? "fa-times-circle" : "fa-thumbtack"}" aria-hidden="true"></i>
           </a>
         </div>
       </header>
