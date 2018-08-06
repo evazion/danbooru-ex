@@ -29,7 +29,7 @@ export default class Header {
 
     // Initalize header search box.
     Header.$tags.val($("#sidebar #tags").val());
-    Danbooru.Autocomplete.initialize_all();
+    Danbooru.Autocomplete && Danbooru.Autocomplete.initialize_all && Danbooru.Autocomplete.initialize_all();
 
     Header.$close.click(Header.toggle);
     $(document).scroll(_.throttle(Header.onScroll, 16));
