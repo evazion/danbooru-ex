@@ -1,5 +1,3 @@
-/* global Danbooru */
-
 import Resource from "./resource.js";
 
 import _ from "lodash";

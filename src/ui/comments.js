@@ -1,5 +1,3 @@
-/* global Danbooru */
-
 export default class Comments {
   static initialize() {
     if ($("#c-comments").length || $("#c-posts #a-show").length) {

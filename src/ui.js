@@ -1,5 +1,3 @@
-/* global Danbooru */
-
 import Header       from "./ui/header.js";
 import ModeMenu     from "./ui/mode_menu.js";
 import Notes        from "./ui/notes.js";

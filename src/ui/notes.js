@@ -1,5 +1,3 @@
-/* global Danbooru */
-
 import _ from "lodash";
 
 export default class Notes {
