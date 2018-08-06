@@ -1,8 +1,12 @@
 import EX from "../ex.js";
 import ModeMenu from "./mode_menu.js";
 import Sidebar from "./sidebar.js";
+import Post from "../post.js";
+import Posts from "./posts.js";
+import Tag from "../tag.js";
 
 import _ from "lodash";
+import moment from "moment";
 
 export default class PreviewPanel {
   static initialize() {
@@ -32,7 +36,7 @@ export default class PreviewPanel {
     $content.after(`
       <div id="ex-preview-panel-resizer" class="ex-vertical-resizer"></div>
       <section id="ex-preview-panel" class="ex-panel">
-        <div>
+        <div id="ex-preview-panel-container">
           <article>
             No image selected. Click a thumbnail to open image preview.
           </article>
@@ -65,6 +69,15 @@ export default class PreviewPanel {
       drag: _.throttle(PreviewPanel.resize, 16),
       stop: _.debounce(PreviewPanel.save, 100),
     });
+  }
+
+  static async update($post) {
+    const postId = $post.data("id");
+    const post = await Post.get(postId);
+
+    const html = PreviewPanel.renderPost(post);
+
+    $("#ex-preview-panel > div").children().first().replaceWith(html);
   }
 
   static get $panel() {
@@ -134,5 +147,59 @@ export default class PreviewPanel {
 
     $("#ex-preview-panel > div").css({ height });
     $("#ex-preview-panel > div > article.post-preview .post-media").css({ "max-height": height });
+  }
+
+  static renderPost(post) {
+    return `
+      <section class="ex-excerpt ex-post-excerpt">
+        <div class="ex-excerpt-title ex-post-excerpt-title">
+          <span class="post-info uploader-name">
+            <a href="/users/${post.uploader_id}">${_.escape(post.uploader_name)}</a>
+          </span>
+
+          <time class="post-info created-at ex-short-relative-time"
+                datetime="${post.created_at}"
+                title="${moment(post.created_at).format()}">
+            ${moment(post.created_at).locale("en-short").fromNow()} ago
+          </time>
+
+          <span class="post-info fav-count">
+            <a href="#">${post.fav_count}</a>
+            <a href="#">
+              <i class="far fa-star" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="post-info score">
+            ${post.score}
+            <a href="#">
+              <i class="far fa-thumbs-up" aria-hidden="true"></i>
+            </a>
+            <a href="#">
+              <i class="far fa-thumbs-down" aria-hidden="true"></i>
+            </a>
+          </span>
+
+          <span class="post-info source">
+            <a href="${_.escape(post.source)}">${post.source_domain}</a>
+          </span>
+
+          <span class="post-info rating">
+            ${post.pretty_rating}
+          </span>
+
+          <span class="post-info dimensions">
+            ${post.image_width}x${post.image_height}
+          </span>
+        </div>
+
+        <div class="ex-excerpt-body ex-post-excerpt-body">
+          ${Posts.preview(post, { size: "large", classes: [ "ex-no-tooltip" ] })}
+          <div class="ex-post-excerpt-metadata">
+            ${Tag.renderTagList(post, "ex-tag-list-inline")}
+          </div>
+        </div>
+      </section>
+    `;
   }
 }

@@ -74,7 +74,7 @@ export default class ModeMenu {
     const oldN = ModeMenu.getTagScriptNumber();
 
     if (ModeMenu.getMode() === "tag-script" && newN === oldN) {
-      $('.ex-mode-menu input[name="tag-script"]').focus();
+      $('.ex-mode-menu input[name="tag-script"]').select();
     } else {
       ModeMenu.setMode("tag-script");
       ModeMenu.setTagScriptNumber(newN);
@@ -309,16 +309,15 @@ export class Selection {
   }
 
   static swapCursor($oldCursor, $newCursor) {
+    const $post = $newCursor.closest(".post-preview");
+
     $oldCursor.removeClass("ex-cursor");
     $newCursor.addClass("ex-cursor");
 
     Selection.scrollWindowTo($newCursor);
     $newCursor.find("a").focus();
 
-    const post = Posts.normalize($newCursor.closest(".post-preview").data());
-    const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
-
-    $("#ex-preview-panel article").replaceWith(html);
+    PreviewPanel.update($post);
     PreviewPanel.setHeight();
   }
 
