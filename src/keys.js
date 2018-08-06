@@ -181,8 +181,8 @@ export default class Keys {
     //$(document).unbind("keydown", "w s");
     //Mousetrap.bind("w", Keys.scroll(+1, 50, 0.06));
     //Mousetrap.bind("s", Keys.scroll(-1, 50, 0.06));
-    Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
-    Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
+    // Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
+    // Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
   }
 
   /* Actions */
