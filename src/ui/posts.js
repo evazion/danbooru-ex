@@ -75,7 +75,7 @@ export default class Posts {
 
       $tags.addClass(`ex-${category}-tag-list`);
       $header.wrap(`<span class="ex-tag-list-header ex-${category}-tag-list-header">`);
-      $header.parent().append(`<span class="post-count">${$tags.children().size()}</span>`);
+      $header.parent().append(`<span class="post-count">${$tags.children().length}</span>`);
     });
   }
 
