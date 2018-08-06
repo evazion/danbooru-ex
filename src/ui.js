@@ -9,7 +9,6 @@ import Sidebar      from "./ui/sidebar.js";
 
 import Artists      from "./ui/artists.js";
 import Comments     from "./ui/comments.js";
-import ForumPosts   from "./ui/forum_posts.js";
 import Posts        from "./ui/posts.js";
 import PostVersions from "./ui/post_versions.js";
 import SavedSearches from "./ui/saved_searches.js";
@@ -170,7 +169,6 @@ UI.Sidebar = Sidebar;
 
 UI.Artists = Artists;
 UI.Comments = Comments;
-UI.ForumPosts = ForumPosts;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;
 UI.SavedSearches = SavedSearches;

@@ -37,7 +37,6 @@ export default window.EX = class EX {
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
-    EX.config.forumRedesign && EX.UI.ForumPosts.initialize();
     EX.config.postsRedesign && EX.UI.Posts.initialize();
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();

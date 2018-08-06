@@ -89,9 +89,6 @@ export default class Config {
       commentsRedesign: Setting.Shared({
         help: "Enable comment scores and extra info on posts in /comments",
       }),
-      forumRedesign: Setting.Shared({
-        help: 'Replace Permalinks on forum posts with "forum #1234" links',
-      }),
       postsRedesign: Setting.Shared({
         help: 'Move artist tags to the top of the tag list, put tag counts next to tag list headers, and add hotkeys for rating / voting on posts.',
       }),
