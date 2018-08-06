@@ -1,5 +1,4 @@
 import _ from "lodash";
-import $ from "jquery";
 import EX from "./ex.js";
 
 export default class Resource {

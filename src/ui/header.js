@@ -1,4 +1,3 @@
-import $ from "jquery";
 import _ from "lodash";
 
 import EX from "../ex.js";

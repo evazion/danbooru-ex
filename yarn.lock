@@ -1015,10 +1015,6 @@ isstream@~0.1.2:
   version "1.11.2"
   resolved "https://codeload.github.com/jquery/jquery-ui/tar.gz/16a3e63a7108dc7da34d7d52b4fccd9ada24308c"
 
-jquery@^1.11.1:
-  version "1.12.4"
-  resolved "https://registry.yarnpkg.com/jquery/-/jquery-1.12.4.tgz#01e1dfba290fe73deba77ceeacb0f9ba2fec9e0c"
-
 js-base64@^2.1.8:
   version "2.4.8"
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-2.4.8.tgz#57a9b130888f956834aa40c5b165ba59c758f033"

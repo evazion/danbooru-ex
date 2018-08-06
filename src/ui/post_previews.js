@@ -1,5 +1,3 @@
-import $ from "jquery";
-
 import EX from "../ex.js";
 import PreviewPanel from "./preview_panel.js";
 import Posts from "./posts.js";

@@ -1,5 +1,3 @@
-import $ from "jquery";
-
 import Config from "./config.js";
 import DText from "./dtext.js";
 import Keys from "./keys.js";

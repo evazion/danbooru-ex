@@ -25,7 +25,7 @@ export default {
     globals: {
         filesize: 'filesize',
         lodash: '_',
-        jquery: 'jQuery',
+        jquery: '$',
         moment: 'moment',
         mousetrap: "Mousetrap",
         resizesensor: "ResizeSensor",
