@@ -55,11 +55,11 @@ export default class Keys {
       "goto-last-page": Navigation.gotoLastPage,
       "goto-page-dialog": Navigation.gotoPageDialog,
       
-      "go-my-account": () => window.location = `/users/${Danbooru.meta("current-user-id")}`,
+      "go-my-account": () => window.location = `/users/${Danbooru.Utility.meta("current-user-id")}`,
       "go-my-dmails": () => window.location = "/dmails",
-      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`,
+      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.Utility.meta("current-user-name"))}`,
       "go-my-saved-searches": () => window.location = `/saved_searches`,
-      "go-my-settings": () => window.location = `/users/${Danbooru.meta("current-user-id")}/edit`,
+      "go-my-settings": () => window.location = `/users/${Danbooru.Utility.meta("current-user-id")}/edit`,
 
       "go-artists-index": () => window.location = "/artists",
       "go-bur-new": () => window.location = "/bulk_update_requests/new",

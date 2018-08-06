@@ -151,7 +151,7 @@ export default class ModeMenu {
 
       return promise.then(post => {
           updated++;
-          Danbooru.notice(`Updated post #${postId} (${total - updated} remaining)`);
+          Danbooru.Utility.notice(`Updated post #${postId} (${total - updated} remaining)`);
           return { post: post, status: 200 };
         }).catch(resp => {
           return { id: postId, status: resp.status };
@@ -354,7 +354,7 @@ export class Selection {
     const post = Posts.normalize(Selection.$cursor.closest(".post-preview").data());
 
     $.post("/favorites.json", { post_id: post.id }).then(() =>
-      Danbooru.notice(`You have favorited post #${post.id}.`)
+      Danbooru.Utility.notice(`You have favorited post #${post.id}.`)
     );
   }
 }

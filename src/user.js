@@ -14,7 +14,7 @@ export default Resource.User = class User extends Resource {
     if (user.can_upload_free)   { classes += " user-post-uploader"; }
     if (user.is_super_voter)    { classes += " user-super-voter"; }
     if (user.is_banned)         { classes += " user-banned"; }
-    if (Danbooru.meta("style-usernames") === "true") { classes += " with-style"; }
+    if (Danbooru.Utility.meta("style-usernames") === "true") { classes += " with-style"; }
 
     return `
       <a class="${classes}" href="/users/${user.id}">${_.escape(user.name)}</a>

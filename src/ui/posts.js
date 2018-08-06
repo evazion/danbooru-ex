@@ -113,7 +113,7 @@ export default class Posts {
    * U / Alt+U: Vote up / vote down.
    */
   static initializeHotkeys() {
-    const post_id = Danbooru.meta("post-id");
+    const post_id = Danbooru.Utility.meta("post-id");
 
     const rate = function (post_id, rating) {
       return function (e) {

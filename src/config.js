@@ -230,11 +230,11 @@ export default class Config {
       const value = e.target.checked;
 
       this.set(name, value);
-      Danbooru.notice("Setting saved.");
+      Danbooru.Utility.notice("Setting saved.");
     });
 
     $("#factory_reset").click(e => {
-      confirm('Reset Danbooru EX settings?') && this.reset() && Danbooru.notice("Danbooru EX reset.");
+      confirm('Reset Danbooru EX settings?') && this.reset() && Danbooru.Utility.notice("Danbooru EX reset.");
     });
   }
 
