@@ -45,10 +45,19 @@ export default class Navigation {
     return false;
   }
 
+  static goDirection(direction) {
+    var href = $(`.paginator a[rel=${direction}]`).attr("href");
+    if (href) {
+      window.location = href;
+    }
+  }
+
   static goTop()    { window.scrollTo(0, 0); }
   static goBottom() { window.scrollTo(0, $(document).height()); }
   static goForward() { window.history.forward(); }
   static goBack()    { window.history.back(); }
+  static goNext()   { Navigation.goDirection("next"); }
+  static goPrev()   { Navigation.goDirection("prev"); }
 
   static scroll(direction, duration, distance) {
     return _.throttle(() => {
