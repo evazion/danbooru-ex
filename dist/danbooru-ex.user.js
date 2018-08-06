@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Danbooru EX (Beta)
-// @version      2017.11.14@05:45:11
+// @name         Danbooru EX
+// @version      2018.08.06@04:28:09
 // @namespace    https://github.com/evazion/danbooru-ex
 // @source       https://github.com/evazion/danbooru-ex
 // @description  Danbooru UI Enhancements
@@ -8,7 +8,7 @@
 // @match        *://*.donmai.us/*
 // @grant        none
 // @run-at       document-body
-// @downloadURL  https://github.com/evazion/danbooru-ex/raw/unstable/dist/danbooru-ex.user.js
+// @downloadURL  https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
 // @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js
@@ -30,7 +30,7 @@ console.log("Danbooru EX:", GM_info.script.version);
 // console.time("preinit");
 // console.time("initialized");
 
-var danbooruEX = (function ($$1,_,Mousetrap,moment,ResizeSensor,filesize) {
+var danbooruEX = (function ($$1,_,Mousetrap,moment,ResizeSensor) {
 'use strict';
 
 function ___$insertStyle(css) {
@@ -55,7 +55,6 @@ _ = _ && _.hasOwnProperty('default') ? _['default'] : _;
 Mousetrap = Mousetrap && Mousetrap.hasOwnProperty('default') ? Mousetrap['default'] : Mousetrap;
 moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
 ResizeSensor = ResizeSensor && ResizeSensor.hasOwnProperty('default') ? ResizeSensor['default'] : ResizeSensor;
-filesize = filesize && filesize.hasOwnProperty('default') ? filesize['default'] : filesize;
 
 /* global Danbooru */
 
@@ -286,11 +285,11 @@ class Config {
       const value = e.target.checked;
 
       this.set(name, value);
-      Danbooru.notice("Setting saved.");
+      Danbooru.Utility.notice("Setting saved.");
     });
 
     $("#factory_reset").click(e => {
-      confirm('Reset Danbooru EX settings?') && this.reset() && Danbooru.notice("Danbooru EX reset.");
+      confirm('Reset Danbooru EX settings?') && this.reset() && Danbooru.Utility.notice("Danbooru EX reset.");
     });
   }
 
@@ -500,7 +499,7 @@ var User = Resource.User = class User extends Resource {
     if (user.can_upload_free)   { classes += " user-post-uploader"; }
     if (user.is_super_voter)    { classes += " user-super-voter"; }
     if (user.is_banned)         { classes += " user-banned"; }
-    if (Danbooru.meta("style-usernames") === "true") { classes += " with-style"; }
+    if (Danbooru.Utility.meta("style-usernames") === "true") { classes += " with-style"; }
 
     return `
       <a class="${classes}" href="/users/${user.id}">${_.escape(user.name)}</a>
@@ -614,7 +613,7 @@ class Posts {
    * U / Alt+U: Vote up / vote down.
    */
   static initializeHotkeys() {
-    const post_id = Danbooru.meta("post-id");
+    const post_id = Danbooru.Utility.meta("post-id");
 
     const rate = function (post_id, rating) {
       return function (e) {
@@ -657,7 +656,6 @@ class Posts {
     post.status_flags = post.flags;
     post.image_width = post.width;
     post.image_height = post.height;
-    post.large_file_url = post.large_file_url.replace(/https?:\/\/.*\.donmai\.us\//, "");
 
     return post;
   }
@@ -944,6 +942,7 @@ class ModeMenu {
   // of the arrow keys in tag script / preview mode. Ignore these bindings
   // during these modes.
   static overrideDanbooruArrowKeys() {
+    /* XXX
     Danbooru.Paginator.next_page = _.wrap(Danbooru.Paginator.next_page, function(next_page) {
       if (ModeMenu.getMode() == "view") { next_page(); }
     });
@@ -951,6 +950,7 @@ class ModeMenu {
     Danbooru.Paginator.prev_page = _.wrap(Danbooru.Paginator.prev_page, function(prev_page) {
       if (ModeMenu.getMode() == "view") { prev_page(); }
     });
+    */
   }
 
   static initializeModeMenu() {
@@ -1067,7 +1067,7 @@ class ModeMenu {
 
       return promise.then(post => {
           updated++;
-          Danbooru.notice(`Updated post #${postId} (${total - updated} remaining)`);
+          Danbooru.Utility.notice(`Updated post #${postId} (${total - updated} remaining)`);
           return { post: post, status: 200 };
         }).catch(resp => {
           return { id: postId, status: resp.status };
@@ -1270,7 +1270,7 @@ class Selection {
     const post = Posts.normalize(Selection.$cursor.closest(".post-preview").data());
 
     $.post("/favorites.json", { post_id: post.id }).then(() =>
-      Danbooru.notice(`You have favorited post #${post.id}.`)
+      Danbooru.Utility.notice(`You have favorited post #${post.id}.`)
     );
   }
 }
@@ -1299,7 +1299,7 @@ class Header {
 
     // Initalize header search box.
     Header.$tags.val($$1("#sidebar #tags").val());
-    Danbooru.Autocomplete.initialize_all();
+    Danbooru.Autocomplete && Danbooru.Autocomplete.initialize_all && Danbooru.Autocomplete.initialize_all();
 
     Header.$close.click(Header.toggle);
     $$1(document).scroll(_.throttle(Header.onScroll, 16));
@@ -1331,18 +1331,10 @@ class Header {
     return false;
   }
 
-  static close() {
-    Header.$el.addClass("ex-static").removeClass("ex-fixed");
-    EX.config.headerFixed = false;
-  }
-
-  static open() {
-    Header.$el.addClass("ex-fixed").removeClass("ex-static");
-    EX.config.headerFixed = true;
-  }
-
   static toggle() {
-    return EX.config.headerFixed ? Header.close() : Header.open();
+    Header.$el.toggleClass("ex-fixed ex-static");
+    Header.$close.find("i").toggleClass("fa-times-circle fa-thumbtack");
+    EX.config.headerFixed = !EX.config.headerFixed;
   }
 
   static get $el()    { return $$1("#ex-header"); }
@@ -1391,7 +1383,7 @@ class Header {
           </section>
 
           <a class="ex-header-close">
-            <i class="fa fa-lg" aria-hidden="true"></i>
+            <i class="fas fa-lg ${EX.config.headerFixed ? "fa-times-circle" : "fa-thumbtack"}" aria-hidden="true"></i>
           </a>
         </div>
       </header>
@@ -1505,11 +1497,11 @@ class Keys {
       "goto-last-page": Navigation.gotoLastPage,
       "goto-page-dialog": Navigation.gotoPageDialog,
       
-      "go-my-account": () => window.location = `/users/${Danbooru.meta("current-user-id")}`,
+      "go-my-account": () => window.location = `/users/${Danbooru.Utility.meta("current-user-id")}`,
       "go-my-dmails": () => window.location = "/dmails",
-      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.meta("current-user-name"))}`,
+      "go-my-favorites": () => window.location = `/posts?tags=ordfav:${encodeURIComponent(Danbooru.Utility.meta("current-user-name"))}`,
       "go-my-saved-searches": () => window.location = `/saved_searches`,
-      "go-my-settings": () => window.location = `/users/${Danbooru.meta("current-user-id")}/edit`,
+      "go-my-settings": () => window.location = `/users/${Danbooru.Utility.meta("current-user-id")}/edit`,
 
       "go-artists-index": () => window.location = "/artists",
       "go-bur-new": () => window.location = "/bulk_update_requests/new",
@@ -1524,8 +1516,6 @@ class Keys {
       "go-forward": Navigation.goForward,
       "go-back": Navigation.goBack,
 
-      "header-open": Header.open,
-      "header-close": Header.close,
       "header-toggle": Header.toggle,
       "header-focus-search": Header.focusSearch,
       "header-execute-search-in-new-tab": Header.executeSearchInNewTab,
@@ -1552,8 +1542,6 @@ class Keys {
 
     this.bind([
       { "q": "header-focus-search" },
-      { "h o": "header-open" },
-      { "h c": "header-close" },
       { "h t": "header-toggle" },
       { "h h": "header-focus-search" },
 
@@ -1635,8 +1623,8 @@ class Keys {
     //$(document).unbind("keydown", "w s");
     //Mousetrap.bind("w", Keys.scroll(+1, 50, 0.06));
     //Mousetrap.bind("s", Keys.scroll(-1, 50, 0.06));
-    Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
-    Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
+    // Danbooru.Shortcuts.nav_scroll_down = Navigation.scroll(+1, 50, 0.06);
+    // Danbooru.Shortcuts.nav_scroll_up   = Navigation.scroll(-1, 50, 0.06);
   }
 
   /* Actions */
@@ -2047,10 +2035,6 @@ class Comments {
         Comments.initializeMetadata();
       });
     }
-
-    if ($("#c-comments #a-index").length && window.location.search.match(/group_by=post/)) {
-      Comments.initializeTagList();
-    }
   }
 
   static initializePatches() {
@@ -2097,65 +2081,6 @@ class Comments {
       `));
     });
   }
-
-  // Sort tags by type, and put artist tags first.
-  static initializeTagList() {
-    const post_ids = $(".comments-for-post").map((i, e) => $(e).data('post-id')).toArray();
-
-    $.getJSON(`/posts.json?tags=status:any+id:${post_ids.join(',')}`).then(posts => {
-      $(".comments-for-post").each((i, comment) => {
-        const post_id = $(comment).parent().data('id');
-        const post = _.find(posts, { id: post_id });
-
-        const $row = $(`<div class="row"></div>`);
-
-        $row.append($(`
-          <span class="info">
-            <strong>Post</strong>
-            <a href="/posts/${post.id}">#${post.id}</a>
-          </span>
-        `));
-
-        $row.append($(`
-          <span class="info">
-            <strong>Size</strong>
-            <a href="${post.file_url}">${filesize(post.file_size, { round: 0 })}</a>
-            (${post.image_width}x${post.image_height})
-          </span>
-        `));
-
-        $row.append($(`
-          <span class="info">
-            <strong>Favorites</strong>
-            ${post.fav_count}
-          </span>
-        `));
-
-        /*
-        $row.append($(`
-            <span class="info">
-                <strong>Source</strong>
-                <a href="${_.escape(post.source)}">${_.escape(post.source)}</a>
-            </span>
-        `));
-        */
-
-        $(comment).find('.header').prepend($row);
-
-        const $tags =
-          $(comment)
-          .find(".category-0, .category-1, .category-3, .category-4")
-          .detach();
-
-        // Sort tags by category, but put general tags (category 0) at the end.
-        const $sorted = _.sortBy($tags, t =>
-          $(t).attr('class').replace(/category-0/, 'category-5')
-        );
-
-        $(comment).find('.list-of-tags').append($sorted);
-      });
-    });
-  }
 }
 
 class ForumPosts {
@@ -2168,8 +2093,8 @@ class ForumPosts {
   // On forum posts, change "Permalink" to "Forum #1234". */
   static initializePermalinks() {
     $(".forum-post menu").each((i, e) => {
-      let $forum_id  = $(e).find("li:nth-child(1)");
-      let $permalink = $(e).find("li:last-child");
+      let $forum_id  = $(e).find("li:nth-of-type(1)");
+      let $permalink = $(e).find("li:last-of-type").first();
 
       $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
       $forum_id.remove();
@@ -2543,7 +2468,7 @@ class UI {
   static initialize() {
     UI.initializeFooter();
     UI.initializeMoment();
-    UI.initializePatches();
+    // UI.initializePatches(); // XXX
 
     EX.config.styleWikiLinks && UI.initializeWikiLinks();
     EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
@@ -2694,7 +2619,7 @@ UI.SavedSearches = SavedSearches;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-___$insertStyle("@import url(https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css);\n@import url(https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.css);\n#ex-header {\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white;\n  /* http://fontawesome.io/icon/times-circle/ */\n  /* http://fontawesome.io/icon/thumb-tack/ */ }\n  #ex-header .ex-header-wrapper {\n    display: flex; }\n    #ex-header .ex-header-wrapper.ex-fixed.ex-header-scrolled {\n      border-bottom: 1px solid #EEEEEE;\n      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n    #ex-header .ex-header-wrapper h1 {\n      display: inline-block;\n      font-size: 2.5em;\n      margin: 0 30px; }\n    #ex-header .ex-header-wrapper .ex-search-box {\n      margin: auto;\n      display: flex;\n      flex: 0 1 30%; }\n      #ex-header .ex-header-wrapper .ex-search-box input#ex-tags {\n        flex: 0 1 100%; }\n      #ex-header .ex-header-wrapper .ex-search-box input[type=\"submit\"] {\n        flex: 1;\n        margin: auto 1em; }\n    #ex-header .ex-header-wrapper .ex-mode-menu {\n      margin: auto;\n      flex: 1 2 70%; }\n      #ex-header .ex-header-wrapper .ex-mode-menu .ex-tag-script-controls {\n        display: inline-block;\n        margin: auto; }\n      #ex-header .ex-header-wrapper .ex-mode-menu label {\n        font-weight: bold;\n        cursor: auto; }\n        @media (max-width: 1280px) {\n          #ex-header .ex-header-wrapper .ex-mode-menu label {\n            display: none; } }\n    #ex-header .ex-header-wrapper .ex-header-close {\n      margin: auto;\n      margin-right: 30px;\n      color: #0073ff;\n      cursor: pointer; }\n  #ex-header.ex-fixed .ex-header-close .fa::before {\n    content: \"\\f057\"; }\n  #ex-header.ex-static .ex-header-close .fa::before {\n    content: \"\\f08d\"; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* Fix sidebar search box from rendering on top of EX header bar. */\n#page #sidebar input[type=\"text\"] {\n  z-index: 10 !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
+___$insertStyle("#ex-header {\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white; }\n  #ex-header .ex-header-wrapper {\n    display: flex; }\n    #ex-header .ex-header-wrapper.ex-fixed.ex-header-scrolled {\n      border-bottom: 1px solid #EEEEEE;\n      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n    #ex-header .ex-header-wrapper h1 {\n      display: inline-block;\n      font-size: 2.5em;\n      margin: 0 30px; }\n    #ex-header .ex-header-wrapper .ex-search-box {\n      margin: auto;\n      display: flex;\n      flex: 0 1 30%; }\n      #ex-header .ex-header-wrapper .ex-search-box input#ex-tags {\n        flex: 0 1 100%; }\n      #ex-header .ex-header-wrapper .ex-search-box input[type=\"submit\"] {\n        flex: 1;\n        margin: auto 1em; }\n    #ex-header .ex-header-wrapper .ex-mode-menu {\n      margin: auto;\n      flex: 1 2 70%; }\n      #ex-header .ex-header-wrapper .ex-mode-menu .ex-tag-script-controls {\n        display: inline-block;\n        margin: auto; }\n      #ex-header .ex-header-wrapper .ex-mode-menu label {\n        font-weight: bold;\n        cursor: auto; }\n        @media (max-width: 1280px) {\n          #ex-header .ex-header-wrapper .ex-mode-menu label {\n            display: none; } }\n    #ex-header .ex-header-wrapper .ex-header-close {\n      margin: auto;\n      margin-right: 30px;\n      color: #0073ff;\n      cursor: pointer; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* Fix sidebar search box from rendering on top of EX header bar. */\n#page #sidebar input[type=\"text\"] {\n  z-index: 10 !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
 
 var EX = window.EX = class EX {
   static get Config() { return Config; }
@@ -2759,4 +2684,4 @@ $$1(function () {
 
 return EX;
 
-}(jQuery,_,Mousetrap,moment,ResizeSensor,filesize));
+}(jQuery,_,Mousetrap,moment,ResizeSensor));
