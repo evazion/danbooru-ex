@@ -239,9 +239,9 @@ export class Selection {
 
   static between($from, $to) {
     if ($from.nextAll().is($to)) {
-      return $from.nextUntil($to, Selection.post).add($to).andSelf();
+      return $from.nextUntil($to, Selection.post).add($to).addBack();
     } else if ($from.prevAll().is($to)) {
-      return $from.prevUntil($to, Selection.post).add($to).andSelf();
+      return $from.prevUntil($to, Selection.post).add($to).addBack();
     } else {
       return $();
     }
