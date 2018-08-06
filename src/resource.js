@@ -2,17 +2,20 @@ import _ from "lodash";
 import EX from "./ex.js";
 
 export default class Resource {
-  static request(type, url, params = {}) {
+  constructor(object) {
+    Object.assign(this, object);
+  }
+
+  static async request(type, url, params = {}) {
     const query = `${url}?${decodeURIComponent($.param(params))}`;
+
     // console.time(`${type} ${query}`);
-
     const request = $.ajax({ url, type, data: params });
-    // EX.debug(`[NET] ${type} ${query}`, request);
+    const response = await request;
 
-    return request.always(() => {
-      // console.timeEnd(`${type} ${query}`);
-      EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request)
-    });
+    EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request)
+
+    return new this(response);
   }
 
   static put(id, params = {}) {
