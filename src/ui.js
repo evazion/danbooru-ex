@@ -26,7 +26,7 @@ export default class UI {
   static initialize() {
     UI.initializeFooter();
     UI.initializeMoment();
-    UI.initializePatches();
+    // UI.initializePatches(); // XXX
 
     EX.config.styleWikiLinks && UI.initializeWikiLinks();
     EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
