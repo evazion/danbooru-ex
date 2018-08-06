@@ -28,6 +28,7 @@ export default class ModeMenu {
   // of the arrow keys in tag script / preview mode. Ignore these bindings
   // during these modes.
   static overrideDanbooruArrowKeys() {
+    /* XXX
     Danbooru.Paginator.next_page = _.wrap(Danbooru.Paginator.next_page, function(next_page) {
       if (ModeMenu.getMode() == "view") { next_page(); }
     });
@@ -35,6 +36,7 @@ export default class ModeMenu {
     Danbooru.Paginator.prev_page = _.wrap(Danbooru.Paginator.prev_page, function(prev_page) {
       if (ModeMenu.getMode() == "view") { prev_page(); }
     });
+    */
   }
 
   static initializeModeMenu() {
