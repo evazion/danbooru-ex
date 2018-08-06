@@ -17,7 +17,7 @@ export default class Posts {
 
     $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
-    Posts.initializePatches();
+    // Posts.initializePatches(); XXX
     // Posts.initializeImplications();
     Posts.initializeTagList();
     Posts.initializeHotkeys();
