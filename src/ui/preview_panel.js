@@ -1,5 +1,6 @@
 import EX from "../ex.js";
 import ModeMenu from "./mode_menu.js";
+import Sidebar from "./sidebar.js";
 
 import _ from "lodash";
 
@@ -52,6 +53,10 @@ export default class PreviewPanel {
       PreviewPanel.$panel.hide();
     }
 
+    if (PreviewPanel.opened()) {
+      Sidebar.close();
+    }
+
     $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
     $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
@@ -87,10 +92,12 @@ export default class PreviewPanel {
     }
 
     PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then(PreviewPanel.save);
+    Sidebar.close();
   }
 
   static close() {
     PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then(PreviewPanel.save);
+    Sidebar.open();
   }
 
   static switchMode() {
