@@ -8,15 +8,6 @@
      */
     word-break: break-word;
 
-    display: flex;
-    flex-direction: column;
-
-    /* Move artist tags to top of tag list. */
-    .ex-artist-tag-list-header,
-    .ex-artist-tag-list {
-      order: -1;
-    }
-
     .ex-tag-list-header {
         h1, h2 { display: inline-block; }
         .post-count { margin-left: 0.5em; }
