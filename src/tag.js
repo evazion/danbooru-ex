@@ -1,6 +1,5 @@
 import _ from "lodash";
 import Resource from "./resource.js";
-import Post from "./post.js";
 
 export default Resource.Tag = class Tag extends Resource {
   static get Categories() {
@@ -25,8 +24,7 @@ export default Resource.Tag = class Tag extends Resource {
     return `<a class="search-tag tag-type-${tag.category}" href="${href}">${_.escape(tag.name)}</a>`;
   }
 
-  static renderTagList(post, classes) {
-    const tags = Post.tags(post);
+  static renderTagList(tags, classes) {
     return `
       <section class="ex-tag-list ${classes}">
         <h1>Tags</h1>

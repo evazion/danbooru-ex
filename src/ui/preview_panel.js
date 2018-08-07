@@ -37,7 +37,7 @@ export default class PreviewPanel {
       <div id="ex-preview-panel-resizer" class="ex-vertical-resizer"></div>
       <section id="ex-preview-panel" class="ex-panel">
         <div id="ex-preview-panel-container">
-          <article>
+          <article class="ex-no-image-selected">
             No image selected. Click a thumbnail to open image preview.
           </article>
         </div>
@@ -74,7 +74,6 @@ export default class PreviewPanel {
   static async update($post) {
     const postId = $post.data("id");
     const post = await Post.get(postId);
-
     const html = PreviewPanel.renderPost(post);
 
     $("#ex-preview-panel > div").children().first().replaceWith(html);
@@ -151,53 +150,65 @@ export default class PreviewPanel {
 
   static renderPost(post) {
     return `
-      <section class="ex-excerpt ex-post-excerpt">
-        <div class="ex-excerpt-title ex-post-excerpt-title">
-          <span class="post-info uploader-name">
-            <a href="/users/${post.uploader_id}">${_.escape(post.uploader_name)}</a>
-          </span>
+      <section class="ex-preview-panel-post">
+        <div class="ex-preview-panel-post-metadata">
+          <div class="ex-preview-panel-post-title">
+            <span class="post-info">
+              <h1>Score</h1>
 
-          <time class="post-info created-at ex-short-relative-time"
-                datetime="${post.created_at}"
-                title="${moment(post.created_at).format()}">
-            ${moment(post.created_at).locale("en-short").fromNow()} ago
-          </time>
+              <span class="fav-count">
+                ${post.fav_count}
 
-          <span class="post-info fav-count">
-            <a href="#">${post.fav_count}</a>
-            <a href="#">
-              <i class="far fa-star" aria-hidden="true"></i>
-            </a>
-          </span>
+                <a href="#">
+                  <i class="far fa-heart" aria-hidden="true"></i>
+                </a>
+              </span>
 
-          <span class="post-info score">
-            ${post.score}
-            <a href="#">
-              <i class="far fa-thumbs-up" aria-hidden="true"></i>
-            </a>
-            <a href="#">
-              <i class="far fa-thumbs-down" aria-hidden="true"></i>
-            </a>
-          </span>
+              <span class="score">
+                ${post.score}
 
-          <span class="post-info source">
-            <a href="${_.escape(post.source)}">${post.source_domain}</a>
-          </span>
+                <a href="#">
+                  <i class="far fa-thumbs-up" aria-hidden="true"></i>
+                </a>
+                <a href="#">
+                  <i class="far fa-thumbs-down" aria-hidden="true"></i>
+                </a>
+              </span>
+            </span>
 
-          <span class="post-info rating">
-            ${post.pretty_rating}
-          </span>
+            <span class="post-info uploader-name">
+              <h1>User</h1>
 
-          <span class="post-info dimensions">
-            ${post.image_width}x${post.image_height}
-          </span>
+              <a href="/users/${post.uploader_id}">${_.escape(post.uploader_name)}</a>
+
+              <time class="created-at ex-short-relative-time" datetime="${post.created_at}" title="${moment(post.created_at).format()}">
+                ${moment(post.created_at).locale("en-short").fromNow()}
+              </time>
+            </span>
+
+            <span class="post-info rating">
+              <h1>Rating</h1>
+              ${post.pretty_rating}
+            </span>
+
+            <span class="post-info source">
+              <h1>Source</h1>
+              <a href="${_.escape(post.source)}">${post.source_domain}</a>
+            </span>
+
+            <span class="post-info dimensions">
+              <h1>Size</h1>
+              ${post.image_width}x${post.image_height}
+            </span>
+          </div>
+
+          <div class="ex-preview-panel-post-tags">
+            ${Tag.renderTagList(post.tags, "ex-tag-list-inline")}
+          </div>
         </div>
 
-        <div class="ex-excerpt-body ex-post-excerpt-body">
+        <div class="ex-preview-panel-post-body">
           ${Posts.preview(post, { size: "large", classes: [ "ex-no-tooltip" ] })}
-          <div class="ex-post-excerpt-metadata">
-            ${Tag.renderTagList(post, "ex-tag-list-inline")}
-          </div>
         </div>
       </section>
     `;

@@ -4,17 +4,17 @@ import Resource from "./resource.js";
 export default Resource.Post = class Post extends Resource {
   static get primaryKey() { return "post"; }
 
-  static tags(post) {
+  get tags() {
     let split_tag_string = (tag_string, category) => {
       return tag_string.split(/\s+/).filter(String).map(name => ({ name, category }));
     }
 
     return _.concat(
-      split_tag_string(post.tag_string_artist, 1),
-      split_tag_string(post.tag_string_copyright, 3),
-      split_tag_string(post.tag_string_character, 4),
-      split_tag_string(post.tag_string_meta, 5),
-      split_tag_string(post.tag_string_general, 0),
+      split_tag_string(this.tag_string_artist, 1),
+      split_tag_string(this.tag_string_copyright, 3),
+      split_tag_string(this.tag_string_character, 4),
+      split_tag_string(this.tag_string_meta, 5),
+      split_tag_string(this.tag_string_general, 0),
     );
   }
 
@@ -32,9 +32,9 @@ export default Resource.Post = class Post extends Resource {
 
   get pretty_rating() {
     switch (this.rating) {
-      case "s": return "safe";
-      case "q": return "questionable";
-      case "e": return "explicit";
+      case "s": return "Safe";
+      case "q": return "Questionable";
+      case "e": return "Explicit";
     }
   }
 }

@@ -1,3 +1,50 @@
+$metadata-height: 8em;
+$max-tags: 30;
+
+@mixin thin-scrollbar {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-button {
+    width: 0px;
+    height: 0px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #999999;
+    border: 0px none #FFFFFF;
+    border-radius: 0px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #AAAAAA;
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background: #AAAAAA;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #EEEEEE;
+    border: 0px none #ffffff;
+    border-radius: 0px;
+  }
+
+  &::-webkit-scrollbar-track:hover {
+    background: #EEEEEE;
+  }
+
+  &::-webkit-scrollbar-track:active {
+    background: #EEEEEE;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
 .ex-panel-container {
     display: flex;
     min-height: 100vh;
@@ -13,18 +60,57 @@
     }
 
     #ex-preview-panel {
+        font-size: 0.928575em; // 13px
+        line-height: 1.2em;
         width: 0;
         overflow: hidden;
 
-        & > div {
-            display: flex;
-            overflow-y: auto;
-        }
+        #ex-preview-panel-container {
+            overflow-y: hidden;
 
-        & > div > article {
-            width: auto;
-            height: auto;
-            margin: auto;
+            .ex-no-image-selected {
+                text-align: center;
+                margin-top: 2em;
+            }
+
+            .ex-preview-panel-post-metadata {
+                max-height: $metadata-height;
+                margin: 0em 2em 1em;
+
+                overflow-y: auto;
+                @include thin-scrollbar;
+
+                .ex-preview-panel-post-title {
+                    .fav-count {
+                        margin-right: 0.25em;
+                    }
+
+                    .post-info {
+                        margin-right: 1em;
+                        color: $dim-text;
+                        white-space: nowrap;
+
+                        h1 {
+                            color: #000;
+                            display: inline;
+                            font-size: 1em;
+                            margin-right: 0.25em;
+                        }
+                    }
+                }
+            }
+
+            .ex-preview-panel-post-body {
+                display: flex;
+                flex-direction: column;
+
+                article {
+                    width: auto;
+                    height: calc(92vh - 127px);
+                    margin: auto;
+                    justify-content: center;
+                }
+            }
         }
     }
 
