@@ -162,11 +162,14 @@ export default class Posts {
   static preview(post, { size="preview", classes=[] } = {}) {
     let preview_class = "post-preview ex-post-preview";
     preview_class += " " + classes.join(" ");
-    preview_class += post.is_pending           ? " post-status-pending"      : "";
-    preview_class += post.is_flagged           ? " post-status-flagged"      : "";
-    preview_class += post.is_deleted           ? " post-status-deleted"      : "";
-    preview_class += post.parent_id            ? " post-status-has-parent"   : "";
-    preview_class += post.has_visible_children ? " post-status-has-children" : "";
+
+    if (size === "preview") {
+        preview_class += post.is_pending           ? " post-status-pending"      : "";
+        preview_class += post.is_flagged           ? " post-status-flagged"      : "";
+        preview_class += post.is_deleted           ? " post-status-deleted"      : "";
+        preview_class += post.parent_id            ? " post-status-has-parent"   : "";
+        preview_class += post.has_visible_children ? " post-status-has-children" : "";
+    }
 
     const data_attributes = `
       data-id="${post.id}"
