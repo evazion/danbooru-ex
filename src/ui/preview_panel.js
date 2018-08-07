@@ -193,7 +193,7 @@ export default class PreviewPanel {
 
             <span class="post-info source">
               <h1>Source</h1>
-              <a href="${_.escape(post.source)}">${post.source_domain}</a>
+              ${post.source_link}
             </span>
 
             <span class="post-info dimensions">

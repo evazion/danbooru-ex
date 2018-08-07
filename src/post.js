@@ -24,9 +24,24 @@ export default Resource.Post = class Post extends Resource {
 
   get source_domain() {
     try {
-      return new URL(this.source).hostname;
+      const hostname = new URL(this.source).hostname;
+      const domain = hostname.match(/([^.]*)\.([^.]*)$/)[0];
+      return domain;
     } catch (_e) {
       return "";
+    }
+  }
+
+  get source_link() {
+    const maxLength = 10;
+    const truncatedSource = this.source.replace(new RegExp(`(.{${maxLength}}).*$`), "$1...");
+
+    if (this.source.match(/^https?:\/\//)) {
+      return `<a href="${_.escape(this.source)}">${this.source_domain}</a>`;
+    } else if (this.source.trim() !== "") {
+      return `<i>${_.escape(truncatedSource)}</i>`;
+    } else {
+      return "<i>none</i>";
     }
   }
 
