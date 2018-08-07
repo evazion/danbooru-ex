@@ -1,5 +1,5 @@
 $dim-border-color: #EEEEEE;
-$dim-text: #CCCCCC;
+$dim-text: #333;
 
 $post-preview: "article.post-preview, #c-moderator-post-queues .post-preview aside, #c-comments .post-preview .preview";
 
@@ -151,12 +151,17 @@ body.mode-preview #{$post-preview} {
 
 // Highlight thumbnails when hovering in preview or tag script mode.
 body.mode-preview, body.mode-tag-script {
-    #{$post-preview} { &:hover { background: hsla(195, 50%, 95%, 1); } }
+    // #{$post-preview} { &:hover { background: hsla(195, 50%, 95%, 1); } }
+    #{$post-preview} { &:hover { opacity: 0.75; } }
 }
 
 // Highlight selected thumbnails in light blue.
 body.mode-tag-script { #{$post-preview} { &.ui-selected {
-    background: hsla(195, 50%, 80%, 1);
+    background: hsla(195, 50%, 60%, 1);
+
+    img {
+        opacity: 0.5;
+    }
 } } }
 
 // Switch gutters from margin to padding so thumbnails are fully highlighted.
@@ -171,6 +176,7 @@ article.post-preview {
 #{$post-preview} { &.ex-cursor {
     z-index: 50;
     outline: 2px solid hsla(195, 50%, 50%, 1);
+    background-color: hsla(195, 50%, 80%, 1);
 } }
 
 // Use dotted line for selection drag outline.
