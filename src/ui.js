@@ -63,18 +63,19 @@ export default class UI {
     moment.locale("en-short", {
       relativeTime : {
           future: "in %s",
-          past:   "%s",
-          s:  "s",
-          m:  "1m",
-          mm: "%dm",
-          h:  "1h",
-          hh: "%dh",
-          d:  "1d",
-          dd: "%dd",
-          M:  "1m",
-          MM: "%dm",
-          y:  "1y",
-          yy: "%dy"
+          past:   "%s ago",
+          s:  "1 second",
+          ss:  "%d seconds",
+          m:  "1 minute",
+          mm: "%d minutes",
+          h:  "1 hour",
+          hh: "%dh hours",
+          d:  "1 day",
+          dd: "%d days",
+          M:  "1 month",
+          MM: "%d months",
+          y:  "1 year",
+          yy: "%d years"
       }
     });
 
