@@ -188,7 +188,7 @@ export default class PreviewPanel {
 
             <span class="post-info rating">
               <h1>Rating</h1>
-              ${post.pretty_rating}
+              ${post.rating.toUpperCase()}
             </span>
 
             <span class="post-info source">
