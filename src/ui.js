@@ -69,7 +69,7 @@ export default class UI {
           m:  "1 minute",
           mm: "%d minutes",
           h:  "1 hour",
-          hh: "%dh hours",
+          hh: "%d hours",
           d:  "1 day",
           dd: "%d days",
           M:  "1 month",
