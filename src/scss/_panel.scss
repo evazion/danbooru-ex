@@ -1,5 +1,6 @@
-$metadata-height: 8em;
-$max-tags: 30;
+$metadata-height: 9.95em;
+$font-size: 0.85714em; // 12px
+// $font-size: 0.928575em; // 13px
 
 @mixin thin-scrollbar {
   &::-webkit-scrollbar {
@@ -51,7 +52,8 @@ $max-tags: 30;
 
     .ex-panel {
         flex: 0 0 auto;
-        overflow: hidden;
+        overflow: auto;
+        align-self: start;
     }
 
     .ex-content-panel {
@@ -60,25 +62,30 @@ $max-tags: 30;
     }
 
     #ex-preview-panel {
-        font-size: 0.928575em; // 13px
-        line-height: 1.2em;
-        width: 0;
-        overflow: hidden;
+        @include thin-scrollbar;
 
-        #ex-preview-panel-container {
-            overflow-y: hidden;
+        position: sticky;
+        top: 3em;
+        max-height: calc(100vh - 127px);
+        overflow-y: auto;
+        overflow-x: hidden;
 
-            .ex-no-image-selected {
-                text-align: center;
-                margin-top: 2em;
-            }
+        .ex-no-image-selected {
+            text-align: center;
+            margin-top: 2em;
+        }
+
+        .ex-preview-panel-post {
+            font-size: $font-size;
+            line-height: 1.2em;
+            margin: 0 1em;
 
             .ex-preview-panel-post-metadata {
+                @include thin-scrollbar;
                 max-height: $metadata-height;
-                margin: 0em 2em 1em;
+                margin-bottom: 1em;
 
                 overflow-y: auto;
-                @include thin-scrollbar;
 
                 .ex-preview-panel-post-title {
                     .fav-count {
@@ -106,7 +113,8 @@ $max-tags: 30;
 
                 article {
                     width: auto;
-                    height: calc(92vh - 127px);
+                    // height: calc(90vh - 127px);
+                    height: auto;
                     margin: auto;
                     justify-content: center;
                 }

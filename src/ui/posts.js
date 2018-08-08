@@ -220,12 +220,12 @@ export default class Posts {
       const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
       media = `
-        <video class="post-media" ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
+        <video ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
                src="${src}" title="${_.escape(post.tag_string)}">
       `;
     } else {
       media = `
-        <img class="post-media" itemprop="thumbnailUrl" width="${width}" height="${height}"
+        <img itemprop="thumbnailUrl" width="${width}" height="${height}"
              src="${src}" title="${_.escape(post.tag_string)}">
       `;
     }

@@ -50,7 +50,6 @@ export default class PreviewPanel {
 
     const width = _.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
     PreviewPanel.setWidth(width);
-    PreviewPanel.setHeight();
     PreviewPanel.save();
 
     if (ModeMenu.getMode() === "view") {
@@ -61,7 +60,6 @@ export default class PreviewPanel {
       Sidebar.close();
     }
 
-    $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
     $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
@@ -124,28 +122,6 @@ export default class PreviewPanel {
     PreviewPanel.$panel.width(width);
     PreviewPanel.$panel.css({ flex: `0 0 ${width}px` });
     $("#ex-preview-panel > div").width(width);
-  }
-
-  static setHeight() {
-    const headerHeight = $("#ex-header").outerHeight(true);
-    const footerHeight = $("footer").outerHeight(true);
-
-    let height;
-    if (window.scrollY + headerHeight >= PreviewPanel.origTop) {
-      $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
-      height = `calc(100vh - ${headerHeight}px)`;
-    } else {
-      $("#ex-preview-panel > div").removeClass("ex-fixed");
-      height = `calc(100vh - ${PreviewPanel.origTop - window.scrollY}px)`;
-    }
-
-    const diff = window.scrollY + window.innerHeight + footerHeight - $("body").height();
-    if (diff >= 0) {
-      height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
-    }
-
-    $("#ex-preview-panel > div").css({ height });
-    $("#ex-preview-panel > div > article.post-preview .post-media").css({ "max-height": height });
   }
 
   static renderPost(post) {

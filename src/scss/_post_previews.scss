@@ -31,11 +31,6 @@ $line-height: 21px;
         width: auto;
         height: auto;
         overflow: visible;
-
-        .post-media {
-            max-width: $media-size;
-            max-height: $media-size;
-        }
     }
 
     &-metadata {

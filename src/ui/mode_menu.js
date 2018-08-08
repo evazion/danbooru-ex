@@ -318,7 +318,6 @@ export class Selection {
     $newCursor.find("a").focus();
 
     PreviewPanel.update($post);
-    PreviewPanel.setHeight();
   }
 
   static scrollWindowTo($target) {
