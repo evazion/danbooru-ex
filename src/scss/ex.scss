@@ -164,10 +164,13 @@ body.mode-tag-script { #{$post-preview} { &.ui-selected {
     }
 } } }
 
-// Switch gutters from margin to padding so thumbnails are fully highlighted.
-article.post-preview {
+#posts-container article.post-preview {
+    // Switch gutters from margin to padding so thumbnails are fully highlighted.
     padding: 0 10px 10px 0;
     margin: 0;
+
+    // Fix gaps between thumbnails due to whitespace between inline-block elements.
+    float: left;
 }
 
 // Outline the currently selected post with 2px border. Add 2px padding to
