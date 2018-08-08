@@ -115,7 +115,7 @@ export default class Config {
         value: 210
       }),
       defaultPreviewPanelWidth: Setting.Session({
-        value: 480
+        value: 785
       }),
       sidebarState: Setting.Session({
         value: {}
