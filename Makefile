@@ -30,7 +30,7 @@ dist:
 	mkdir -p dist
 
 bump:
-	@date -u "+%Y.%m.%d@%H:%M:%S" > VERSION
+	@date -u "+%Y.%m.%d@%H.%M.%S" > VERSION
 
 serve:
 	@cd dist
