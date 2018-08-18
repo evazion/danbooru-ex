@@ -112,12 +112,18 @@ $font-size: 0.85714em; // 12px
                 display: flex;
                 flex-direction: column;
 
-                article {
+                article.post-preview {
                     width: auto;
                     // height: calc(90vh - 127px);
                     height: auto;
                     margin: auto;
                     justify-content: center;
+
+                    img {
+                        object-fit: scale-down;
+                        max-width: 100%;
+                        max-height: calc(90vh - 127px); // XXX
+                    }
                 }
             }
         }
