@@ -15,7 +15,6 @@ export default class Posts {
 
     $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
-    // Posts.initializePatches(); XXX
     // Posts.initializeImplications();
     Posts.initializeTagList();
     Posts.initializeHotkeys();
@@ -43,21 +42,6 @@ export default class Posts {
       $img.css({ "width": size, "height": size, "object-fit": "contain" });
       $img.attr("src", src);
     });
-  }
-
-  // Update Rating in sidebar when it changes.
-  static initializePatches() {
-    function patched_update_data(update_data, data) {
-      const rating = data.rating === 's' ? "Safe"
-                    : data.rating === 'q' ? "Questionable"
-                    : data.rating === 'e' ? "Explicit"
-                    : "Unknown";
-
-      $("#post-information > ul > li:nth-child(6)").text(`Rating: ${rating}`);
-      return update_data(data);
-    }
-
-    Danbooru.Post.update_data = _.wrap(Danbooru.Post.update_data, patched_update_data);
   }
 
   static initializeTagList() {
