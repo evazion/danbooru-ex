@@ -75,15 +75,9 @@ export default class UI {
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
   // creation date and post count.
   static initializeWikiLinks() {
-    function parseTagName(wikiLink) {
-      return decodeURIComponent($(wikiLink).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
-    }
-
+    const parseTagName = wikiLink => decodeURIComponent($(wikiLink).attr('href').match(/\?title=(.*)$/)[1]);
     const metaWikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
-
-    const $wikiLinks =
-      $(`a[href^="/wiki_pages/show_or_new?title="]`)
-      .filter((i, e) => $(e).text() != "?");
+    const $wikiLinks = $(".dtext-wiki-link");
 
     const tags =
       _($wikiLinks.toArray())
@@ -93,7 +87,7 @@ export default class UI {
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
     Tag.search(tags).then(tags => {
-      tags = _.keyBy(tags[0], "name");
+      tags = _.keyBy(tags, "name");
       $wikiLinks.each((i, e) => {
         const $wikiLink = $(e);
         const name = parseTagName($wikiLink);
@@ -107,28 +101,13 @@ export default class UI {
         }
 
         const tagCreatedAt = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
-
-        const tagTitle =
-          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tagCreatedAt}`;
-
-        _(tag).forOwn((value, key) =>
-          $wikiLink.attr(`data-tag-${_(key).kebabCase()}`, value)
-        );
-
+        const tagTitle = `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tagCreatedAt}`;
         $wikiLink.addClass(`tag-type-${tag.category}`).attr('title', tagTitle);
 
         if (tag.post_count === 0) {
           $wikiLink.addClass("tag-post-count-empty");
-        } else if (tag.post_count < 100) {
-          $wikiLink.addClass("tag-post-count-small");
         } else if (tag.post_count < 1000) {
-          $wikiLink.addClass("tag-post-count-medium");
-        } else if (tag.post_count < 10000) {
-          $wikiLink.addClass("tag-post-count-large");
-        } else if (tag.post_count < 100000) {
-          $wikiLink.addClass("tag-post-count-huge");
-        } else {
-          $wikiLink.addClass("tag-post-count-gigantic");
+          $wikiLink.addClass("tag-post-count-small");
         }
       });
     });
