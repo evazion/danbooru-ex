@@ -111,14 +111,6 @@ $post-preview: "article.post-preview, #c-moderator-post-queues .post-preview asi
   display: inline-block;
 }
 
-#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
-#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
-    /* display: flex; */
-    /* align-items: center; */
-    padding-top: 52px;
-    margin-top: -52px;
-}
-
 body.mode-tag-script {
     background-color: white;
 }
@@ -229,13 +221,22 @@ body.mode-tag-script { #{$post-preview} { &.ui-selected {
     display: inline-block;
 }
 
-/* The icon beside collapsible headers on wiki pages and expandable galleries. */
-a.ui-icon.collapsible-header {
-    display: inline-block;
+// The icon beside collapsible headers on wiki pages and expandable galleries.
+a.collapsible-header {
+    display: none;
     cursor: pointer;
+    margin-left: -16px;
 }
 
-/* Avoid pushing headers further right. */
-#c-wiki-pages #a-show a.ui-icon.collapsible-header {
-    margin-left: -8px;
+// Display collapsible header icon only when hovering.
+h1:hover a.collapsible-header, h2:hover a.collapsible-header, h3:hover a.collapsible-header,
+h4:hover a.collapsible-header, h5:hover a.collapsible-header, h6:hover a.collapsible-header {
+    display: inline-block !important;
+}
+
+// Add extra padding beside header for collapsible header icon.
+#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,
+#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {
+    padding-left: 16px;
+    margin-left: -16px;
 }
