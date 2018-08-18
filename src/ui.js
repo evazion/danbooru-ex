@@ -93,7 +93,7 @@ export default class UI {
 
     // Fetch tag data for each batch of tags, then categorize them and add tooltips.
     Tag.search(tags).then(tags => {
-      tags = _.keyBy(tags, "name");
+      tags = _.keyBy(tags[0], "name");
       $wikiLinks.each((i, e) => {
         const $wikiLink = $(e);
         const name = parseTagName($wikiLink);
