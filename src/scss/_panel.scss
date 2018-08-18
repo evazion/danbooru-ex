@@ -69,6 +69,7 @@ $font-size: 0.85714em; // 12px
         max-height: calc(100vh - 127px);
         overflow-y: auto;
         overflow-x: hidden;
+        overscroll-behavior-y: contain;
 
         .ex-no-image-selected {
             text-align: center;
