@@ -60,7 +60,7 @@ export default class ModeMenu {
     const selector = `
       .mod-queue-preview aside a,
       div.post-preview .preview a,
-      article.post-preview a
+      article.post-preview:not(.ex-preview-panel-image) a
     `;
 
     $(document).on("click", selector, ModeMenu.onThumbnailClick);

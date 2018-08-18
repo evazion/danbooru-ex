@@ -184,7 +184,7 @@ export default class PreviewPanel {
         </div>
 
         <div class="ex-preview-panel-post-body">
-          ${Posts.preview(post, { size: "large", classes: [ "ex-no-tooltip" ] })}
+          ${Posts.preview(post, { size: "large", classes: [ "ex-preview-panel-image" ] })}
         </div>
       </section>
     `;
