@@ -23,23 +23,12 @@ export default class UI {
   static initialize() {
     UI.initializeFooter();
     UI.initializeMoment();
-    // UI.initializePatches(); // XXX
 
     EX.config.styleWikiLinks && UI.initializeWikiLinks();
     EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
 
     const $viewport = $('<div id="ex-viewport"></div>');
     $("body").append($viewport);
-  }
-
-  // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
-  static initializePatches() {
-    const oldToggleTag = Danbooru.RelatedTag.toggle_tag;
-    Danbooru.RelatedTag.toggle_tag = function (e) {
-      if (e.which === 1) {
-        return oldToggleTag(e);
-      }
-    };
   }
 
   // Use relative times everywhere.
