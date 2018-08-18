@@ -3,21 +3,16 @@ export default class Comments {
     if ($("#c-comments").length || $("#c-posts #a-show").length) {
       $(function () {
         Comments.initializePatches();
-        Comments.initializeMetadata();
+        Comments.initializeMetadata($(".comments-for-post"));
       });
     }
   }
 
   static initializePatches() {
-    // HACK: "Show all comments" replaces the comment list's HTML then
-    // initializes all the reply/edit/vote links. We hook into that
-    // initialization here so we can add in our own metadata at the same time.
-    Danbooru.Comment.initializeVoteLinks = function ($parent) {
-      $parent = $parent || $(document);
-      $parent.find(".unvote-comment-link").hide();
-
+    $(window).on("danbooru:index_for_post", (event, post_id) => {
+      const $parent = $(`.comments-for-post[data-post-id=${post_id}]`);
       Comments.initializeMetadata($parent);
-    };
+    });
   }
 
   /*
@@ -25,8 +20,6 @@ export default class Comments {
    * Add comment scores.
    */
   static initializeMetadata($parent) {
-    $parent = $parent || $(document);
-
     $parent.find('.comment').each((i, e) => {
       const $menu = $(e).find('menu');
 
