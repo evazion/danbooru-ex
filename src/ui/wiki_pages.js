@@ -18,9 +18,8 @@ export default class WikiPages {
       return;
     }
 
-    $headings.prepend(
-      $('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>')
-    ).click(e => {
+    $headings.prepend($('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>'));
+    $headings.find("a.collapsible-header").click(e => {
       const $button = $(e.target);
 
       // Collapse everything up to the next heading at the same
