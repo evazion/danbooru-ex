@@ -27,11 +27,9 @@ export default class ModeMenu {
   // of the arrow keys in tag script / preview mode. Ignore these bindings
   // during these modes.
   static overrideDanbooruArrowKeys() {
-    $(document).unbind("keydown.danbooru.next_page");
-    $(document).unbind("keydown.danbooru.prev_page");
-
-    Danbooru.Utility.keydown("a", "keydown.danbooru.nav_prev_page", Navigation.goPrev);
-    Danbooru.Utility.keydown("d", "keydown.danbooru.nav_next_page", Navigation.goNext);
+    $('[data-shortcut="d right"]').attr("data-shortcut", "d");
+    $('[data-shortcut="a left"]').attr("data-shortcut", "a");
+    Danbooru.Shortcuts.initialize_data_shortcuts();
 
     Danbooru.Utility.keydown("left",  "keydown.danbooru.arrow_prev_page", _e => ModeMenu.getMode() === "view" && Navigation.goPrev());
     Danbooru.Utility.keydown("right", "keydown.danbooru.arrow_next_page", _e => ModeMenu.getMode() === "view" && Navigation.goNext());
