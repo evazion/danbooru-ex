@@ -20,6 +20,8 @@ dist/danbooru-ex.user.js: $(shell find src) rollup.config.js VERSION Makefile | 
 
 stable unstable: all
 release: all
+	git add VERSION dist
+	git commit -m "Release $(VERSION)"
 	git tag -a -m "Release $(VERSION)" "v$(VERSION)" 
 	git push --tags
 
