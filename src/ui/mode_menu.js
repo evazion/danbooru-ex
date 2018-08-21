@@ -39,7 +39,8 @@ export default class ModeMenu {
 
   static initializeModeMenu() {
     $('.ex-mode-menu select[name="mode"]').change(ModeMenu.switchMode);
-    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], "view");
+    const defaultMode = (EX.config.defaultPreviewMode && EX.config.pageKey() === "c-posts a-index") ? "preview" : "view";
+    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], defaultMode);
     ModeMenu.setMode(mode);
   }
 

@@ -35,6 +35,10 @@ export default class Config {
       enablePreviewPanel: Setting.Shared({
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
       }),
+      defaultPreviewMode: Setting.Shared({
+        help: "Open new tabs in preview mode",
+        value: false,
+      }),
       enableHotkeys: Setting.Shared({
         help: "Enable additional keyboard shortcuts.",
       }),
