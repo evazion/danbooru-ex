@@ -1,6 +1,5 @@
 import EX from "../ex.js";
 import ModeMenu from "./mode_menu.js";
-import Sidebar from "./sidebar.js";
 import Post from "../post.js";
 import Posts from "./posts.js";
 import Tag from "../tag.js";
@@ -56,10 +55,6 @@ export default class PreviewPanel {
       PreviewPanel.$panel.hide();
     }
 
-    if (PreviewPanel.opened()) {
-      Sidebar.close();
-    }
-
     $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
@@ -102,12 +97,10 @@ export default class PreviewPanel {
     }
 
     PreviewPanel.$panel.show({ effect: "slide", direction: "left" }).promise().then(PreviewPanel.save);
-    Sidebar.close();
   }
 
   static close() {
     PreviewPanel.$panel.hide({ effect: "slide", direction: "right" }).promise().then(PreviewPanel.save);
-    Sidebar.open();
   }
 
   static switchMode() {
