@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Danbooru EX
-// @version      2018.08.06@04:28:09
+// @version      2018.08.21@19.46.59
 // @namespace    https://github.com/evazion/danbooru-ex
 // @source       https://github.com/evazion/danbooru-ex
 // @description  Danbooru UI Enhancements
