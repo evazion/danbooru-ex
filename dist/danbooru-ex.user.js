@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Danbooru EX
-// @version      2018.08.06@04:28:09
+// @name         Danbooru EX (Dev)
+// @version      2018.08.21@19.36.50
 // @namespace    https://github.com/evazion/danbooru-ex
 // @source       https://github.com/evazion/danbooru-ex
 // @description  Danbooru UI Enhancements
@@ -8,9 +8,9 @@
 // @match        *://*.donmai.us/*
 // @grant        none
 // @run-at       document-body
-// @downloadURL  https://github.com/evazion/danbooru-ex/raw/stable/dist/danbooru-ex.user.js
-// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/selectable.js
-// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.11.2/ui/tooltip.js
+// @downloadURL  http://localhost:8000/danbooru-ex.user.js
+// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.12.1/ui/widgets/selectable.js
+// @require      https://raw.githubusercontent.com/jquery/jquery-ui/1.12.1/ui/widgets/tooltip.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js
 // @require      https://unpkg.com/filesize@3.5.11
@@ -30,7 +30,7 @@ console.log("Danbooru EX:", GM_info.script.version);
 // console.time("preinit");
 // console.time("initialized");
 
-var danbooruEX = (function ($$1,_,Mousetrap,moment,ResizeSensor) {
+var danbooruEX = (function (_,Mousetrap,moment,ResizeSensor) {
 'use strict';
 
 function ___$insertStyle(css) {
@@ -50,13 +50,10 @@ function ___$insertStyle(css) {
   return css;
 }
 
-$$1 = $$1 && $$1.hasOwnProperty('default') ? $$1['default'] : $$1;
 _ = _ && _.hasOwnProperty('default') ? _['default'] : _;
 Mousetrap = Mousetrap && Mousetrap.hasOwnProperty('default') ? Mousetrap['default'] : Mousetrap;
 moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
 ResizeSensor = ResizeSensor && ResizeSensor.hasOwnProperty('default') ? ResizeSensor['default'] : ResizeSensor;
-
-/* global Danbooru */
 
 class Setting {
   constructor({ value, help, configurable, storage } = {}) {
@@ -91,6 +88,10 @@ class Config {
       }),
       enablePreviewPanel: Setting.Shared({
         help: "Enable the post preview panel. Requires header bar and mode menu to be enabled.",
+      }),
+      defaultPreviewMode: Setting.Shared({
+        help: "Open new tabs in preview mode",
+        value: false,
       }),
       enableHotkeys: Setting.Shared({
         help: "Enable additional keyboard shortcuts.",
@@ -144,9 +145,6 @@ class Config {
       commentsRedesign: Setting.Shared({
         help: "Enable comment scores and extra info on posts in /comments",
       }),
-      forumRedesign: Setting.Shared({
-        help: 'Replace Permalinks on forum posts with "forum #1234" links',
-      }),
       postsRedesign: Setting.Shared({
         help: 'Move artist tags to the top of the tag list, put tag counts next to tag list headers, and add hotkeys for rating / voting on posts.',
       }),
@@ -175,7 +173,7 @@ class Config {
         value: 210
       }),
       defaultPreviewPanelWidth: Setting.Session({
-        value: 480
+        value: 785
       }),
       sidebarState: Setting.Session({
         value: {}
@@ -349,17 +347,24 @@ class DText {
 }
 
 class Resource {
-  static request(type, url, params = {}) {
-    const query = `${url}?${decodeURIComponent($$1.param(params))}`;
+  constructor(object) {
+    Object.assign(this, object);
+  }
+
+  static async request(type, url, params = {}) {
+    const query = `${url}?${decodeURIComponent($.param(params))}`;
+
     // console.time(`${type} ${query}`);
+    const request = $.ajax({ url, type: "POST", data: Object.assign({}, params, { _method: type })});
+    const response = await request;
 
-    const request = $$1.ajax({ url, type, data: params });
-    // EX.debug(`[NET] ${type} ${query}`, request);
+    EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request);
 
-    return request.always(() => {
-      // console.timeEnd(`${type} ${query}`);
-      EX.debug(`[NET] ${request.status} ${request.statusText} ${query}`, request);
-    });
+    if (Array.isArray(response)) {
+      return response.map(r => new this(r));
+    } else {
+      return new this(response);
+    }
   }
 
   static put(id, params = {}) {
@@ -376,36 +381,14 @@ class Resource {
 
   static search(values, otherParams) {
     const key = this.primaryKey;
-    const requests = this.batch(values).map(batch => {
+    const batchedValues = _(values).sortBy().sortedUniq().chunk(1000).value();
+
+    const requests = batchedValues.map(batch => {
       const params = _.merge(this.searchParams, { search: otherParams }, { search: { [key]: batch.join(",") }});
       return this.index(params);
     });
 
     return Promise.all(requests).then(_.flatten);
-  }
-
-  // Collect items in batches, with each batch having a max count of 1000 items
-  // or a max combined size of 6500 bytes for all items. This is necessary
-  // because these are the parameter limits for requests to the API.
-  static batch(items, limit = 1000, maxLength = 6500) {
-    let item_batches = [[]];
-    items = _(items).sortBy().sortedUniq().value();
-
-    for (let item of items) {
-      const current_batch = item_batches[0];
-      const next_batch = current_batch.concat([item]);
-
-      const batch_length = next_batch.map(encodeURIComponent).join(",").length;
-      const batch_count = next_batch.length;
-
-      if (batch_count > limit || batch_length > maxLength) {
-        item_batches.unshift([item]);
-      } else {
-        current_batch.push(item);
-      }
-    }
-
-    return _(item_batches).reject(_.isEmpty).reverse().value();
   }
 
   static get searchParams() {
@@ -420,18 +403,53 @@ class Resource {
 var Post = Resource.Post = class Post extends Resource {
   static get primaryKey() { return "post"; }
 
-  static tags(post) {
+  get tags() {
+    let split_tag_string = (tag_string, category) => {
+      return tag_string.split(/\s+/).filter(String).map(name => ({ name, category }));
+    };
+
     return _.concat(
-      post.tag_string_artist.split(/\s+/).map(name => ({ name, category: 1 })),
-      post.tag_string_copyright.split(/\s+/).map(name => ({ name, category: 3 })),
-      post.tag_string_character.split(/\s+/).map(name => ({ name, category: 4 })),
-      post.tag_string_meta.split(/\s+/).map(name => ({ name, category: 5 })),
-      post.tag_string_general.split(/\s+/).map(name => ({ name, category: 0 }))
+      split_tag_string(this.tag_string_artist, 1),
+      split_tag_string(this.tag_string_copyright, 3),
+      split_tag_string(this.tag_string_character, 4),
+      split_tag_string(this.tag_string_meta, 5),
+      split_tag_string(this.tag_string_general, 0),
     );
   }
 
   static update(postId, tags) {
     return this.put(postId, { "post[old_tag_string]": "", "post[tag_string]": tags });
+  }
+
+  get source_domain() {
+    try {
+      const hostname = new URL(this.source).hostname;
+      const domain = hostname.match(/([^.]*)\.([^.]*)$/)[0];
+      return domain;
+    } catch (_e) {
+      return "";
+    }
+  }
+
+  get source_link() {
+    const maxLength = 10;
+    const truncatedSource = this.source.replace(new RegExp(`(.{${maxLength}}).*$`), "$1...");
+
+    if (this.source.match(/^https?:\/\//)) {
+      return `<a href="${_.escape(this.source)}">${this.source_domain}</a>`;
+    } else if (this.source.trim() !== "") {
+      return `<i>${_.escape(truncatedSource)}</i>`;
+    } else {
+      return "<i>none</i>";
+    }
+  }
+
+  get pretty_rating() {
+    switch (this.rating) {
+      case "s": return "Safe";
+      case "q": return "Questionable";
+      case "e": return "Explicit";
+    }
   }
 };
 
@@ -458,8 +476,7 @@ var Tag = Resource.Tag = class Tag extends Resource {
     return `<a class="search-tag tag-type-${tag.category}" href="${href}">${_.escape(tag.name)}</a>`;
   }
 
-  static renderTagList(post, classes) {
-    const tags = Post.tags(post);
+  static renderTagList(tags, classes) {
     return `
       <section class="ex-tag-list ${classes}">
         <h1>Tags</h1>
@@ -487,8 +504,6 @@ var TagImplication = Resource.TagImplication = class TagImplication extends Reso
   static get primaryKey() { return "id"; }
 };
 
-/* global Danbooru */
-
 var User = Resource.User = class User extends Resource {
   static get primaryKey() { return "id"; }
 
@@ -507,8 +522,6 @@ var User = Resource.User = class User extends Resource {
   }
 };
 
-/* global Danbooru */
-
 class Posts {
   static initialize() {
     if ($("#c-posts #a-show").length === 0) {
@@ -517,7 +530,6 @@ class Posts {
 
     $("#image").addClass("ex-fit-width");
     Posts.initializeResize();
-    Posts.initializePatches();
     // Posts.initializeImplications();
     Posts.initializeTagList();
     Posts.initializeHotkeys();
@@ -547,21 +559,6 @@ class Posts {
     });
   }
 
-  // Update Rating in sidebar when it changes.
-  static initializePatches() {
-    function patched_update_data(update_data, data) {
-      const rating = data.rating === 's' ? "Safe"
-                    : data.rating === 'q' ? "Questionable"
-                    : data.rating === 'e' ? "Explicit"
-                    : "Unknown";
-
-      $("#post-information > ul > li:nth-child(6)").text(`Rating: ${rating}`);
-      return update_data(data);
-    }
-
-    Danbooru.Post.update_data = _.wrap(Danbooru.Post.update_data, patched_update_data);
-  }
-
   static initializeTagList() {
     _.forOwn({
       "Artist": "artist",
@@ -575,7 +572,7 @@ class Posts {
 
       $tags.addClass(`ex-${category}-tag-list`);
       $header.wrap(`<span class="ex-tag-list-header ex-${category}-tag-list-header">`);
-      $header.parent().append(`<span class="post-count">${$tags.children().size()}</span>`);
+      $header.parent().append(`<span class="post-count">${$tags.children().length}</span>`);
     });
   }
 
@@ -664,11 +661,14 @@ class Posts {
   static preview(post, { size="preview", classes=[] } = {}) {
     let preview_class = "post-preview ex-post-preview";
     preview_class += " " + classes.join(" ");
-    preview_class += post.is_pending           ? " post-status-pending"      : "";
-    preview_class += post.is_flagged           ? " post-status-flagged"      : "";
-    preview_class += post.is_deleted           ? " post-status-deleted"      : "";
-    preview_class += post.parent_id            ? " post-status-has-parent"   : "";
-    preview_class += post.has_visible_children ? " post-status-has-children" : "";
+
+    if (size === "preview") {
+        preview_class += post.is_pending           ? " post-status-pending"      : "";
+        preview_class += post.is_flagged           ? " post-status-flagged"      : "";
+        preview_class += post.is_deleted           ? " post-status-deleted"      : "";
+        preview_class += post.parent_id            ? " post-status-has-parent"   : "";
+        preview_class += post.has_visible_children ? " post-status-has-children" : "";
+    }
 
     const data_attributes = `
       data-id="${post.id}"
@@ -719,12 +719,12 @@ class Posts {
       const muted    = (size === "large" || EX.config.muteVideos)     ? "muted"    : "";
 
       media = `
-        <video class="post-media" ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
+        <video ${autoplay} ${loop} ${muted} width="${width}" height="${height}"
                src="${src}" title="${_.escape(post.tag_string)}">
       `;
     } else {
       media = `
-        <img class="post-media" itemprop="thumbnailUrl" width="${width}" height="${height}"
+        <img itemprop="thumbnailUrl" width="${width}" height="${height}"
              src="${src}" title="${_.escape(post.tag_string)}">
       `;
     }
@@ -820,8 +820,8 @@ class PreviewPanel {
     $content.after(`
       <div id="ex-preview-panel-resizer" class="ex-vertical-resizer"></div>
       <section id="ex-preview-panel" class="ex-panel">
-        <div>
-          <article>
+        <div id="ex-preview-panel-container">
+          <article class="ex-no-image-selected">
             No image selected. Click a thumbnail to open image preview.
           </article>
         </div>
@@ -834,14 +834,12 @@ class PreviewPanel {
 
     const width = _.defaultTo(EX.config.previewPanelState[EX.config.pageKey()], EX.config.defaultPreviewPanelWidth);
     PreviewPanel.setWidth(width);
-    PreviewPanel.setHeight();
     PreviewPanel.save();
 
     if (ModeMenu.getMode() === "view") {
       PreviewPanel.$panel.hide();
     }
 
-    $(document).scroll(_.throttle(PreviewPanel.setHeight, 16));
     $('.ex-mode-menu select[name="mode"]').change(PreviewPanel.switchMode);
     $("#ex-preview-panel-resizer").draggable({
       axis: "x",
@@ -849,6 +847,14 @@ class PreviewPanel {
       drag: _.throttle(PreviewPanel.resize, 16),
       stop: _.debounce(PreviewPanel.save, 100),
     });
+  }
+
+  static async update($post) {
+    const postId = $post.data("id");
+    const post = await Post.get(postId);
+    const html = PreviewPanel.renderPost(post);
+
+    $("#ex-preview-panel > div").children().first().replaceWith(html);
   }
 
   static get $panel() {
@@ -896,30 +902,139 @@ class PreviewPanel {
     $("#ex-preview-panel > div").width(width);
   }
 
-  static setHeight() {
-    const headerHeight = $("#ex-header").outerHeight(true);
-    const footerHeight = $("footer").outerHeight(true);
+  static renderPost(post) {
+    return `
+      <section class="ex-preview-panel-post">
+        <div class="ex-preview-panel-post-metadata">
+          <div class="ex-preview-panel-post-title">
+            <span class="post-info">
+              <h1>Score</h1>
 
-    let height;
-    if (window.scrollY + headerHeight >= PreviewPanel.origTop) {
-      $("#ex-preview-panel > div").addClass("ex-fixed").css({ top: headerHeight });
-      height = `calc(100vh - ${headerHeight}px)`;
-    } else {
-      $("#ex-preview-panel > div").removeClass("ex-fixed");
-      height = `calc(100vh - ${PreviewPanel.origTop - window.scrollY}px)`;
-    }
+              <span class="fav-count">
+                ${post.fav_count}
 
-    const diff = window.scrollY + window.innerHeight + footerHeight - $("body").height();
-    if (diff >= 0) {
-      height = `calc(100vh - ${headerHeight}px - ${diff}px)`;
-    }
+                <a href="#">
+                  <i class="far fa-heart" aria-hidden="true"></i>
+                </a>
+              </span>
 
-    $("#ex-preview-panel > div").css({ height });
-    $("#ex-preview-panel > div > article.post-preview .post-media").css({ "max-height": height });
+              <span class="score">
+                ${post.score}
+
+                <a href="#">
+                  <i class="far fa-thumbs-up" aria-hidden="true"></i>
+                </a>
+                <a href="#">
+                  <i class="far fa-thumbs-down" aria-hidden="true"></i>
+                </a>
+              </span>
+            </span>
+
+            <span class="post-info uploader-name">
+              <h1>User</h1>
+
+              <a href="/users/${post.uploader_id}">${_.escape(post.uploader_name)}</a>
+
+              <time class="created-at ex-short-relative-time" datetime="${post.created_at}" title="${moment(post.created_at).format()}">
+                ${moment(post.created_at).locale("en-short").fromNow()}
+              </time>
+            </span>
+
+            <span class="post-info rating">
+              <h1>Rating</h1>
+              ${post.rating.toUpperCase()}
+            </span>
+
+            <span class="post-info source">
+              <h1>Source</h1>
+              ${post.source_link}
+            </span>
+
+            <span class="post-info dimensions">
+              <h1>Size</h1>
+              ${post.image_width}x${post.image_height}
+            </span>
+          </div>
+
+          <div class="ex-preview-panel-post-tags">
+            ${Tag.renderTagList(post.tags, "ex-tag-list-inline")}
+          </div>
+        </div>
+
+        <div class="ex-preview-panel-post-body">
+          ${Posts.preview(post, { size: "large", classes: [ "ex-preview-panel-image" ] })}
+        </div>
+      </section>
+    `;
   }
 }
 
-/* global Danbooru */
+class Navigation {
+  static gotoPageN(n) {
+    if (location.search.match(/page=(\d+)/)) {
+      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
+    } else {
+      location.search += `&page=${n}`;
+    }
+  }
+
+  static gotoPage(event) {
+    Navigation.gotoPageN(Number(event.key));
+  }
+
+  static gotoLastPage(event) {
+    // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
+    const n = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
+
+    if (n) {
+      Navigation.gotoPageN(n);
+    }
+  }
+
+  static gotoPageDialog() {
+    const $dialog = $(`
+      <form>
+        <input id="ex-dialog-input" type="text" placeholder="Enter page number">
+        <input type="submit" value="Go">
+      </form>
+    `).dialog({
+      title: "Go To Page",
+      minHeight: 0,
+      minWidth: 0,
+      resizable: false,
+      modal: true,
+    });
+
+    $dialog.submit(() => {
+      const page = $dialog.find('input[type="text"]').val();
+      Navigation.gotoPageN(page);
+      return false;
+    });
+
+    return false;
+  }
+
+  static goDirection(direction) {
+    var href = $(`.paginator a[rel=${direction}]`).attr("href");
+    if (href) {
+      window.location = href;
+    }
+  }
+
+  static goTop()    { window.scrollTo(0, 0); }
+  static goBottom() { window.scrollTo(0, $(document).height()); }
+  static goForward() { window.history.forward(); }
+  static goBack()    { window.history.back(); }
+  static goNext()   { Navigation.goDirection("next"); }
+  static goPrev()   { Navigation.goDirection("prev"); }
+
+  static scroll(direction, duration, distance) {
+    return _.throttle(() => {
+      const top = $(window).scrollTop() + direction * $(window).height() * distance;
+      $('html, body').animate({scrollTop: top}, duration, "linear");
+    }, duration);
+  }
+}
 
 class ModeMenu {
   static initialize() {
@@ -942,20 +1057,18 @@ class ModeMenu {
   // of the arrow keys in tag script / preview mode. Ignore these bindings
   // during these modes.
   static overrideDanbooruArrowKeys() {
-    /* XXX
-    Danbooru.Paginator.next_page = _.wrap(Danbooru.Paginator.next_page, function(next_page) {
-      if (ModeMenu.getMode() == "view") { next_page(); }
-    });
+    $('[data-shortcut="d right"]').attr("data-shortcut", "d");
+    $('[data-shortcut="a left"]').attr("data-shortcut", "a");
+    Danbooru.Shortcuts.initialize_data_shortcuts();
 
-    Danbooru.Paginator.prev_page = _.wrap(Danbooru.Paginator.prev_page, function(prev_page) {
-      if (ModeMenu.getMode() == "view") { prev_page(); }
-    });
-    */
+    Danbooru.Utility.keydown("left",  "keydown.danbooru.arrow_prev_page", _e => ModeMenu.getMode() === "view" && Navigation.goPrev());
+    Danbooru.Utility.keydown("right", "keydown.danbooru.arrow_next_page", _e => ModeMenu.getMode() === "view" && Navigation.goNext());
   }
 
   static initializeModeMenu() {
     $('.ex-mode-menu select[name="mode"]').change(ModeMenu.switchMode);
-    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], "view");
+    const defaultMode = (EX.config.defaultPreviewMode && EX.config.pageKey() === "c-posts a-index") ? "preview" : "view";
+    const mode = _.defaultTo(EX.config.modeMenuState[EX.config.pageKey()], defaultMode);
     ModeMenu.setMode(mode);
   }
 
@@ -976,7 +1089,7 @@ class ModeMenu {
     const selector = `
       .mod-queue-preview aside a,
       div.post-preview .preview a,
-      article.post-preview a
+      article.post-preview:not(.ex-preview-panel-image) a
     `;
 
     $(document).on("click", selector, ModeMenu.onThumbnailClick);
@@ -990,7 +1103,7 @@ class ModeMenu {
     const oldN = ModeMenu.getTagScriptNumber();
 
     if (ModeMenu.getMode() === "tag-script" && newN === oldN) {
-      $('.ex-mode-menu input[name="tag-script"]').focus();
+      $('.ex-mode-menu input[name="tag-script"]').select();
     } else {
       ModeMenu.setMode("tag-script");
       ModeMenu.setTagScriptNumber(newN);
@@ -1155,9 +1268,9 @@ class Selection {
 
   static between($from, $to) {
     if ($from.nextAll().is($to)) {
-      return $from.nextUntil($to, Selection.post).add($to).andSelf();
+      return $from.nextUntil($to, Selection.post).add($to).addBack();
     } else if ($from.prevAll().is($to)) {
-      return $from.prevUntil($to, Selection.post).add($to).andSelf();
+      return $from.prevUntil($to, Selection.post).add($to).addBack();
     } else {
       return $();
     }
@@ -1225,17 +1338,15 @@ class Selection {
   }
 
   static swapCursor($oldCursor, $newCursor) {
+    const $post = $newCursor.closest(".post-preview");
+
     $oldCursor.removeClass("ex-cursor");
     $newCursor.addClass("ex-cursor");
 
     Selection.scrollWindowTo($newCursor);
     $newCursor.find("a").focus();
 
-    const post = Posts.normalize($newCursor.closest(".post-preview").data());
-    const html = Posts.preview(post, { size: "large", classes: ["ex-no-tooltip"] });
-
-    $("#ex-preview-panel article").replaceWith(html);
-    PreviewPanel.setHeight();
+    PreviewPanel.update($post);
   }
 
   static scrollWindowTo($target) {
@@ -1275,8 +1386,6 @@ class Selection {
   }
 }
 
-/* global Danbooru */
-
 class Header {
   static initialize() {
     Header.initializeHeader();
@@ -1291,34 +1400,34 @@ class Header {
   }
 
   static initializeHeader() {
-    let $header = $$1(Header.render()).insertBefore("#top");
+    let $header = $(Header.render()).insertBefore("#top");
     _.defer(() => $header.show());
 
     // Move news announcements inside of EX header.
-    $$1("#news-updates").insertBefore("#ex-header .ex-header-wrapper");
+    $("#news-updates").insertBefore("#ex-header .ex-header-wrapper");
 
     // Initalize header search box.
-    Header.$tags.val($$1("#sidebar #tags").val());
+    Header.$tags.val($("#sidebar #tags").val());
     Danbooru.Autocomplete && Danbooru.Autocomplete.initialize_all && Danbooru.Autocomplete.initialize_all();
 
     Header.$close.click(Header.toggle);
-    $$1(document).scroll(_.throttle(Header.onScroll, 16));
+    $(document).scroll(_.throttle(Header.onScroll, 16));
   }
 
   static initializeModeMenu() {
-    $$1(".ex-mode-menu").show();
+    $(".ex-mode-menu").show();
     ModeMenu.initialize();
   }
 
   static onScroll() {
-    $$1("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
+    $("#ex-header").toggleClass("ex-header-scrolled", window.scrollY > 0, { duration: 100 });
     // Shrink header after scrolling down.
-    window.scrollY > 0 && $$1("header h1").addClass("ex-small-header");
+    window.scrollY > 0 && $("header h1").addClass("ex-small-header");
   }
 
   static executeSearchInNewTab() {
     // XXX
-    if ($$1("#ex-header #ex-tags:focus").length) {
+    if ($("#ex-header #ex-tags:focus").length) {
       const tags = Header.$tags.val().trim();
       window.open(`/posts?tags=${encodeURIComponent(tags)}`, "_blank").focus();
     }
@@ -1337,9 +1446,9 @@ class Header {
     EX.config.headerFixed = !EX.config.headerFixed;
   }
 
-  static get $el()    { return $$1("#ex-header"); }
-  static get $close() { return $$1("#ex-header .ex-header-close"); }
-  static get $tags()  { return $$1("#ex-header #ex-tags"); }
+  static get $el()    { return $("#ex-header"); }
+  static get $close() { return $("#ex-header .ex-header-close"); }
+  static get $tags()  { return $("#ex-header #ex-tags"); }
 
   static render() {
     return `
@@ -1390,66 +1499,6 @@ class Header {
     `;
   }
 }
-
-class Navigation {
-  static gotoPageN(n) {
-    if (location.search.match(/page=(\d+)/)) {
-      location.search = location.search.replace(/page=(\d+)/, `page=${n}`);
-    } else {
-      location.search += `&page=${n}`;
-    }
-  }
-
-  static gotoPage(event) {
-    Navigation.gotoPageN(Number(event.key));
-  }
-
-  static gotoLastPage(event) {
-    // a:not(a[rel]) - exclude the Previous/Next links seen in the paginator on /favorites et al.
-    const n = $('div.paginator li:nth-last-child(2) a:not(a[rel])').first().text();
-
-    if (n) {
-      Navigation.gotoPageN(n);
-    }
-  }
-
-  static gotoPageDialog() {
-    const $dialog = $(`
-      <form>
-        <input id="ex-dialog-input" type="text" placeholder="Enter page number">
-        <input type="submit" value="Go">
-      </form>
-    `).dialog({
-      title: "Go To Page",
-      minHeight: 0,
-      minWidth: 0,
-      resizable: false,
-      modal: true,
-    });
-
-    $dialog.submit(() => {
-      const page = $dialog.find('input[type="text"]').val();
-      Navigation.gotoPageN(page);
-      return false;
-    });
-
-    return false;
-  }
-
-  static goTop()    { window.scrollTo(0, 0); }
-  static goBottom() { window.scrollTo(0, $(document).height()); }
-  static goForward() { window.history.forward(); }
-  static goBack()    { window.history.back(); }
-
-  static scroll(direction, duration, distance) {
-    return _.throttle(() => {
-      const top = $(window).scrollTop() + direction * $(window).height() * distance;
-      $('html, body').animate({scrollTop: top}, duration, "linear");
-    }, duration);
-  }
-}
-
-/* global Danbooru */
 
 class Keys {
   constructor() {
@@ -1657,8 +1706,6 @@ class Keys {
   }
 }
 
-/* global Danbooru */
-
 class Notes {
   static initialize() {
     $(Notes.initializeLivePreview);
@@ -1686,7 +1733,7 @@ class Notes {
 class PostPreviews {
   // Show post previews when hovering over post #1234 links.
   static initializePostLinkPreviews() {
-    const posts = $$1('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($$1(e).text()));
+    const posts = $('a[href^="/posts/"]').filter((i, e) => /post #\d+/.test($(e).text()));
     PostPreviews.initialize(posts);
   }
 
@@ -1704,11 +1751,11 @@ class PostPreviews {
   }
 
   static initialize(selector) {
-    $$1(document).on('mouseover', selector, event => {
+    $(document).on('mouseover', selector, event => {
       const delay = EX.config.thumbnailPreviewDelay;
-      const [, postID] = $$1(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
+      const [, postID] = $(event.target).closest("a").attr("href").match(/\/posts\/(\d+)/);
 
-      $$1(event.target).qtip({
+      $(event.target).qtip({
         content: {
           text: (event, api) => {
             Post.get(postID).then(post => {
@@ -1748,7 +1795,7 @@ class PostPreviews {
         position: {
           my: "top left",
           at: "top right",
-          viewport: $$1("#ex-viewport"),
+          viewport: $("#ex-viewport"),
           effect: false,
           adjust: {
             method: "flipinvert shift",
@@ -1780,7 +1827,7 @@ class Sidebar {
       <div id="ex-sidebar-resizer" class="ex-vertical-resizer"></div>
     `);
 
-    $$1("#ex-sidebar-resizer").draggable({
+    $("#ex-sidebar-resizer").draggable({
       axis: "x",
       helper: "clone",
       drag: _.throttle(Sidebar.resize, 16),
@@ -1812,7 +1859,7 @@ class Sidebar {
   }
 
   static get $panel() {
-    return $$1("#sidebar");
+    return $("#sidebar");
   }
 
   static get width() {
@@ -2025,28 +2072,21 @@ class Artists {
   }
 }
 
-/* global Danbooru */
-
 class Comments {
   static initialize() {
     if ($("#c-comments").length || $("#c-posts #a-show").length) {
       $(function () {
         Comments.initializePatches();
-        Comments.initializeMetadata();
+        Comments.initializeMetadata($(".comments-for-post"));
       });
     }
   }
 
   static initializePatches() {
-    // HACK: "Show all comments" replaces the comment list's HTML then
-    // initializes all the reply/edit/vote links. We hook into that
-    // initialization here so we can add in our own metadata at the same time.
-    Danbooru.Comment.initializeVoteLinks = function ($parent) {
-      $parent = $parent || $(document);
-      $parent.find(".unvote-comment-link").hide();
-
+    $(window).on("danbooru:index_for_post", (event, post_id) => {
+      const $parent = $(`.comments-for-post[data-post-id=${post_id}]`);
       Comments.initializeMetadata($parent);
-    };
+    });
   }
 
   /*
@@ -2054,8 +2094,6 @@ class Comments {
    * Add comment scores.
    */
   static initializeMetadata($parent) {
-    $parent = $parent || $(document);
-
     $parent.find('.comment').each((i, e) => {
       const $menu = $(e).find('menu');
 
@@ -2079,30 +2117,6 @@ class Comments {
           <span>${comment_score}</span>
         </span>
       `));
-    });
-  }
-}
-
-class ForumPosts {
-  static initialize() {
-    if ($("#c-forum-topics #a-show").length) {
-        ForumPosts.initializePermalinks();
-    }
-  }
-
-  // On forum posts, change "Permalink" to "Forum #1234". */
-  static initializePermalinks() {
-    $(".forum-post menu").each((i, e) => {
-      let $forum_id  = $(e).find("li:nth-of-type(1)");
-      let $permalink = $(e).find("li:last-of-type").first();
-
-      $permalink.find("a").text(`Forum #${$forum_id.text().match(/\d+/)}`);
-      $forum_id.remove();
-
-      // Add separator only if there's something to separate.
-      if ($(e).children().length > 1) {
-        $permalink.before($("<li>").text("|"));
-      }
     });
   }
 }
@@ -2224,7 +2238,7 @@ class Users {
   static initialize() {
     this.initializeWordBreaks();
 
-    if ($$1("#c-users #a-show").length) {
+    if ($("#c-users #a-show").length) {
       this.initializeCollapsibleHeaders();
       this.initializeExpandableGalleries();
     }
@@ -2241,8 +2255,8 @@ class Users {
   // Add tooltips to usernames. Also add data attributes for custom CSS styling.
   static initializeUserTooltips() {
     // XXX triggers on Profile / Settings links on /static/site_map
-    $$1(document).on("mouseover", '#page a[href^="/users/"]', e => {
-        const $user = $$1(e.target);
+    $(document).on("mouseover", '#page a[href^="/users/"]', e => {
+        const $user = $(e.target);
         const userId = Users.parseUserId($user);
 
         if (userId === null) {
@@ -2251,7 +2265,7 @@ class Users {
 
         const qtipParams = _.merge(Users.QTIP_SETTINGS, {
           show: { event: e.type },
-          position: { viewport: $$1("#ex-viewport") },
+          position: { viewport: $("#ex-viewport") },
           content: {
             text: (event, api) => {
               User.get(userId).then(user => {
@@ -2269,31 +2283,31 @@ class Users {
   }
 
   static initializeCollapsibleHeaders () {
-    $$1("#c-users #a-show > .box").each((i, e) => {
-      const $gallery = $$1(e);
+    $("#c-users #a-show > .box").each((i, e) => {
+      const $gallery = $(e);
 
       // Make gallery headers collapsible.
-      const $toggleCollapse = $$1(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>`);
+      const $toggleCollapse = $(`<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>`);
       $gallery.find("h2").prepend($toggleCollapse);
 
       $toggleCollapse.click(event => {
-        $$1(event.target).closest("h2").next("div").slideToggle();
-        $$1(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
+        $(event.target).closest("h2").next("div").slideToggle();
+        $(event.target).toggleClass('ui-icon-triangle-1-e ui-icon-triangle-1-s');
         return false;
       });
     });
   }
 
   static initializeExpandableGalleries() {
-    const user = $$1("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
+    const user = $("#a-show > h1 > a").text().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(" ", "_");
 
     // Rewrite /favorites link into ordfav: search so it's consistent with other post sections.
-    $$1(".box a[href^='/favorites?user_id=']").attr(
+    $(".box a[href^='/favorites?user_id=']").attr(
       "href", `/posts?tags=ordfav:${encodeURIComponent(user)}`
     );
 
-    $$1("#c-users #a-show > .box").each((i, e) => {
-      const $gallery = $$1(e).addClass("ex-post-gallery");
+    $("#c-users #a-show > .box").each((i, e) => {
+      const $gallery = $(e).addClass("ex-post-gallery");
 
       // Store the tag search corresponding to this gallery section in a data
       // attribute for the click handler.
@@ -2307,7 +2321,7 @@ class Users {
       `);
 
       $gallery.find(".ex-text-thumbnail a").click(event => {
-        const $gallery = $$1(event.target).closest(".ex-post-gallery");
+        const $gallery = $(event.target).closest(".ex-post-gallery");
 
         const limit = 30;
         const page = Math.trunc($gallery.find(".post-preview").children().length / limit) + 1;
@@ -2367,7 +2381,7 @@ class Users {
   }
 
   static userLinks() {
-    return $$1('#page a[href^="/users/"]').filter((i, e) => this.parseUserId($$1(e)));
+    return $('#page a[href^="/users/"]').filter((i, e) => this.parseUserId($(e)));
   }
 
   static parseUserId($user) {
@@ -2393,9 +2407,8 @@ class WikiPages {
       return;
     }
 
-    $headings.prepend(
-      $('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>')
-    ).click(e => {
+    $headings.prepend($('<a class="ui-icon ui-icon-triangle-1-s collapsible-header"></a>'));
+    $headings.find("a.collapsible-header").click(e => {
       const $button = $(e.target);
 
       // Collapse everything up to the next heading at the same
@@ -2462,29 +2475,16 @@ class WikiPages {
   }
 }
 
-/* global Danbooru */
-
 class UI {
   static initialize() {
     UI.initializeFooter();
     UI.initializeMoment();
-    // UI.initializePatches(); // XXX
 
     EX.config.styleWikiLinks && UI.initializeWikiLinks();
     EX.config.useRelativeTimestamps && UI.initializeRelativeTimes();
 
     const $viewport = $('<div id="ex-viewport"></div>');
     $("body").append($viewport);
-  }
-
-  // Prevent middle-click from adding tag when clicking on related tags (open a new tab instead).
-  static initializePatches() {
-    const oldToggleTag = Danbooru.RelatedTag.toggle_tag;
-    Danbooru.RelatedTag.toggle_tag = function (e) {
-      if (e.which === 1) {
-        return oldToggleTag(e);
-      }
-    };
   }
 
   // Use relative times everywhere.
@@ -2508,18 +2508,19 @@ class UI {
     moment.locale("en-short", {
       relativeTime : {
           future: "in %s",
-          past:   "%s",
-          s:  "s",
-          m:  "1m",
-          mm: "%dm",
-          h:  "1h",
-          hh: "%dh",
-          d:  "1d",
-          dd: "%dd",
-          M:  "1m",
-          MM: "%dm",
-          y:  "1y",
-          yy: "%dy"
+          past:   "%s ago",
+          s:  "1 second",
+          ss:  "%d seconds",
+          m:  "1 minute",
+          mm: "%d minutes",
+          h:  "1 hour",
+          hh: "%d hours",
+          d:  "1 day",
+          dd: "%d days",
+          M:  "1 month",
+          MM: "%d months",
+          y:  "1 year",
+          yy: "%d years"
       }
     });
 
@@ -2530,15 +2531,9 @@ class UI {
   // Color code tags linking to wiki pages. Also add a tooltip showing the tag
   // creation date and post count.
   static initializeWikiLinks() {
-    function parseTagName(wikiLink) {
-      return decodeURIComponent($(wikiLink).attr('href').match(/^\/wiki_pages\/show_or_new\?title=(.*)/)[1]);
-    }
-
+    const parseTagName = wikiLink => decodeURIComponent($(wikiLink).attr('href').match(/\?title=(.*)$/)[1]);
     const metaWikis = /^(about:|disclaimer:|help:|howto:|list_of|pool_group:|tag_group:|template:)/i;
-
-    const $wikiLinks =
-      $(`a[href^="/wiki_pages/show_or_new?title="]`)
-      .filter((i, e) => $(e).text() != "?");
+    const $wikiLinks = $(".dtext-wiki-link");
 
     const tags =
       _($wikiLinks.toArray())
@@ -2562,28 +2557,13 @@ class UI {
         }
 
         const tagCreatedAt = moment(tag.created_at).format('MMMM Do YYYY, h:mm:ss a');
-
-        const tagTitle =
-          `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tagCreatedAt}`;
-
-        _(tag).forOwn((value, key) =>
-          $wikiLink.attr(`data-tag-${_(key).kebabCase()}`, value)
-        );
-
+        const tagTitle = `${Tag.Categories[tag.category]} tag #${tag.id} - ${tag.post_count} posts - created on ${tagCreatedAt}`;
         $wikiLink.addClass(`tag-type-${tag.category}`).attr('title', tagTitle);
 
         if (tag.post_count === 0) {
           $wikiLink.addClass("tag-post-count-empty");
-        } else if (tag.post_count < 100) {
-          $wikiLink.addClass("tag-post-count-small");
         } else if (tag.post_count < 1000) {
-          $wikiLink.addClass("tag-post-count-medium");
-        } else if (tag.post_count < 10000) {
-          $wikiLink.addClass("tag-post-count-large");
-        } else if (tag.post_count < 100000) {
-          $wikiLink.addClass("tag-post-count-huge");
-        } else {
-          $wikiLink.addClass("tag-post-count-gigantic");
+          $wikiLink.addClass("tag-post-count-small");
         }
       });
     });
@@ -2612,14 +2592,13 @@ UI.Sidebar = Sidebar;
 
 UI.Artists = Artists;
 UI.Comments = Comments;
-UI.ForumPosts = ForumPosts;
 UI.Posts = Posts;
 UI.PostVersions = PostVersions;
 UI.SavedSearches = SavedSearches;
 UI.Users = Users;
 UI.WikiPages = WikiPages;
 
-___$insertStyle("#ex-header {\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white; }\n  #ex-header .ex-header-wrapper {\n    display: flex; }\n    #ex-header .ex-header-wrapper.ex-fixed.ex-header-scrolled {\n      border-bottom: 1px solid #EEEEEE;\n      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n    #ex-header .ex-header-wrapper h1 {\n      display: inline-block;\n      font-size: 2.5em;\n      margin: 0 30px; }\n    #ex-header .ex-header-wrapper .ex-search-box {\n      margin: auto;\n      display: flex;\n      flex: 0 1 30%; }\n      #ex-header .ex-header-wrapper .ex-search-box input#ex-tags {\n        flex: 0 1 100%; }\n      #ex-header .ex-header-wrapper .ex-search-box input[type=\"submit\"] {\n        flex: 1;\n        margin: auto 1em; }\n    #ex-header .ex-header-wrapper .ex-mode-menu {\n      margin: auto;\n      flex: 1 2 70%; }\n      #ex-header .ex-header-wrapper .ex-mode-menu .ex-tag-script-controls {\n        display: inline-block;\n        margin: auto; }\n      #ex-header .ex-header-wrapper .ex-mode-menu label {\n        font-weight: bold;\n        cursor: auto; }\n        @media (max-width: 1280px) {\n          #ex-header .ex-header-wrapper .ex-mode-menu label {\n            display: none; } }\n    #ex-header .ex-header-wrapper .ex-header-close {\n      margin: auto;\n      margin-right: 30px;\n      color: #0073ff;\n      cursor: pointer; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* Fix sidebar search box from rendering on top of EX header bar. */\n#page #sidebar input[type=\"text\"] {\n  z-index: 10 !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word;\n  display: flex;\n  flex-direction: column;\n  /* Move artist tags to top of tag list. */ }\n  #tag-list .ex-artist-tag-list-header,\n  #tag-list .ex-artist-tag-list {\n    order: -1; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: hidden; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    width: 0;\n    overflow: hidden; }\n    .ex-panel-container #ex-preview-panel > div {\n      display: flex;\n      overflow-y: auto; }\n    .ex-panel-container #ex-preview-panel > div > article {\n      width: auto;\n      height: auto;\n      margin: auto; }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip {\n  max-width: 720px;\n  max-height: none;\n  border-width: 2px;\n  box-sizing: border-box; }\n  .qtip .ex-excerpt-title {\n    font-size: 1em;\n    margin-bottom: 1em;\n    padding-bottom: 1em;\n    border-bottom: 1px solid #EEEEEE; }\n    .qtip .ex-excerpt-title::first-line {\n      line-height: 0px; }\n    .qtip .ex-excerpt-title::before {\n      content: \"\";\n      display: inline-block;\n      height: 21px; }\n  .qtip .ex-excerpt-body {\n    display: flex;\n    flex-direction: row; }\n  .qtip ::-webkit-scrollbar {\n    width: 5px;\n    height: 5px; }\n  .qtip ::-webkit-scrollbar-button {\n    width: 0px;\n    height: 0px; }\n  .qtip ::-webkit-scrollbar-thumb {\n    background: #999999;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-thumb:hover {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-thumb:active {\n    background: #AAAAAA; }\n  .qtip ::-webkit-scrollbar-track {\n    background: #EEEEEE;\n    border: 0px none #ffffff;\n    border-radius: 0px; }\n  .qtip ::-webkit-scrollbar-track:hover {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-track:active {\n    background: #EEEEEE; }\n  .qtip ::-webkit-scrollbar-corner {\n    background: transparent; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #CCCCCC; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n  .qtip .ex-post-excerpt-preview .post-media {\n    max-width: 350px;\n    max-height: 350px; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  /* display: flex; */\n  /* align-items: center; */\n  padding-top: 52px;\n  margin-top: -52px; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  background: #ecf5f9; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #b3d9e6; }\n\narticle.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #CCCCCC;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\n/* The icon beside collapsible headers on wiki pages and expandable galleries. */\na.ui-icon.collapsible-header {\n  display: inline-block;\n  cursor: pointer; }\n\n/* Avoid pushing headers further right. */\n#c-wiki-pages #a-show a.ui-icon.collapsible-header {\n  margin-left: -8px; }\n");
+___$insertStyle("#ex-header {\n  position: absolute;\n  top: 0;\n  padding: 5px 0;\n  width: 100%;\n  z-index: 100;\n  background: white;\n  border-bottom: 1px solid white; }\n  #ex-header .ex-header-wrapper {\n    display: flex; }\n    #ex-header .ex-header-wrapper.ex-fixed.ex-header-scrolled {\n      border-bottom: 1px solid #EEEEEE;\n      box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }\n    #ex-header .ex-header-wrapper h1 {\n      display: inline-block;\n      font-size: 2.5em;\n      margin: 0 30px; }\n    #ex-header .ex-header-wrapper .ex-search-box {\n      margin: auto;\n      display: flex;\n      flex: 0 1 30%; }\n      #ex-header .ex-header-wrapper .ex-search-box input#ex-tags {\n        flex: 0 1 100%; }\n      #ex-header .ex-header-wrapper .ex-search-box input[type=\"submit\"] {\n        flex: 1;\n        margin: auto 1em; }\n    #ex-header .ex-header-wrapper .ex-mode-menu {\n      margin: auto;\n      flex: 1 2 70%; }\n      #ex-header .ex-header-wrapper .ex-mode-menu .ex-tag-script-controls {\n        display: inline-block;\n        margin: auto; }\n      #ex-header .ex-header-wrapper .ex-mode-menu label {\n        font-weight: bold;\n        cursor: auto; }\n        @media (max-width: 1280px) {\n          #ex-header .ex-header-wrapper .ex-mode-menu label {\n            display: none; } }\n    #ex-header .ex-header-wrapper .ex-header-close {\n      margin: auto;\n      margin-right: 30px;\n      color: #0073ff;\n      cursor: pointer; }\n\n@media (max-width: 1280px) {\n  header h1 {\n    font-size: 1.5em !important; } }\n\nh1.ex-small-header {\n  font-size: 1.5em !important; }\n\n/* Fix sidebar search box from rendering on top of EX header bar. */\n#page #sidebar input[type=\"text\"] {\n  z-index: 10 !important; }\n\n/* /posts/1234 */\n/* Move artist tags to top of the tag list. */\n#tag-list {\n  /*\n     * Break tags that are too long for the tag list (e.g.\n     * kuouzumiaiginsusutakeizumonokamimeichoujin_mika)\n     */\n  word-break: break-word; }\n  #tag-list .ex-tag-list-header h1, #tag-list .ex-tag-list-header h2 {\n    display: inline-block; }\n  #tag-list .ex-tag-list-header .post-count {\n    margin-left: 0.5em; }\n\n/*\n * Make the parent/child thumbnail container scroll vertically, not horizontally, to prevent\n * long child lists from blowing out the page width.\n */\n#has-parent-relationship-preview,\n#has-children-relationship-preview {\n  overflow: auto;\n  white-space: initial; }\n\n#c-posts #a-show {\n  /*\n    #image-container {\n        position: relative;\n        display: inline-block;\n\n        .desc {\n            display: none;\n        }\n    }\n\n    #note-container {\n        position: initial;\n\n        .note-box {\n            background: hsla(60,100%,97%,0.5);\n            outline: 1px solid white;\n            border: 1px solid black;\n            box-sizing: border-box;\n\n            .note-box-inner-border {\n                display: none;\n            }\n        }\n    }\n*/ }\n\n.ex-fit-width {\n  max-width: 100%;\n  height: auto !important; }\n\n.ex-post-gallery span h2 {\n  display: inline-block; }\n\n.ex-text-thumbnail {\n  display: inline-block;\n  float: left;\n  height: 154px;\n  width: 154px;\n  margin: 0 10px 10px 0;\n  text-align: center;\n  background: #EEEEEE;\n  border: 2px solid #DDDDDD; }\n  .ex-text-thumbnail a {\n    display: inline-block;\n    width: 100%;\n    height: 100%;\n    line-height: 154px; }\n\n.ex-panel-container {\n  display: flex;\n  min-height: 100vh; }\n  .ex-panel-container .ex-panel {\n    flex: 0 0 auto;\n    overflow: auto;\n    align-self: start; }\n  .ex-panel-container .ex-content-panel {\n    flex: 1 1;\n    margin-left: 0px !important; }\n  .ex-panel-container #ex-preview-panel {\n    position: sticky;\n    top: 3em;\n    max-height: calc(100vh - 127px);\n    overflow-y: auto;\n    overflow-x: hidden;\n    overscroll-behavior-y: contain; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar {\n      width: 5px;\n      height: 5px; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-button {\n      width: 0px;\n      height: 0px; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-thumb {\n      background: #999999;\n      border: 0px none #FFFFFF;\n      border-radius: 0px; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-thumb:hover {\n      background: #AAAAAA; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-thumb:active {\n      background: #AAAAAA; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-track {\n      background: #EEEEEE;\n      border: 0px none #ffffff;\n      border-radius: 0px; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-track:hover {\n      background: #EEEEEE; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-track:active {\n      background: #EEEEEE; }\n    .ex-panel-container #ex-preview-panel::-webkit-scrollbar-corner {\n      background: transparent; }\n    .ex-panel-container #ex-preview-panel .ex-no-image-selected {\n      text-align: center;\n      margin-top: 2em; }\n    .ex-panel-container #ex-preview-panel .ex-preview-panel-post {\n      font-size: 0.85714em;\n      line-height: 1.2em;\n      margin: 0 1em; }\n      .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata {\n        max-height: 9.95em;\n        margin-bottom: 1em;\n        overflow-y: auto; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar {\n          width: 5px;\n          height: 5px; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-button {\n          width: 0px;\n          height: 0px; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-thumb {\n          background: #999999;\n          border: 0px none #FFFFFF;\n          border-radius: 0px; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-thumb:hover {\n          background: #AAAAAA; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-thumb:active {\n          background: #AAAAAA; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-track {\n          background: #EEEEEE;\n          border: 0px none #ffffff;\n          border-radius: 0px; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-track:hover {\n          background: #EEEEEE; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-track:active {\n          background: #EEEEEE; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata::-webkit-scrollbar-corner {\n          background: transparent; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata .ex-preview-panel-post-title .fav-count {\n          margin-right: 0.25em; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata .ex-preview-panel-post-title .post-info {\n          margin-right: 1em;\n          color: #333;\n          white-space: nowrap; }\n          .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-metadata .ex-preview-panel-post-title .post-info h1 {\n            color: #000;\n            display: inline;\n            font-size: 1em;\n            margin-right: 0.25em; }\n      .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-body {\n        display: flex;\n        flex-direction: column; }\n        .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-body article.post-preview {\n          width: auto;\n          height: auto;\n          margin: auto;\n          justify-content: center; }\n          .ex-panel-container #ex-preview-panel .ex-preview-panel-post .ex-preview-panel-post-body article.post-preview img {\n            object-fit: scale-down;\n            max-width: 100%;\n            max-height: calc(90vh - 127px); }\n  .ex-panel-container .ex-vertical-resizer {\n    cursor: col-resize;\n    flex: 0 0 1px;\n    border: 0.5em solid white;\n    background: #ededed;\n    transition: background 0.125s; }\n    .ex-panel-container .ex-vertical-resizer:hover {\n      background: #cccccc;\n      transition: background 0.125s; }\n\n.ex-tag-list.ex-tag-list-inline {\n  word-break: break-all; }\n  .ex-tag-list.ex-tag-list-inline h1 {\n    display: inline;\n    font-size: 1em; }\n  .ex-tag-list.ex-tag-list-inline ul {\n    display: inline; }\n    .ex-tag-list.ex-tag-list-inline ul li {\n      display: inline-block;\n      margin-right: 0.5rem; }\n\n#ex-viewport {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n  visibility: hidden;\n  margin: 4em; }\n\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n/*\n.qtip {\n    max-width: 720px;\n    max-height: none;\n    border-width: 2px;\n    box-sizing: border-box;\n\n    .ex-excerpt {\n        &-title {\n            font-size: 1em;\n            margin-bottom: 1em;\n            padding-bottom: 1em;\n            border-bottom: 1px solid $dim-border-color;\n\n            // Baseline align the title so the bottom margin/padding is correct.\n            // https://blogs.adobe.com/webplatform/2014/08/13/one-weird-trick-to-baseline-align-text/\n            &::first-line {\n                line-height: 0px;\n            }\n\n            &::before {\n                content: \"\";\n                display: inline-block;\n                height: $line-height;\n            }\n        }\n\n      &-body {\n          display: flex;\n          flex-direction: row;\n      }\n    }\n\n    ::-webkit-scrollbar {\n        width: 5px;\n        height: 5px;\n    }\n    ::-webkit-scrollbar-button {\n        width: 0px;\n        height: 0px;\n    }\n    ::-webkit-scrollbar-thumb {\n        background: #999999;\n        border: 0px none #ffffff;\n        border-radius: 0px;\n    }\n    ::-webkit-scrollbar-thumb:hover {\n        background: #AAAAAA;\n    }\n    ::-webkit-scrollbar-thumb:active {\n        background: #AAAAAA;\n    }\n    ::-webkit-scrollbar-track {\n        background: $dim-border-color;\n        border: 0px none #ffffff;\n        border-radius: 0px;\n    }\n    ::-webkit-scrollbar-track:hover {\n        background: $dim-border-color;\n    }\n    ::-webkit-scrollbar-track:active {\n        background: $dim-border-color;\n    }\n    ::-webkit-scrollbar-corner {\n        background: transparent;\n    }\n}\n*/\n.post-media {\n  max-width: 100%;\n  max-height: 100%;\n  width: auto;\n  height: auto;\n  box-sizing: border-box;\n  object-fit: contain; }\n\n.qtip .ex-post-excerpt-title .post-info {\n  color: #333; }\n  .qtip .ex-post-excerpt-title .post-info.id {\n    color: #333;\n    font-weight: bold; }\n\n.qtip .ex-post-excerpt-body {\n  max-height: 350px; }\n\n.qtip .ex-post-excerpt-preview {\n  flex: 0 1;\n  width: auto;\n  height: auto;\n  overflow: visible; }\n\n.qtip .ex-post-excerpt-metadata {\n  flex: 1 1;\n  overflow-y: auto; }\n\n.qtip .ex-user-excerpt-body dl.info {\n  margin-right: 2em; }\n\n.ex-fixed {\n  position: fixed !important; }\n\n/* Overrides for Danbooru's responsive layout */\n@media screen and (max-width: 660px) {\n  body {\n    overflow-x: hidden; }\n  #ex-header input {\n    font-size: 1em; }\n  #ex-header {\n    text-align: initial;\n    line-height: initial; }\n  #nav {\n    display: block;\n    float: none;\n    font-size: 1em; }\n  header#top menu {\n    width: initial; }\n  header#top menu li a {\n    padding: 6px 5px; }\n  .ex-preview-panel-container {\n    display: block;\n    min-height: initial; }\n  #sidebar,\n  #ex-sidebar-resizer,\n  #ex-preview-panel-resizer,\n  #ex-preview-panel {\n    display: none !important; } }\n\n#notice {\n  top: 4.5em !important; }\n\n.ex-artists {\n  white-space: nowrap; }\n\n.ex-artist .ex-artist-id {\n  width: 10%; }\n\n.ex-artist .ex-artist-other-names {\n  width: 100%;\n  white-space: normal; }\n\n#c-artists #sidebar label {\n  display: block;\n  font-weight: bold;\n  padding: 4px 0 4px 0;\n  width: auto;\n  cursor: auto; }\n\n#c-artists #sidebar input[type=\"text\"] {\n  width: 100% !important; }\n\n#c-artists #sidebar button[type=\"submit\"] {\n  display: block;\n  margin: 4px 0 4px 0; }\n\n#c-artists #sidebar h2 {\n  font-size: 1em;\n  display: inline-block;\n  margin: 0.75em 0 0.25em 0; }\n\n#c-artists #a-index {\n  opacity: 0; }\n\n.ex-index {\n  opacity: 1 !important;\n  transition: opacity 0.15s; }\n\n#c-users #a-edit #ex-settings-section label {\n  display: inline-block; }\n\nbody.mode-tag-script {\n  background-color: white; }\n\nbody.mode-tag-script #ex-header {\n  border-top: 2px solid #D6D;\n  padding-top: 3px; }\n\nbody.mode-preview #ex-header {\n  border-top: 2px solid #0073ff;\n  padding-top: 3px; }\n\nbody.mode-view #ex-preview-panel-resizer {\n  display: none; }\n\nbody.mode-tag-script article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a,\nbody.mode-preview article.post-preview > a, #c-moderator-post-queues .post-preview aside > a, #c-comments .post-preview .preview > a {\n  width: 100%;\n  height: 100%; }\n  body.mode-tag-script article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus,\n  body.mode-preview article.post-preview > a:focus, #c-moderator-post-queues .post-preview aside > a:focus, #c-comments .post-preview .preview > a:focus {\n    outline: none; }\n\nbody.mode-preview article.post-preview:hover, body.mode-preview #c-moderator-post-queues .post-preview aside:hover, body.mode-preview #c-comments .post-preview .preview:hover, body.mode-tag-script article.post-preview:hover, body.mode-tag-script #c-moderator-post-queues .post-preview aside:hover, body.mode-tag-script #c-comments .post-preview .preview:hover {\n  opacity: 0.75; }\n\nbody.mode-tag-script article.post-preview.ui-selected, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected, body.mode-tag-script #c-comments .post-preview .preview.ui-selected {\n  background: #66b3cc; }\n  body.mode-tag-script article.post-preview.ui-selected img, body.mode-tag-script #c-moderator-post-queues .post-preview aside.ui-selected img, body.mode-tag-script #c-comments .post-preview .preview.ui-selected img {\n    opacity: 0.5; }\n\n#posts-container article.post-preview {\n  padding: 0 10px 10px 0;\n  margin: 0;\n  float: left; }\n\n#posts > div {\n  padding: 2px; }\n\narticle.post-preview.ex-cursor, #c-moderator-post-queues .post-preview aside.ex-cursor, #c-comments .post-preview .preview.ex-cursor {\n  z-index: 50;\n  outline: 2px solid #409fbf;\n  background-color: #b3d9e6; }\n\n.ui-selectable-helper {\n  position: absolute;\n  z-index: 100;\n  border: 1px dotted black; }\n\n.ui-selectable {\n  -ms-touch-action: none;\n  touch-action: none; }\n\n.ex-short-relative-time {\n  color: #333;\n  margin-left: 0.2em; }\n\n.tag-post-count-empty {\n  border-bottom: 1px dotted; }\n\n.tag-dne {\n  border-bottom: 1px dotted; }\n\n/* Ensure colorized tags are still hidden. */\n.spoiler:hover a.tag-type-1 {\n  color: #A00; }\n\n.spoiler:hover a.tag-type-3 {\n  color: #A0A; }\n\n.spoiler:hover a.tag-type-4 {\n  color: #0A0; }\n\n.spoiler:not(:hover) a {\n  color: black !important; }\n\n.paginator menu li {\n  line-height: 2.5em;\n  display: inline-block; }\n\na.collapsible-header {\n  display: none;\n  cursor: pointer;\n  margin-left: -16px; }\n\nh1:hover a.collapsible-header, h2:hover a.collapsible-header, h3:hover a.collapsible-header,\nh4:hover a.collapsible-header, h5:hover a.collapsible-header, h6:hover a.collapsible-header {\n  display: inline-block !important; }\n\n#wiki-page-body h1, #wiki-page-body h2, #wiki-page-body h3,\n#wiki-page-body h4, #wiki-page-body h5, #wiki-page-body h6 {\n  padding-left: 16px;\n  margin-left: -16px; }\n");
 
 var EX = window.EX = class EX {
   static get Config() { return Config; }
@@ -2651,7 +2630,6 @@ var EX = window.EX = class EX {
 
     EX.config.artistsRedesign && EX.UI.Artists.initialize();
     EX.config.commentsRedesign && EX.UI.Comments.initialize();
-    EX.config.forumRedesign && EX.UI.ForumPosts.initialize();
     EX.config.postsRedesign && EX.UI.Posts.initialize();
     EX.config.postVersionsRedesign && EX.UI.PostVersions.initialize();
     EX.config.wikiRedesign && EX.UI.WikiPages.initialize();
@@ -2672,16 +2650,16 @@ var EX = window.EX = class EX {
 window.EX.debug("Danbooru:", window.Danbooru);
 // console.timeEnd("loaded");
 
-$$1(function () {
+$(function () {
   try {
     window.EX.initialize();
   } catch(e) {
     console.trace(e);
-    $$1("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
+    $("footer").append(`<div class="ex-error">Danbooru EX error: ${e}</div>`);
     throw e;
   }
 });
 
 return EX;
 
-}(jQuery,_,Mousetrap,moment,ResizeSensor));
+}(_,Mousetrap,moment,ResizeSensor));
