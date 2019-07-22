@@ -7,6 +7,8 @@ import Tag from "../tag.js";
 import _ from "lodash";
 import moment from "moment";
 
+let _previewPanelPost = null
+
 export default class PreviewPanel {
   static initialize() {
     // This is the main content panel that comes before the preview panel.
@@ -66,10 +68,50 @@ export default class PreviewPanel {
 
   static async update($post) {
     const postId = $post.data("id");
-    const post = await Post.get(postId);
+    const post = _previewPanelPost = await Post.get(postId);
     const html = PreviewPanel.renderPost(post);
 
-    $("#ex-preview-panel > div").children().first().replaceWith(html);
+    const panelParent = $("#ex-preview-panel > div");
+
+    let $html = panelParent.children().first();
+
+    let favButton = $html.find(".fa-heart").parent();
+
+    if (favButton.length > 0) {
+      favButton[0].removeEventListener('click', PreviewPanel.favoritePost, false);
+    }
+
+    $html.replaceWith(html);
+    $html = panelParent.children().first();
+
+    favButton = $html.find('.fa-heart').parent();
+    if (favButton.length > 0) {
+      favButton[0].addEventListener('click', PreviewPanel.favoritePost, false);
+    }  
+  }
+  
+  static async favoritePost(e) {
+    const post = _previewPanelPost;
+
+    if (post == null) {
+      return;
+    }
+
+    e.preventDefault()
+
+    let isFav = post.is_favorited;
+
+    const type = isFav ? "DELETE" : "POST";
+    const params = isFav ? {} : { post_id: post.id };
+    const url = `/favorites${(isFav ? `/${post.id}` : "")}`;
+
+    await Post.request(type, url, params);
+    isFav = post.is_favorited = !isFav; // For future use, incase they unfavorite without changing the post
+
+    const remove = isFav ? "far" : "fas";
+    const add = isFav ? "fas" : "far";
+
+    $("#ex-preview-panel > div").children().first().find(".fa-heart").removeClass(remove).addClass(add);
   }
 
   static get $panel() {
@@ -129,7 +171,7 @@ export default class PreviewPanel {
                 ${post.fav_count}
 
                 <a href="#">
-                  <i class="far fa-heart" aria-hidden="true"></i>
+                  <i class="fa${(post.is_favorited ? "s" : "r")} fa-heart" aria-hidden="true"></i>
                 </a>
               </span>
 
